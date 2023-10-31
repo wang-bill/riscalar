@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module instruction_decode 
+module decode 
   (
     input wire [31:0] instruction_in,
     input wire [31:0] pc_in,
