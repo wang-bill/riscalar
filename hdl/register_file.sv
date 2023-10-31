@@ -9,13 +9,15 @@ module register_file
     input wire [4:0] rs2_in,
     input wire [4:0] wa_in, // write address
     input wire we_in, // write enable, high for one clock cycle during write
-    input wire [31:0] wd_in,
+    input wire [31:0] wd_in, // write data
 
     output logic [31:0] rd1_out,
     output logic [31:0] rd2_out,
   )
 
   logic [31:0] registers [31:0]; // right number -> number of registers; left number -> size of registers
+
+  assign registers[11] = 44; // HARD CODED a0 REGISTER FOR TESTING PURPOSES, DELETE LATER
 
   always_ff @(posedge clk_in) begin
     if (rst_in) begin

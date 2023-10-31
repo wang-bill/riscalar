@@ -3,6 +3,7 @@
 
 module decode 
   (
+    input wire clk_in;
     input wire [31:0] instruction_in,
     input wire [31:0] pc_in,
 
@@ -12,8 +13,8 @@ module decode
 
     output wire signed [31:0] imm_out;
     output wire [31:0] pc_out;
-    output wire signed [31:0] rval1_out;
-    output wire signed [31:0] rval2_out;
+    output wire signed [4:0] rs1_out;
+    output wire signed [4:0] rs2_out;
   )
   // instruction type 
   logic [6:0] opcode;
@@ -101,8 +102,8 @@ module decode
 
     pc_out = pc_in;
     imm_out = imm;
-    rval1_out = rs1;
-    rval2_out = rs2;
+    rs1_out = rs1;
+    rs2_out = rs2;
   end
 
 
