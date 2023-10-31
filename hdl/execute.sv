@@ -5,9 +5,9 @@ typedef enum {Add, Sub, And, Or, Xor, Slt, Sltu, Sll, Srl, Sra} AluFunc; //10 Al
 typedef enum {Eq, Neq, Lt, Ltu, Ge, Geu, Dbr} BrFunc;
 
 module execute(
-        input wire [3:0] iType_in,
-        input wire [3:0] aluFunc_in,
-        input wire [3:0] brFunc_in,
+        input IType iType_in,
+        input AluFunc aluFunc_in,
+        input BrFunc brFunc_in,
         //input wire [4:0] dst_in,
         //input wire [4:0] src1_in, // this info is no longer relevant/not needed, I feel like we can just not include it
         //input wire [4:0] src2_in,
