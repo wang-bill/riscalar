@@ -1,12 +1,12 @@
 `timescale 1ns / 1ps
 `default_nettype none
-
-typedef enum {Add, Sub, And, Or, Xor, Slt, Sltu, Sll, Srl, Sra} AluFunc; //10 AluFuncs
+// types defined in types.svh
+// typedef enum {Add, Sub, And, Or, Xor, Slt, Sltu, Sll, Srl, Sra} AluFunc; //10 AluFuncs
 
 module alu(
     input wire signed [31:0] rval1_in,
     input wire signed [31:0] rval2_in,
-    input wire [3:0] aluFunc_in,
+    input AluFunc aluFunc_in,
     output logic signed [31:0] data_out
 );
     logic [31:0] rval1_u, rval2_u;
