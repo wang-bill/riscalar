@@ -16,7 +16,9 @@ module top_level(
   Itype iType;
   AluFunc aluFunc;
   BrFunc brFunc;
-  logic [31:0] imm;
+  logic signed [31:0] imm;
+  logic [4:0] rs1;
+  logic [4:0] rs2;
 
   decode(
     .clk_in(clk_100mhz),
@@ -33,9 +35,10 @@ module top_level(
   );
 
   // registers (part of decode)
-  logic [31:0] rval1;
-  logic [31:0] rval2;
-  logic wa, we, wd;
+  logic signed [31:0] rval1, rval2, wd;
+  logic [4:0] wa;
+  logic we;
+
   register_file(
     .clk_in(clk_100mhz),
     .rst_in(rst_in),
@@ -57,7 +60,7 @@ module top_level(
     .imm_in(imm),
     .pc_in(pc),
     .rval1_in(rval1),
-    .rval2_in(ravl2),
+    .rval2_in(rval2),
 
     .data_out(),
     .addr_out(),
