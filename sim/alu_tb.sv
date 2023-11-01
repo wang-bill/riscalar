@@ -6,7 +6,7 @@ module alu_tb();
 
   logic signed [31:0] rval1_in;
   logic signed [31:0] rval2_in;
-  AluFunc aluFunc_in;
+  logic [3:0] aluFunc_in;
   logic signed [31:0] data_out;
 
   logic passed;
