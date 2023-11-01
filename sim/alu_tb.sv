@@ -56,6 +56,11 @@ module alu_tb();
     aluFunc_in = Slt;
     #10
     passed = data_out == 0 ? 1 : 0;
+    rval1_in = 12;
+    rval2_in = 13;
+    aluFunc_in = Slt;
+    #10
+    passed = passed && (data_out == 1) ? 1 : 0;
     $display("SLT TEST: %s", passed ? "PASSED" : "FAILED");
 
     rval1_in = 12;
