@@ -2,6 +2,7 @@
 `default_nettype none
 // types defined in types.svh
 // typedef enum {Add, Sub, And, Or, Xor, Slt, Sltu, Sll, Srl, Sra} AluFunc; //10 AluFuncs
+`include "hdl/types.svh"
 
 module alu(
     input wire signed [31:0] rval1_in,

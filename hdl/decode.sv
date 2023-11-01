@@ -1,9 +1,13 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
+typedef enum {OP, OPIMM, BRANCH, LUI, JAL, JALR, LOAD, STORE, AUIPC} IType; //9 ITypes
+typedef enum {Add, Sub, And, Or, Xor, Slt, Sltu, Sll, Srl, Sra} AluFunc; //10 AluFuncs
+typedef enum {Eq, Neq, Lt, Ltu, Ge, Geu, Dbr} BrFunc;
+
 module decode 
   (
-    input wire clk_in;
+    input wire clk_in,
     input wire [31:0] instruction_in,
     input wire [31:0] pc_in,
 
@@ -108,9 +112,7 @@ module decode
 
 
   // maybe put in execute?
-  typedef enum {OP, OPIMM, BRANCH, LUI, JAL, JALR, LOAD, STORE, AUIPC} IType; //9 ITypes
-  typedef enum {Add, Sub, And, Or, Xor, Slt, Sltu, Sll, Srl, Sra} AluFunc; //10 AluFuncs
-  typedef enum {Eq, Neq, Lt, Ltu, Ge, Geu, Dbr} BrFunc;
+
 
   always_comb begin
     if (inst_type == R) begin // need to change this line if we put in execute
