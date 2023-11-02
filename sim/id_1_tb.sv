@@ -4,40 +4,49 @@
 /*
 0x00D605B3 // add a1, a2, a3
 0x00158593 // addi a1, a1, 1
-0x0AE6A2A3 // sw a3, 5(a4)
+0x08E6A223 // sw a3, 4(a4)
+lw
+bne
+jal
+lui
+auipc
 */
 module id_tb();
-  // typedef enum {OP, OPIMM, BRANCH, LUI, JAL, JALR, LOAD, STORE, AUIPC} IType; //9 ITypes
-  // typedef enum {Add, Sub, And, Or, Xor, Slt, Sltu, Sll, Srl, Sra} AluFunc; //10 AluFuncs
-  // typedef enum {Eq, Neq, Lt, Ltu, Ge, Geu, Dbr} BrFunc;
-  // 10 instructions from different categories
-  // logic [31:0] instruction_in_1 = 32'h00D605B3;
-  logic [31:0] instruction_in_2;
-  // 32'h00158593;
+  logic clk_in;
+  logic [31:0] instruction_in;
   logic [31:0] pc;
-  // 32'h0000_0000;
-  // logic [31:0] instruction_in_3 = 32'h0AE6A2A3;
+  IType iType;
+  AluFunc aluFunc;
+  BrFunc brFunc;
 
-  // Itype iType;
-  // AluFunc aluFunc;
-  // BrFunc brFunc;
-  logic [31:0] iType;
-  logic [31:0] aluFunc;
-  logic [31:0] brFunc;
+  logic [31:0] updated_pc; // should be same as original pc
   logic [31:0] imm;
+  logic [4:0] rs1;
+  logic [4:0] rs2;
+  logic [4:0] rd;
 
+  logic iType_c;
+  logic aluFunc_c;
+  logic brFunc_c;
+  logic updated_pc_c;
+  logic imm_c;
+  logic rs1_c;
+  logic rs2_c;
+  logic rd_c;
+  
   decode uut(
     .clk_in(clk_in),
-    .instruction_in(instruction_in_2),
+    .instruction_in(instruction_in),
     .pc_in(pc),
 
     .iType_out(iType),
     .aluFunc_out(aluFunc),
     .brFunc_out(brFunc),
-    .pc_out(pc),
+    .pc_out(updated_pc),
     .imm_out(imm),
     .rs1_out(rs1),
-    .rs2_out(rs2)
+    .rs2_out(rs2),
+    .rd_out(rd)
   );
 
   always begin
@@ -45,15 +54,52 @@ module id_tb();
       clk_in = !clk_in;
   end
 
+
   //initial block...this is our test simulation
   initial begin
 
     $display("Starting Sim");
-    // call instructions and assert their output
-    instruction_in_2 = 32'h00158593;
+    
+    instruction_in = 32'h00D605B3; // add a1, a2, a3
+    pc = 32'h0000_1111;
+    #10
+
+    iType_c = (iType == OP);
+    aluFunc_c = (aluFunc == Add);
+    updated_pc_c = (updated_pc == pc);
+    rs1_c = (rs1 == 12);
+    rs2_c = (rs2 == 13);
+    rd_c = (rd == 11);
+
+    $display("TEST 1: %s", (iType_c && updated_pc_c && aluFunc_c && rs1_c && rs2_c && rd_c) ? "PASSED" : "FAILED");
+    
+    instruction_in = 32'h00158593; // addi a1, a1, 1
     pc = 32'h0000_0000;
     #10
-    $display("no errors");
+    
+    iType_c = (iType == OPIMM);
+    aluFunc_c = (aluFunc == Add);
+    updated_pc_c = (updated_pc == pc);
+    imm_c = (imm == 1);
+    rs1_c = (rs1 == 11);
+    rd_c = (rd == 11);
+
+    $display("TEST 2: %s", (iType_c && updated_pc_c && aluFunc_c && imm_c && rs1_c && rd_c) ? "PASSED" : "FAILED");
+
+    // instruction_in = 32'h08E6A223;
+    // pc = 32'h1111_1111;
+    // #10
+
+    // iType_c = (iType == STORE);
+    // aluFunc_c = (aluFunc == Add);
+    // updated_pc_c = (updated_pc == pc);
+    // imm_c = (imm == 4);
+    // // rs1_c = (rs1 == 14);
+    // // rs2_c = (rs2 == 13);
+    // $display("%b", imm);
+    // $display("TEST 3: %s", (iType_c && aluFunc_c && updated_pc_c && imm_c) ? "PASSED" : "FAILED");
+
+    $finish;
   end
 endmodule
 `default_nettype wire

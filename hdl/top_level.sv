@@ -28,6 +28,7 @@ module top_level(
   logic signed [31:0] imm;
   logic [4:0] rs1;
   logic [4:0] rs2;
+  logic [4:0] rd;
 
   decode(
     .clk_in(clk_100mhz),
@@ -40,7 +41,8 @@ module top_level(
     .pc_out(pc),
     .imm_out(imm),
     .rs1_out(rs1),
-    .rs2_out(rs2)
+    .rs2_out(rs2),
+    .rd_out(rd)
   );
 
   // registers (part of decode)
@@ -80,6 +82,9 @@ module top_level(
   );
 
   // memory
+  if (iType == LOAD || iType == STORE) begin
+    // emulate memory
+  end
 
   // writeback
   assign wd = result;
