@@ -21,6 +21,16 @@ module top_level(
   logic [31:0] pc;
   logic [31:0] inst;
 
+  always_ff @(posedge clk_100mhz) begin
+    if (sys_rst) begin
+      //Simulates instruction fetch
+      inst <= 32'h0015_8593; // hard coded for now, addi a1, a1, 1
+      pc <= 32'h0000_0000; // hard coded for now
+    end else begin
+      pc <= nextPc
+    end
+  end
+
   // decode
   Itype iType;
   AluFunc aluFunc;
@@ -88,16 +98,6 @@ module top_level(
 
   // writeback
   assign wd = result;
-
-  always_ff @(posedge clk_100mhz) begin
-    if (sys_rst) begin
-      //Simulates instruction fetch
-      inst <= 32'h0015_8593; // hard coded for now, addi a1, a1, 1
-      pc <= 32'h0000_0000; // hard coded for now
-    end else begin
-      pc <= nextPc
-    end
-  end
 
 endmodule
 
