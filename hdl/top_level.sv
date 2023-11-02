@@ -82,7 +82,7 @@ module top_level(
   // memory
 
   // writeback
-  assign wa = result;
+  assign wd = result;
 
   always_ff @(posedge clk_100mhz) begin
     if (sys_rst) begin
