@@ -1,2 +1,6 @@
 ### RISC-V Superscalar Processor
-fjdksa
+
+TODO:
+ - Cross-module test cases
+ - Memory access
+ - Superscalar
