@@ -2,9 +2,9 @@
 `default_nettype none
 
 module execute(
-        input IType iType_in,
-        input AluFunc aluFunc_in,
-        input BrFunc brFunc_in,
+        input wire [3:0] iType_in,
+        input wire [3:0] aluFunc_in,
+        input wire [2:0] brFunc_in,
         
         input wire signed [31:0] imm_in,
         input wire [31:0] pc_in,
@@ -20,7 +20,7 @@ module execute(
     logic [31:0] nextPc_default;
     assign nextPc_default = pc_in + 4;
     assign alu_rval1 = rval1_in;
-    assign alu_rval2 = (iType_in == OPIMM) ? imm : rval2_in;
+    assign alu_rval2 = (iType_in == OPIMM) ? imm_in : rval2_in;
     
     logic branch_res;
 

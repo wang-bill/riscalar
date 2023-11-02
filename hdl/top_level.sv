@@ -3,14 +3,23 @@
 
 module top_level(
   input wire clk_100mhz,
-)
+  input wire [15:0] sw,
+  input wire [3:0] btn,
+  output logic [15:0] led,
+  output logic [2:0] rgb0, //rgb led
+  output logic [2:0] rgb1, //rgb led
+);
+  assign led = sw; //for debugging
+  //shut up those rgb LEDs (active high):
+  assign rgb1= 0;
+  assign rgb0 = 0;
+
+  logic sys_rst;
+  assign sys_rst = btn[0];
 
   // instruction fetch
   logic [31:0] pc;
   logic [31:0] inst;
-
-  assign inst = 32'h0015_8593; // hard coded for now, addi a1, a1, 1
-  assign pc = 32'h0000_0000; // hard coded for now
 
   // decode
   Itype iType;
@@ -52,6 +61,9 @@ module top_level(
     .rd2_out(rval2)
   );
 
+  logic signed [31:0] result, addr;
+  logic [31:0] nextPc; 
+
   // execute
   execute(
     .iType_in(iType),
@@ -62,14 +74,25 @@ module top_level(
     .rval1_in(rval1),
     .rval2_in(rval2),
 
-    .data_out(),
-    .addr_out(),
-    .nextPc_out()
+    .data_out(result),
+    .addr_out(addr),
+    .nextPc_out(nextPc)
   );
 
   // memory
 
   // writeback
+  assign wa = result;
+
+  always_ff @(posedge clk_100mhz) begin
+    if (sys_rst) begin
+      //Simulates instruction fetch
+      inst <= 32'h0015_8593; // hard coded for now, addi a1, a1, 1
+      pc <= 32'h0000_0000; // hard coded for now
+    end else begin
+      pc <= nextPc
+    end
+  end
 
 endmodule
 
