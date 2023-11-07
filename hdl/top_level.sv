@@ -8,6 +8,11 @@ module top_level(
   output logic [15:0] led,
   output logic [2:0] rgb0, //rgb led
   output logic [2:0] rgb1, //rgb led
+
+  input wire [31:0] instruction,
+  output logic signed [31:0] data_out,
+  output logic [31:0] addr_out,
+  output logic [31:0] nextPc_out
 );
   assign led = sw; //for debugging
   //shut up those rgb LEDs (active high):
@@ -73,8 +78,8 @@ module top_level(
     .rd2_out(rval2)
   );
 
-  logic signed [31:0] result, addr;
-  logic [31:0] nextPc; 
+  logic signed [31:0] result;
+  logic [31:0] addr, nextPc; 
 
   // execute
   execute(
@@ -98,7 +103,13 @@ module top_level(
 
   // writeback
   assign wd = result;
-  
+  assign wa = rd;
+  assign we = (iType != BRANCH) && (iType != STORE);
+
+  //Testing Output:
+  assign data_out = data;
+  assign addr_out = addr;
+  assign nextPc_out = nextPc;
 endmodule
 
 `default_nettype wire

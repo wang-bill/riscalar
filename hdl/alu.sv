@@ -1,6 +1,5 @@
 `timescale 1ns / 1ps
 `default_nettype none
-// types defined in types.svh
 // typedef enum {Add, Sub, And, Or, Xor, Slt, Sltu, Sll, Srl, Sra} AluFunc; //10 AluFuncs
 `include "hdl/types.svh"
 
