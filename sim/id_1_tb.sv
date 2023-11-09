@@ -28,7 +28,6 @@ module id_tb();
   logic iType_c;
   logic aluFunc_c;
   logic brFunc_c;
-  logic updated_pc_c;
   logic imm_c;
   logic rs1_c;
   logic rs2_c;
@@ -37,12 +36,10 @@ module id_tb();
   decode uut(
     .clk_in(clk_in),
     .instruction_in(instruction_in),
-    .pc_in(pc),
 
     .iType_out(iType),
     .aluFunc_out(aluFunc),
     .brFunc_out(brFunc),
-    .pc_out(updated_pc),
     .imm_out(imm),
     .rs1_out(rs1),
     .rs2_out(rs2),

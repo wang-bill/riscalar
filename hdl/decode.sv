@@ -5,14 +5,12 @@ module decode
   (
     input wire clk_in,
     input wire [31:0] instruction_in,
-    input wire [31:0] pc_in,
 
-    output logic [31:0] iType_out,
-    output logic [31:0] aluFunc_out,
-    output logic [31:0] brFunc_out,
+    output logic [3:0] iType_out,
+    output logic [3:0] aluFunc_out,
+    output logic [2:0] brFunc_out,
 
     output logic signed [31:0] imm_out,
-    output logic [31:0] pc_out,
     output logic signed [4:0] rs1_out,
     output logic signed [4:0] rs2_out,
     output logic [4:0] rd_out
@@ -101,7 +99,6 @@ module decode
      imm = {11'b0, instruction_in[31], instruction_in[21:12], instruction_in[22], instruction_in[30:23], 1'b0};
     end
 
-    pc_out = pc_in;
     imm_out = imm;
     rs1_out = rs1;
     rs2_out = rs2;
@@ -131,8 +128,29 @@ module decode
       end else if (funct3 == 4'h3 && funct7 == 8'h00) begin
         aluFunc_out = Sltu;
       end
-    end else if (inst_type == I && opcode == 7'b0010011) begin
+    //end else if (inst_type == I && opcode == 7'b0010011) begin (why do you check the opcode?)
+    end else if (inst_type == I) begin
       iType_out = OPIMM;
+      if (funct3 == 4'h0) begin
+        aluFunc_out = Add;
+      end else if (funct3 == 4'h4) begin
+        aluFunc_out = Xor;
+      end else if (funct3 == 4'h6) begin
+        aluFunc_out = Or;
+      end else if (funct3 == 4'h7) begin
+        aluFunc_out = And;
+      end else if (funct3 == 4'h1 && imm[11:5] == 8'h00) begin
+        aluFunc_out = Sll;
+      end else if (funct3 == 4'h5 && imm[11:5] == 8'h00) begin
+        aluFunc_out = Srl;
+      //a little unsure about this as RISC-V Manual says imm[5:11] == 0x20 (I reversed the bits)
+      end else if (funct3 == 4'h5 && imm[11:5] == 8'h04) begin 
+        aluFunc_out = Sra;
+      end else if (funct3 == 4'h2) begin
+        aluFunc_out = Slt;
+      end else if (funct3 == 4'h3) begin
+        aluFunc_out = Sltu;
+      end
     end else if (inst_type == B) begin
       iType_out = BRANCH;
       if (funct3 == 4'h0) begin
