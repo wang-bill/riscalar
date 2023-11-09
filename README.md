@@ -11,3 +11,7 @@ November 24th: Implement Branch Prediction + Speculative Execution; Finish setti
 December 1st: SD Card Flashing + Caches
 December 8th: Benchmarking, Begin writing final report (½ done)
 December 12th (Due December 14th): Finish final report
+
+Next Steps (Catherine):
+- Integrate the instruction memory into the processor (how should we load the memory with instructions?)
+- Pipeline the processor (I anticipate this will be more of a challenge than we expect logistically); we might need to add depth to the registers for the pc for example to calculate on multiple pc values at a time...?

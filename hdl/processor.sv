@@ -19,7 +19,7 @@ module processor(
     if (rst_in) begin
       //Simulates instruction fetch
       pc <= 32'h0000_0000; // hard coded for now
-      inst <= 32'h0015_8593; // hard coded for now, addi a1, a1, 1
+      inst <= 0; // hard coded for now, addi a1, a1, 1
     end else begin
       pc <= nextPc;
       inst <= instruction;
@@ -93,7 +93,9 @@ module processor(
   // writeback
   assign wd = result;
   assign wa = rd;
-  assign we = (iType != BRANCH) && (iType != STORE);
+  // When we encounter a branch or store instruction, the destination register is unchanged
+  // We also prevent writeback attempts to 0x0
+  assign we = (iType != BRANCH) && (iType != STORE) && (rd != 0);
 
   //Testing Output:
   assign data_out = result;
