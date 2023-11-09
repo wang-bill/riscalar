@@ -25,14 +25,35 @@ module top_level(
   // instruction fetch
   logic [31:0] pc;
   logic [31:0] inst;
+  logic wea;
+  logic ena;
+
+  assign effective_pc = pc[11:0] >> 2; // take last 12 bits because depth is 4096, and divide by 4 because in reality we'd have 1 byte memory addresses
+  logic [31:0] inst_fetched;
+  xilinx_single_port_ram_read_first #(
+    .RAM_WIDTH(32),                       // Specify RAM data width
+    .RAM_DEPTH(4096),                     // Specify RAM depth (number of entries)
+    .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
+    .INIT_FILE()          // Specify name/location of RAM initialization file if using one (leave blank if not)
+  ) inst_mem (
+    .addra(effective_pc),     // Address bus, width determined from RAM_DEPTH
+    .dina(0),       // RAM input data, width determined from RAM_WIDTH
+    .clka(clk_100mhz),       // Clock
+    .wea(0),         // Write enable
+    .ena(1),         // RAM Enable, for additional power savings, disable port when not in use
+    .rsta(sys_rst),       // Output reset (does not affect memory contents)
+    .regcea(1),   // Output register enable
+    .douta(inst_fetched)      // RAM output data, width determined from RAM_WIDTH
+  );
 
   always_ff @(posedge clk_100mhz) begin
     if (sys_rst) begin
       //Simulates instruction fetch
-      inst <= 32'h0015_8593; // hard coded for now, addi a1, a1, 1
+      inst <= inst_fetched;
       pc <= 32'h0000_0000; // hard coded for now
     end else begin
-      pc <= nextPc
+      inst <= inst_fetched;
+      pc <= nextPc;
     end
   end
 
@@ -97,8 +118,26 @@ module top_level(
   );
 
   // memory
-  if (iType == LOAD || iType == STORE) begin
-    // emulate memory
+  xilinx_single_port_ram_read_first #(
+    .RAM_WIDTH(32),                       // Specify RAM data width
+    .RAM_DEPTH(4096),                     // Specify RAM depth (number of entries)
+    .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
+    .INIT_FILE()          // Specify name/location of RAM initialization file if using one (leave blank if not)
+  ) inst_mem (
+    .addra(effective_pc),     // Address bus, width determined from RAM_DEPTH
+    .dina(result),       // RAM input data, width determined from RAM_WIDTH
+    .clka(clk_100mhz),       // Clock
+    .wea(0),         // Write enable
+    .ena(1),         // RAM Enable, for additional power savings, disable port when not in use
+    .rsta(sys_rst),       // Output reset (does not affect memory contents)
+    .regcea(1),   // Output register enable
+    .douta(inst_fetched)      // RAM output data, width determined from RAM_WIDTH
+  );
+  if (iType == LOAD) begin
+    
+  end 
+  if (iType == STORE) begin
+    
   end
 
   // writeback
