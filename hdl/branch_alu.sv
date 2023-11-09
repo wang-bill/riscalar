@@ -1,5 +1,6 @@
 `timescale 1ns / 1ps
 `default_nettype none
+`include "hdl/types.svh"
 
 // types defined in types.svh
 // typedef enum {Eq, Neq, Lt, Ltu, Ge, Geu, Dbr} BrFunc;
