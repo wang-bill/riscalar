@@ -13,7 +13,7 @@ module processor_tb();
   processor uut
           ( .clk_100mhz(clk_in),
             .rst_in(rst_in),
-            .instruction(instruction),
+            .instruction_in(instruction),
             .data_out(data_out),
             .addr_out(addr_out),
             .nextPc_out(nextPc_out)

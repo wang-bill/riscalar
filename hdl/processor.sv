@@ -6,23 +6,59 @@ module processor(
   input wire clk_100mhz,
   input wire rst_in,
 
-  input wire [31:0] instruction,
+  input wire [31:0] instruction_in,
   output logic signed [31:0] data_out,
   output logic [31:0] addr_out,
   output logic [31:0] nextPc_out
 );
-  // instruction fetch
-  logic [31:0] inst;
-  logic [31:0] pc;
+  parameter INSTRUCTION_LOAD_PERIOD = 5;
+  localparam COUNTER_SIZE = $clog2(INSTRUCTION_LOAD_PERIOD);
 
+  logic [COUNTER_SIZE-1:0] inst_load_counter;
+
+  // instruction fetch
+  logic [31:0] pc;
+  logic [31:0] inst;
+  logic [11:0] effective_pc;
+  logic wea_inst;
+//   assign effective_pc = pc[11:0] >> 2; // take last 12 bits because depth is 4096, and divide by 4 because in reality we'd have 1 byte memory addresses
+  assign wea_inst = (inst_load_counter < INSTRUCTION_LOAD_PERIOD) ? 1 : 0;
+  assign effective_pc = pc[13:2];
+  logic [31:0] inst_fetched;
+  xilinx_single_port_ram_read_first #(
+    .RAM_WIDTH(32),                       // Specify RAM data width
+    .RAM_DEPTH(4096),                     // Specify RAM depth (number of entries)
+    .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
+    .INIT_FILE()          // Specify name/location of RAM initialization file if using one (leave blank if not)
+  ) inst_mem (
+    .addra(effective_pc),     // Address bus, width determined from RAM_DEPTH
+    .dina(instruction_in),       // RAM input data, width determined from RAM_WIDTH
+    .clka(clk_100mhz),       // Clock
+    .wea(wea_inst),         // Write enable
+    .ena(1'b1),         // RAM Enable, for additional power savings, disable port when not in use
+    .rsta(rst_in),       // Output reset (does not affect memory contents)
+    .regcea(1'b1),   // Output register enable
+    .douta(inst_fetched)      // RAM output data, width determined from RAM_WIDTH
+  );
+  
   always_ff @(posedge clk_100mhz) begin
     if (rst_in) begin
       //Simulates instruction fetch
       pc <= 32'h0000_0000; // hard coded for now
       inst <= 0; // hard coded for now, addi a1, a1, 1
+      inst_load_counter <= 0;
     end else begin
-      pc <= nextPc;
-      inst <= instruction;
+      if (inst_load_counter < INSTRUCTION_LOAD_PERIOD - 1) begin
+        inst_load_counter <= inst_load_counter + 1;
+        if (inst_load_counter == INSTRUCTION_LOAD_PERIOD - 1) begin
+          pc <= 0;
+        end else begin
+          pc <= pc + 4;
+        end
+      end else begin
+        pc <= nextPc;
+        inst <= inst_fetched;
+      end
     end
   end
 
@@ -36,7 +72,7 @@ module processor(
   logic signed [4:0] rs2;
   logic [4:0] rd;
 
-  decode my_decode(
+  decode decoder(
     .clk_in(clk_100mhz),
     .instruction_in(inst), // fill in from fetch
 
@@ -54,7 +90,7 @@ module processor(
   logic [4:0] wa;
   logic we;
 
-  register_file my_registerfile(
+  register_file registers(
     .clk_in(clk_100mhz),
     .rst_in(rst_in),
     .rs1_in(rs1),
@@ -71,7 +107,7 @@ module processor(
   logic [31:0] addr, nextPc; 
 
   // execute
-  execute my_execute(
+  execute execute_module(
     .iType_in(iType),
     .aluFunc_in(aluFunc),
     .brFunc_in(brFunc),
@@ -85,13 +121,33 @@ module processor(
     .nextPc_out(nextPc)
   );
 
-  // memory
-  // if (iType == LOAD || iType == STORE) begin
-  //   // emulate memory
-  // end
+  // data memory
+  logic[31:0] mem_addr;
+  logic[11:0] effective_mem_addr;
+  logic signed [31:0] mem_output;
+  logic writing;
+
+  assign mem_addr = rval1 + imm;
+  assign effective_mem_addr = mem_addr[13:2];
+  assign writing = (iType == STORE) ? 1 : 0;
+  xilinx_single_port_ram_read_first #(
+    .RAM_WIDTH(32),                       // Specify RAM data width
+    .RAM_DEPTH(4096),                     // Specify RAM depth (number of entries)
+    .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
+    .INIT_FILE()          // Specify name/location of RAM initialization file if using one (leave blank if not)
+  ) data_mem (
+    .addra(effective_mem_addr),     // Address bus, width determined from RAM_DEPTH
+    .dina(result),       // RAM input data, width determined from RAM_WIDTH
+    .clka(clk_100mhz),       // Clock
+    .wea(writing),         // Write enable
+    .ena(1'b1),         // RAM Enable, for additional power savings, disable port when not in use
+    .rsta(rst_in),       // Output reset (does not affect memory contents)
+    .regcea(1'b1),   // Output register enable
+    .douta(mem_output)      // RAM output data, width determined from RAM_WIDTH
+  );
 
   // writeback
-  assign wd = result;
+  assign wd = (iType == LOAD) ? mem_output : result;
   assign wa = rd;
   // When we encounter a branch or store instruction, the destination register is unchanged
   // We also prevent writeback attempts to 0x0

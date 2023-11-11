@@ -1,5 +1,6 @@
 `timescale 1ns / 1ps
 `default_nettype none
+`include "hdl/types.svh"
 
 module top_level(
   input wire clk_100mhz,
@@ -25,10 +26,9 @@ module top_level(
   // instruction fetch
   logic [31:0] pc;
   logic [31:0] inst;
-  logic wea;
-  logic ena;
-
-  assign effective_pc = pc[11:0] >> 2; // take last 12 bits because depth is 4096, and divide by 4 because in reality we'd have 1 byte memory addresses
+  logic [11:0] effective_pc;
+//   assign effective_pc = pc[11:0] >> 2; // take last 12 bits because depth is 4096, and divide by 4 because in reality we'd have 1 byte memory addresses
+  assign effective_pc = pc[13:2];
   logic [31:0] inst_fetched;
   xilinx_single_port_ram_read_first #(
     .RAM_WIDTH(32),                       // Specify RAM data width
@@ -39,10 +39,10 @@ module top_level(
     .addra(effective_pc),     // Address bus, width determined from RAM_DEPTH
     .dina(0),       // RAM input data, width determined from RAM_WIDTH
     .clka(clk_100mhz),       // Clock
-    .wea(0),         // Write enable
-    .ena(1),         // RAM Enable, for additional power savings, disable port when not in use
+    .wea(1'b0),         // Write enable
+    .ena(1'b1),         // RAM Enable, for additional power savings, disable port when not in use
     .rsta(sys_rst),       // Output reset (does not affect memory contents)
-    .regcea(1),   // Output register enable
+    .regcea(1'b1),   // Output register enable
     .douta(inst_fetched)      // RAM output data, width determined from RAM_WIDTH
   );
 
@@ -58,23 +58,22 @@ module top_level(
   end
 
   // decode
-  Itype iType;
-  AluFunc aluFunc;
-  BrFunc brFunc;
+  logic[3:0] iType;
+  logic[3:0] aluFunc;
+  logic[2:0] brFunc;
+
   logic signed [31:0] imm;
   logic [4:0] rs1;
   logic [4:0] rs2;
   logic [4:0] rd;
 
-  decode(
+  decode decoder(
     .clk_in(clk_100mhz),
     .instruction_in(inst), // fill in from fetch
-    .pc_in(pc), // fill in from fetch
 
     .iType_out(iType),
     .aluFunc_out(aluFunc),
     .brFunc_out(brFunc),
-    .pc_out(pc),
     .imm_out(imm),
     .rs1_out(rs1),
     .rs2_out(rs2),
@@ -86,9 +85,9 @@ module top_level(
   logic [4:0] wa;
   logic we;
 
-  register_file(
+  register_file registers(
     .clk_in(clk_100mhz),
-    .rst_in(rst_in),
+    .rst_in(sys_rst),
     .rs1_in(rs1),
     .rs2_in(rs2),
     .wa_in(wa),
@@ -103,7 +102,7 @@ module top_level(
   logic [31:0] addr, nextPc; 
 
   // execute
-  execute(
+  execute execute_module(
     .iType_in(iType),
     .aluFunc_in(aluFunc),
     .brFunc_in(brFunc),
@@ -117,36 +116,38 @@ module top_level(
     .nextPc_out(nextPc)
   );
 
-  // memory
+  // data memory
+  logic[31:0] mem_addr;
+  logic[11:0] effective_mem_addr;
+  logic signed [31:0] mem_output;
+  logic writing;
+
+  assign mem_addr = rval1 + imm;
+  assign effective_mem_addr = mem_addr[13:2];
+  assign writing = (iType == STORE) ? 1 : 0;
   xilinx_single_port_ram_read_first #(
     .RAM_WIDTH(32),                       // Specify RAM data width
     .RAM_DEPTH(4096),                     // Specify RAM depth (number of entries)
     .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
     .INIT_FILE()          // Specify name/location of RAM initialization file if using one (leave blank if not)
-  ) inst_mem (
-    .addra(effective_pc),     // Address bus, width determined from RAM_DEPTH
+  ) data_mem (
+    .addra(effective_mem_addr),     // Address bus, width determined from RAM_DEPTH
     .dina(result),       // RAM input data, width determined from RAM_WIDTH
     .clka(clk_100mhz),       // Clock
-    .wea(0),         // Write enable
-    .ena(1),         // RAM Enable, for additional power savings, disable port when not in use
+    .wea(writing),         // Write enable
+    .ena(1'b1),         // RAM Enable, for additional power savings, disable port when not in use
     .rsta(sys_rst),       // Output reset (does not affect memory contents)
-    .regcea(1),   // Output register enable
-    .douta(inst_fetched)      // RAM output data, width determined from RAM_WIDTH
+    .regcea(1'b1),   // Output register enable
+    .douta(mem_output)      // RAM output data, width determined from RAM_WIDTH
   );
-  if (iType == LOAD) begin
-    
-  end 
-  if (iType == STORE) begin
-    
-  end
 
   // writeback
-  assign wd = result;
+  assign wd = (iType == LOAD) ? mem_output : result;
   assign wa = rd;
-  assign we = (iType != BRANCH) && (iType != STORE);
+  assign we = (iType != BRANCH) && (iType != STORE) && (rd != 0);
 
   //Testing Output:
-  assign data_out = data;
+  assign data_out = result;
   assign addr_out = addr;
   assign nextPc_out = nextPc;
 endmodule

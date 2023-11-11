@@ -8,8 +8,8 @@
 //  Modify the parameters for the desired RAM characteristics.
 
 module xilinx_single_port_ram_read_first #(
-  parameter RAM_WIDTH = 32,                       // Specify RAM data width
-  parameter RAM_DEPTH = 4096,                     // Specify RAM depth (number of entries)
+  parameter RAM_WIDTH = 18,                       // Specify RAM data width
+  parameter RAM_DEPTH = 1024,                     // Specify RAM depth (number of entries)
   parameter RAM_PERFORMANCE = "HIGH_PERFORMANCE", // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
   parameter INIT_FILE = ""                        // Specify name/location of RAM initialization file if using one (leave blank if not)
 ) (
@@ -80,9 +80,8 @@ module xilinx_single_port_ram_read_first #(
 endmodule
 
 // The following is an instantiation template for xilinx_single_port_ram_read_first
-
-//  Xilinx Single Port Read First RAM
 /*
+  //  Xilinx Single Port Read First RAM
   xilinx_single_port_ram_read_first #(
     .RAM_WIDTH(18),                       // Specify RAM data width
     .RAM_DEPTH(1024),                     // Specify RAM depth (number of entries)
@@ -99,3 +98,5 @@ endmodule
     .douta(douta)      // RAM output data, width determined from RAM_WIDTH
   );
 */
+						
+						
