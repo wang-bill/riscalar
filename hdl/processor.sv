@@ -9,7 +9,8 @@ module processor(
   input wire [31:0] instruction_in,
   output logic signed [31:0] data_out,
   output logic [31:0] addr_out,
-  output logic [31:0] nextPc_out
+  output logic [31:0] nextPc_out,
+  output logic [31:0] registers_out
 );
   parameter INSTRUCTION_LOAD_PERIOD = 5;
   localparam COUNTER_SIZE = $clog2(INSTRUCTION_LOAD_PERIOD);

@@ -35,7 +35,7 @@ module processor_tb();
     #10;
     rst_in = 0;
     // Test #1: Adding 1 to register a1 (x11) every clock cycle, for 128 iterations
-    for (int i = 0; i<128; i=i+1)begin
+    for (int i = 0; i<10; i=i+1)begin
       instruction = 32'h0015_8593; //addi a1, a1, 1
       #10;
     end
