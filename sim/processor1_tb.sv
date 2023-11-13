@@ -13,7 +13,7 @@ module processor_tb();
   processor uut
           ( .clk_100mhz(clk_in),
             .rst_in(rst_in),
-            .instruction_in(instruction),
+            // .instruction_in(instruction),
             .data_out(data_out),
             .addr_out(addr_out),
             .nextPc_out(nextPc_out)
@@ -35,14 +35,16 @@ module processor_tb();
     #10;
     rst_in = 0;
     // Test #1: Adding 1 to register a1 (x11) every clock cycle, for 128 iterations
-    for (int i = 0; i<10; i=i+1)begin
-      instruction = 32'h0015_8593; //addi a1, a1, 1
+    for (int i = 0; i<128; i=i+1)begin
+      // instruction = 32'h0015_8593; //addi a1, a1, 1
+      $display("%d", nextPc_out);
       #10;
     end
+
     
     //Reset register a1 to 0
     // 32b0000_0000_0000_0101_0000_0101_1001_0011
-    instruction = 32'h0005_0593; //addi a1, a0, 0
+    // instruction = 32'h0005_0593; //addi a1, a0, 0
     #10
 
     //Test #2: Invalid Instruction [should just ignore/not modify system]

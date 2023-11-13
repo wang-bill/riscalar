@@ -2,11 +2,16 @@
 `default_nettype none
 `include "hdl/types.svh"
 
+`ifdef SYNTHESIS
+`define FPATH(X) `"X`"
+`else /* ! SYNTHESIS */
+`define FPATH(X) `"X`"
+`endif  /* ! SYNTHESIS */
+
 module processor(
   input wire clk_100mhz,
   input wire rst_in,
 
-  input wire [31:0] instruction_in,
   output logic signed [31:0] data_out,
   output logic [31:0] addr_out,
   output logic [31:0] nextPc_out,
@@ -23,17 +28,18 @@ module processor(
   logic [11:0] effective_pc;
   logic wea_inst;
 //   assign effective_pc = pc[11:0] >> 2; // take last 12 bits because depth is 4096, and divide by 4 because in reality we'd have 1 byte memory addresses
-  assign wea_inst = (inst_load_counter < INSTRUCTION_LOAD_PERIOD) ? 1 : 0;
+  // assign wea_inst = (inst_load_counter < INSTRUCTION_LOAD_PERIOD) ? 1 : 0;
+  assign wea_inst = 0;
   assign effective_pc = pc[13:2];
   logic [31:0] inst_fetched;
   xilinx_single_port_ram_read_first #(
     .RAM_WIDTH(32),                       // Specify RAM data width
-    .RAM_DEPTH(4096),                     // Specify RAM depth (number of entries)
+    .RAM_DEPTH(128),                     // Specify RAM depth (number of entries)
     .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
-    .INIT_FILE()          // Specify name/location of RAM initialization file if using one (leave blank if not)
+    .INIT_FILE(`FPATH(data/inst.mem))          // Specify name/location of RAM initialization file if using one (leave blank if not)
   ) inst_mem (
     .addra(effective_pc),     // Address bus, width determined from RAM_DEPTH
-    .dina(instruction_in),       // RAM input data, width determined from RAM_WIDTH
+    // .dina(instruction_in),       // RAM input data, width determined from RAM_WIDTH
     .clka(clk_100mhz),       // Clock
     .wea(wea_inst),         // Write enable
     .ena(1'b1),         // RAM Enable, for additional power savings, disable port when not in use
