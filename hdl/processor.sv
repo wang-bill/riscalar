@@ -2,6 +2,12 @@
 `default_nettype none
 `include "hdl/types.svh"
 
+`ifdef SYNTHESIS
+`define FPATH(X) `"X`"
+`else /* ! SYNTHESIS */
+`define FPATH(X) `"data/X`"
+`endif  /* ! SYNTHESIS */
+
 module processor(
   input wire clk_100mhz,
   input wire rst_in,
@@ -29,7 +35,7 @@ module processor(
     .RAM_WIDTH(32),                       // Specify RAM data width
     .RAM_DEPTH(4096),                     // Specify RAM depth (number of entries)
     .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
-    .INIT_FILE()          // Specify name/location of RAM initialization file if using one (leave blank if not)
+    .INIT_FILE(`FPATH(data/inst.mem))          // Specify name/location of RAM initialization file if using one (leave blank if not)
   ) inst_mem (
     .addra(effective_pc),     // Address bus, width determined from RAM_DEPTH
     .dina(instruction_in),       // RAM input data, width determined from RAM_WIDTH
