@@ -24,7 +24,7 @@ module decode
   logic [4:0] rd;
   logic [31:0] imm; // value may be different depending on instruction type
 
-  typedef enum {R, I, S, B, U, J} inst_types;
+  typedef enum {R, I, S, B, U, J, N} inst_types;
   
   inst_types inst_type;
   assign opcode = instruction_in[6:0];
@@ -51,7 +51,7 @@ module decode
     end else if (opcode == 7'b1110011) begin // I-type
       inst_type = I;
     end else begin
-      // invalid opcode, throw some sort of error
+      inst_type = N;
     end
 
     // finds funct3, funct7, rs1, rs2, rd, imm
@@ -97,6 +97,13 @@ module decode
      rs2 = 0;
      rd = instruction_in[11:7];
      imm = {11'b0, instruction_in[31], instruction_in[21:12], instruction_in[22], instruction_in[30:23], 1'b0};
+    end else begin //N type (no valid op)
+      funct3 = 0;
+      funct7 = 0;
+      rs1 = 0;
+      rs2 = 0;
+      rd = 0;
+      imm = 0;
     end
 
     imm_out = imm;
@@ -128,8 +135,7 @@ module decode
       end else if (funct3 == 4'h3 && funct7 == 8'h00) begin
         aluFunc_out = Sltu;
       end
-    //end else if (inst_type == I && opcode == 7'b0010011) begin (why do you check the opcode?)
-    end else if (inst_type == I) begin
+    end if (inst_type == I) begin
       iType_out = OPIMM;
       if (funct3 == 4'h0) begin
         aluFunc_out = Add;
@@ -151,7 +157,11 @@ module decode
       end else if (funct3 == 4'h3) begin
         aluFunc_out = Sltu;
       end
-    end else if (inst_type == B) begin
+    end else begin
+      aluFunc_out = NoAlu;
+    end
+    
+    if (inst_type == B) begin
       iType_out = BRANCH;
       if (funct3 == 4'h0) begin
         brFunc_out = Eq;
@@ -168,7 +178,11 @@ module decode
       end else begin
         brFunc_out = Dbr; // might be wrong
       end
-    end else if (inst_type == U && opcode == 7'b0110111) begin
+    end else if begin
+      brFunc_out = Dbr;
+    end
+
+    if (inst_type == U && opcode == 7'b0110111) begin
       iType_out = LUI;
     end else if (inst_type == J) begin
       iType_out = JAL;
@@ -180,6 +194,8 @@ module decode
       iType_out = STORE;
     end else if (inst_type == U && opcode == 7'b0010111) begin
       iType_out = AUIPC;
+    end else if ((inst_type != R) && (inst_type != I) && (inst_type != B)) begin
+      iType_out = NOP;
     end
   end
 
