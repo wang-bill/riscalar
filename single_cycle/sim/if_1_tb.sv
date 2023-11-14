@@ -1,0 +1,1 @@
+// in the case of SD card -> read each slot of SD card and output it, then make sure it matches what is actually in the SD card
