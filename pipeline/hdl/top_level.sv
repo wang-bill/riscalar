@@ -15,11 +15,6 @@ module top_level(
   output logic [15:0] led,
   output logic [2:0] rgb0, //rgb led
   output logic [2:0] rgb1, //rgb led
-
-  input wire [31:0] instruction,
-  output logic signed [31:0] data_out,
-  output logic [31:0] addr_out,
-  output logic [31:0] nextPc_out
 );
   assign led = sw; //for debugging
   //shut up those rgb LEDs (active high):
@@ -29,9 +24,43 @@ module top_level(
   logic sys_rst;
   assign sys_rst = btn[0];
 
+  logic correct_branch;
+  assign correct_branch = (iType_exe != BRANCH && iType_exe != JAL && iType_exe != JALR) || nextPc == (pc_exe + 4);
+  always_ff @(posedge clk_100mhz) begin
+    if (sys_rst) begin
+      //Simulates instruction fetch
+      inst <= inst_fetched;
+      pc <= 32'h0000_0000;
+    end else begin
+      // IF
+      pc <= (correct_branch) ? pc + 4 : nextPc;
+      // IF -> ID
+      inst <= (correct_branch) ? inst_fetched : 0;
+      pc_decode <= pc;
+      // ID -> EXE
+      iType_exe <= (correct_branch) ? iType : NOP;
+      aluFunc_exe <= (correct_branch) ? aluFunc : NoAlu;
+      brFunc_exe <= brFunc;
+      imm_exe <= imm;
+      rd_exe <= rd;
+      pc_exe <= pc_decode;
+      // EXE -> MEM
+      rval1_mem <= rval1;
+      rval2_mem <= rval2;
+      imm_mem <= imm_exe;
+      iType_mem <= iType_exe;
+      result_exe <= result;
+      rd_mem <= rd_exe;
+      // MEM -> WB
+      iType_write <= iType_exe;
+      rd_write <= rd_mem;
+      mem_output_write <= mem_output;
+      result_write <= result_exe;   
+    end
+  end
+
   // instruction fetch
   logic [31:0] pc;
-  logic [31:0] inst;
   logic [11:0] effective_pc;
   assign effective_pc = pc[13:2]; // different than pc for indexing into the BRAM
 
@@ -52,18 +81,8 @@ module top_level(
     .douta(inst_fetched)      // RAM output data, width determined from RAM_WIDTH
   );
 
-  always_ff @(posedge clk_100mhz) begin
-    if (sys_rst) begin
-      //Simulates instruction fetch
-      inst <= inst_fetched;
-      pc <= 32'h0000_0000; // hard coded for now
-    end else begin
-      inst <= inst_fetched;
-      pc <= nextPc;
-    end
-  end
-
   // decode
+  logic [31:0] inst;
   logic[3:0] iType;
   logic[3:0] aluFunc;
   logic[2:0] brFunc;
@@ -72,6 +91,8 @@ module top_level(
   logic [4:0] rs1;
   logic [4:0] rs2;
   logic [4:0] rd;
+
+  logic [31:0] pc_decode;
 
   decode decoder(
     .clk_in(clk_100mhz),
@@ -86,11 +107,12 @@ module top_level(
     .rd_out(rd)
   );
 
-  // registers (part of decode)
-  logic signed [31:0] rval1, rval2, wd;
+  // Writeback Stage Register Wires
+  logic signed [31:0] wd;
   logic [4:0] wa;
   logic we;
 
+  // registers (part of decode)
   register_file registers(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
@@ -100,20 +122,30 @@ module top_level(
     .we_in(we),
     .wd_in(wd),
 
-    .rd1_out(rval1),
+    .rd1_out(rval1), //available 1 clock cycle later
     .rd2_out(rval2)
   );
+
+  // execute
+  logic signed [31:0] rval1, rval2;
+
+  logic[3:0] iType_exe;
+  logic[3:0] aluFunc_exe;
+  logic[2:0] brFunc_exe;
+
+  logic signed [31:0] imm_exe;
+  logic [4:0] rd_exe;
+  logic [31:0] pc_exe;
 
   logic signed [31:0] result;
   logic [31:0] addr, nextPc; 
 
-  // execute
   execute execute_module(
-    .iType_in(iType),
-    .aluFunc_in(aluFunc),
-    .brFunc_in(brFunc),
-    .imm_in(imm),
-    .pc_in(pc),
+    .iType_in(iType_exe),
+    .aluFunc_in(aluFunc_exe),
+    .brFunc_in(brFunc_exe),
+    .imm_in(imm_exe),
+    .pc_in(pc_exe),
     .rval1_in(rval1),
     .rval2_in(rval2),
 
@@ -128,9 +160,15 @@ module top_level(
   logic signed [31:0] mem_output;
   logic writing;
 
-  assign mem_addr = rval1 + imm;
+  logic signed [31:0] rval1_mem, rval2_mem;
+  logic signed imm_mem;
+  logic [3:0] iType_mem;
+  logic signed [31:0] result_mem;
+  logic [4:0] rd_mem;
+
+  assign mem_addr = rval1_exe + imm_mem;
   assign effective_mem_addr = mem_addr[13:2];
-  assign writing = (iType == STORE) ? 1 : 0;
+  assign writing = (iType_mem == STORE) ? 1 : 0;
   xilinx_single_port_ram_read_first #(
     .RAM_WIDTH(32),                       // Specify RAM data width
     .RAM_DEPTH(4096),                     // Specify RAM depth (number of entries)
@@ -138,7 +176,7 @@ module top_level(
     .INIT_FILE()          // Specify name/location of RAM initialization file if using one (leave blank if not)
   ) data_mem (
     .addra(effective_mem_addr),     // Address bus, width determined from RAM_DEPTH
-    .dina(result),       // RAM input data, width determined from RAM_WIDTH
+    .dina(result_exe),       // RAM input data, width determined from RAM_WIDTH
     .clka(clk_100mhz),       // Clock
     .wea(writing),         // Write enable
     .ena(1'b1),         // RAM Enable, for additional power savings, disable port when not in use
@@ -148,14 +186,15 @@ module top_level(
   );
 
   // writeback
-  assign wd = (iType == LOAD) ? mem_output : result;
-  assign wa = rd;
-  assign we = (iType != BRANCH) && (iType != STORE) && (rd != 0);
+  logic [3:0] iType_write;
+  logic [4:0] rd_write;
+  logic signed [31:0] mem_output_write;
 
-  //Testing Output:
-  assign data_out = result;
-  assign addr_out = addr;
-  assign nextPc_out = nextPc;
+  logic signed [31:0] result_write;
+
+  assign wd = (iType_write == LOAD) ? mem_output_write : result_write;
+  assign wa = rd_write;
+  assign we = (iType_write != BRANCH) && (iType_write != STORE) && (rd_write != 0);
 endmodule
 
 `default_nettype wire
