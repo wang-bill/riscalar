@@ -135,7 +135,7 @@ module decode
       end else if (funct3 == 4'h3 && funct7 == 8'h00) begin
         aluFunc_out = Sltu;
       end
-    end if (inst_type == I) begin
+    end else if (inst_type == I) begin
       iType_out = OPIMM;
       if (funct3 == 4'h0) begin
         aluFunc_out = Add;
@@ -178,7 +178,7 @@ module decode
       end else begin
         brFunc_out = Dbr; // might be wrong
       end
-    end else if begin
+    end else begin
       brFunc_out = Dbr;
     end
 

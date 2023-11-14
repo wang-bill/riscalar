@@ -68,7 +68,7 @@ module id_tb();
     rs1_c = (rs1 == 12);
     rs2_c = (rs2 == 13);
     rd_c = (rd == 11);
-
+    
     $display("TEST 1: %s", (iType_c && aluFunc_c && rs1_c && rs2_c && rd_c) ? "PASSED" : "FAILED");
     
     instruction_in = 32'h00158593; // addi a1, a1, 1
