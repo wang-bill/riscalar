@@ -3,9 +3,9 @@
 `include "hdl/types.svh"
 
 `ifdef SYNTHESIS
-`define FPATH(X) `"X`"
-`else /* ! SYNTHESIS */
 `define FPATH(X) `"data/X`"
+`else /* ! SYNTHESIS */
+`define FPATH(X) `"X`"
 `endif  /* ! SYNTHESIS */
 
 module top_level(

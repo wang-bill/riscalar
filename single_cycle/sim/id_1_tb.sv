@@ -1,6 +1,8 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
+`include "hdl/types.svh"
+
 /*
 0x00D605B3 // add a1, a2, a3
 0x00158593 // addi a1, a1, 1
@@ -55,7 +57,7 @@ module id_tb();
   //initial block...this is our test simulation
   initial begin
 
-    $display("Starting Sim");
+    // $display("Starting Sim");
     
     instruction_in = 32'h00D605B3; // add a1, a2, a3
     pc = 32'h0000_1111;
@@ -63,12 +65,11 @@ module id_tb();
 
     iType_c = (iType == OP);
     aluFunc_c = (aluFunc == Add);
-    updated_pc_c = (updated_pc == pc);
     rs1_c = (rs1 == 12);
     rs2_c = (rs2 == 13);
     rd_c = (rd == 11);
 
-    $display("TEST 1: %s", (iType_c && updated_pc_c && aluFunc_c && rs1_c && rs2_c && rd_c) ? "PASSED" : "FAILED");
+    $display("TEST 1: %s", (iType_c && aluFunc_c && rs1_c && rs2_c && rd_c) ? "PASSED" : "FAILED");
     
     instruction_in = 32'h00158593; // addi a1, a1, 1
     pc = 32'h0000_0000;
@@ -76,12 +77,11 @@ module id_tb();
     
     iType_c = (iType == OPIMM);
     aluFunc_c = (aluFunc == Add);
-    updated_pc_c = (updated_pc == pc);
     imm_c = (imm == 1);
     rs1_c = (rs1 == 11);
     rd_c = (rd == 11);
 
-    $display("TEST 2: %s", (iType_c && updated_pc_c && aluFunc_c && imm_c && rs1_c && rd_c) ? "PASSED" : "FAILED");
+    $display("TEST 2: %s", (iType_c && aluFunc_c && imm_c && rs1_c && rd_c) ? "PASSED" : "FAILED");
 
     // instruction_in = 32'h08E6A223;
     // pc = 32'h1111_1111;

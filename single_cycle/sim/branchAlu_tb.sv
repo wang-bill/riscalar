@@ -23,7 +23,7 @@ module branchAlu_tb();
   initial begin
     // $dumpfile("recorder_tb.vcd"); //file to store value change dump (vcd)
     // $dumpvars(0,recorder_tb);
-    $display("Starting Sim"); //print nice message at start
+    // $display("Starting Sim"); //print nice message at start
     rval1_in = 12;
     rval2_in = 10;
     brFunc_in = Eq;

@@ -53,19 +53,10 @@ module processor(
       //Simulates instruction fetch
       pc <= 32'h0000_0000; // hard coded for now
       inst <= 0; // hard coded for now, addi a1, a1, 1
-      inst_load_counter <= 0;
+      // inst_load_counter <= 0;
     end else begin
-      if (inst_load_counter < INSTRUCTION_LOAD_PERIOD - 1) begin
-        inst_load_counter <= inst_load_counter + 1;
-        if (inst_load_counter == INSTRUCTION_LOAD_PERIOD - 1) begin
-          pc <= 0;
-        end else begin
-          pc <= pc + 4;
-        end
-      end else begin
-        pc <= nextPc;
-        inst <= inst_fetched;
-      end
+      pc <= nextPc;
+      inst <= inst_fetched;
     end
   end
 
