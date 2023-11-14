@@ -23,7 +23,7 @@ module register_file
           registers[i] <= 0;
         end
       end
-      registers[11] <= 44; // HARD CODED a0 and a1 REGISTER FOR TESTING PURPOSES, DELETE LATER
+      registers[11] <= 72; // HARD CODED a0 and a1 REGISTER FOR TESTING PURPOSES, DELETE LATER
     end else if (we_in) begin
       //writing to register
       registers[wa_in] <= wd_in;

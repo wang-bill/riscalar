@@ -33,8 +33,8 @@ module top_level(
   logic [31:0] pc;
   logic [31:0] inst;
   logic [11:0] effective_pc;
-//   assign effective_pc = pc[11:0] >> 2; // take last 12 bits because depth is 4096, and divide by 4 because in reality we'd have 1 byte memory addresses
-  assign effective_pc = pc[13:2];
+  assign effective_pc = pc[13:2]; // different than pc for indexing into the BRAM
+
   logic [31:0] inst_fetched;
   xilinx_single_port_ram_read_first #(
     .RAM_WIDTH(32),                       // Specify RAM data width
