@@ -20,13 +20,16 @@ module processor(
   parameter INSTRUCTION_LOAD_PERIOD = 5;
   localparam COUNTER_SIZE = $clog2(INSTRUCTION_LOAD_PERIOD);
 
-  logic [COUNTER_SIZE-1:0] inst_load_counter;
-
   // instruction fetch
   logic [31:0] pc;
   logic [31:0] inst;
   logic [11:0] effective_pc;
   logic wea_inst;
+
+  logic bram_stall_1;
+  logic bram_stall_2;
+
+  logic past_single_cycle_clk;
 //   assign effective_pc = pc[11:0] >> 2; // take last 12 bits because depth is 4096, and divide by 4 because in reality we'd have 1 byte memory addresses
   // assign wea_inst = (inst_load_counter < INSTRUCTION_LOAD_PERIOD) ? 1 : 0;
   assign wea_inst = 0;
@@ -48,13 +51,27 @@ module processor(
     .douta(inst_fetched)      // RAM output data, width determined from RAM_WIDTH
   );
   
+  logic [5:0] counter;
+  logic single_cycle_clk;
+
   always_ff @(posedge clk_100mhz) begin
     if (rst_in) begin
       //Simulates instruction fetch
       pc <= 32'h0000_0000; // hard coded for now
-      inst <= 0; // hard coded for now, addi a1, a1, 1
-      inst_load_counter <= 0;
+      inst <= 0;
+      counter <= 0;
+      single_cycle_clk <= 0;
     end else begin
+      if (counter % 4 == 0) begin
+        single_cycle_clk <= !single_cycle_clk;
+        counter <= counter + 1;
+        past_single_cycle_clk <= single_cycle_clk;
+      end else begin
+        counter <= counter + 1;
+      end
+    end
+
+    if (!past_single_cycle_clk && single_cycle_clk) begin
       pc <= nextPc;
       inst <= inst_fetched;
     end
@@ -152,6 +169,7 @@ module processor(
   assign we = (iType != BRANCH) && (iType != STORE) && (rd != 0);
 
   //Testing Output:
+
   assign data_out = result;
   assign addr_out = addr;
   assign nextPc_out = nextPc;

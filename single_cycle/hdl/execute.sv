@@ -48,7 +48,7 @@ module execute(
             nextPc_out = nextPc_default;
         end else begin
             data_out = 0;
-            // nextPc_out = pc;
+            nextPc_out = nextPc_default;
         end
     end
 

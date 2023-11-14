@@ -10,6 +10,9 @@ module processor_tb();
   logic [31:0] addr_out;
   logic [31:0] nextPc_out;
 
+  logic c_pc;
+  logic c_add;
+
   processor uut
           ( .clk_100mhz(clk_in),
             .rst_in(rst_in),
@@ -25,22 +28,36 @@ module processor_tb();
   end
   //initial block...this is our test simulation
   initial begin
-    $dumpfile("processor.vcd"); //file to store value change dump (vcd)
-    $dumpvars(0,processor_tb);
-    $display("Starting Sim"); //print nice message at start
+    // $dumpfile("processor.vcd"); //file to store value change dump (vcd)
+    // $dumpvars(0,processor_tb);
+    // $display("Starting Sim"); //print nice message at start
     clk_in = 1;
     rst_in = 0;
     #10;
     rst_in = 1;
     #10;
     rst_in = 0;
+    #10;
     // Test #1: Adding 1 to register a1 (x11) every clock cycle, for 128 iterations
+   
+    #10;
+    c_pc = 1;
+    c_add = 1;
+
     for (int i = 0; i<128; i=i+1)begin
       // instruction = 32'h0015_8593; //addi a1, a1, 1
-      $display("%d", nextPc_out);
+      if (nextPc_out != i*4) begin
+        $display("%d", nextPc_out);
+        c_pc = 0;
+      end
+      if (data_out != i*2) begin
+        c_add = 0;
+      end
       // $display("%d", data_out);
       #10;
     end
+    $display("TEST 1: %s", c_pc ? "PASSED" : "FAILED");
+    $display("TEST 2: %s", c_add ? "PASSED" : "FAILED");
 
     
     //Reset register a1 to 0
@@ -64,7 +81,7 @@ module processor_tb();
     //Test #6: Testing jump and link instructions
 
     //Test #7: Test load upper immediate instruction
-    $display("Simulation finished");
+    // $display("Simulation finished");
     $finish;
   end
 endmodule
