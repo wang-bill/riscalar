@@ -17,8 +17,6 @@ module processor(
   output logic [31:0] nextPc_out,
   output logic [31:0] registers_out
 );
-  parameter INSTRUCTION_LOAD_PERIOD = 5;
-  localparam COUNTER_SIZE = $clog2(INSTRUCTION_LOAD_PERIOD);
 
   // instruction fetch
   logic [31:0] pc;
@@ -30,8 +28,6 @@ module processor(
   logic bram_stall_2;
 
   logic past_single_cycle_clk;
-//   assign effective_pc = pc[11:0] >> 2; // take last 12 bits because depth is 4096, and divide by 4 because in reality we'd have 1 byte memory addresses
-  // assign wea_inst = (inst_load_counter < INSTRUCTION_LOAD_PERIOD) ? 1 : 0;
   assign wea_inst = 0;
   assign effective_pc = pc[13:2];
   logic [31:0] inst_fetched;
