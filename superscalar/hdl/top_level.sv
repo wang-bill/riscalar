@@ -22,6 +22,7 @@ module top_level(
   output logic [31:0] nextPc_out
 );
 
+  // Convert from 109 bits to separate registers
   localparam BUSY_LOWER = 0;
   localparam ADDRESS_LOWER = 1;
   localparam VK_LOWER = 33;
@@ -38,43 +39,116 @@ module top_level(
   logic [108:0] reservation_station_2 [1:0]; // ALU 2
 
 
-  // ALU
-  logic signed [31:0] alu_Vj, alu_Vk;
-  logic signed [31:0] alu_result;
-  logic [3:0] alu_opcode; // get from decode
+  // ALU 1
+  logic signed [31:0] alu1_Vj, alu1_Vk;
+  logic signed [31:0] alu1_result;
+  logic [3:0] alu1_opcode; // get from decode
+
+  logic alu1_ready;
+
+  // ALU 2
+  logic signed [31:0] alu2_Vj, alu2_Vk;
+  logic signed [31:0] alu2_result;
+  logic [3:0] alu2_opcode; // get from decode
+
+  logic alu2_ready;
 
 
   always_ff @(posedge clk_100mhz ) begin
+    if (sys_rst) begin
+    end
+    //TODO: Refactor this to use genvar for loop
     if (reservation_station_1[0][BUSY_LOWER] && !reservation_station_1[0][QK_LOWER + 3 : QK_LOWER] &&
         !reservation_station_1[0][QJ_LOWER + 3 : QJ_LOWER]) begin
-          
-          alu_Vk <= reservation_station_1[0][VK_LOWER + 31 : VK_LOWER];
-          alu_Vj <= reservation_station_1[0][VJ_LOWER + 31 : VJ_LOWER];
-          reservation_station_1[0][BUSY_LOWER] <= 0;
-          
+          if (alu1_ready) begin
+            alu1_Vk <= reservation_station_1[0][VK_LOWER + 31 : VK_LOWER];
+            alu1_Vj <= reservation_station_1[0][VJ_LOWER + 31 : VJ_LOWER];
+            reservation_station_1[0][BUSY_LOWER] <= 0;
+
+            alu1_result_reservation_station_row <= 0;
+          end else if (alu2_ready) begin
+            alu2_Vk <= reservation_station_2[0][VK_LOWER + 31 : VK_LOWER];
+            alu2_Vj <= reservation_station_2[0][VJ_LOWER + 31 : VJ_LOWER];
+            reservation_station_2[0][BUSY_LOWER] <= 0;
+
+            alu2_result_reservation_station_row <= 0;
+          end
     end else if (reservation_station_1[1][BUSY_LOWER] && !reservation_station_1[1][QK_LOWER + 3 : QK_LOWER] &&
         !reservation_station_1[1][QJ_LOWER + 3 : QJ_LOWER]) begin
+          if (alu1_ready) begin
+            alu1_Vk <= reservation_station_1[1][VK_LOWER + 31 : VK_LOWER];
+            alu1_Vj <= reservation_station_1[1][VJ_LOWER + 31 : VJ_LOWER];
+            reservation_station_1[0][BUSY_LOWER] <= 0;
 
-          alu_Vk <= reservation_station_1[1][VK_LOWER + 31 : VK_LOWER];
-          alu_Vj <= reservation_station_1[1][VJ_LOWER + 31 : VJ_LOWER];
-
+            alu1_result_reservation_station_row <= 1;
+          end else if (alu2_ready) begin
+            alu2_Vk <= reservation_station_2[1][VK_LOWER + 31 : VK_LOWER];
+            alu2_Vj <= reservation_station_2[1][VJ_LOWER + 31 : VJ_LOWER];
+            //TODO: Copy paste changes to all branches of if/else if
+          end
     end else if (reservation_station_1[2][BUSY_LOWER] && !reservation_station_1[2][QK_LOWER + 3 : QK_LOWER] &&
         !reservation_station_1[2][QJ_LOWER + 3 : QJ_LOWER]) begin
-
-          alu_Vk <= reservation_station_1[2][VK_LOWER + 31 : VK_LOWER];
-          alu_Vj <= reservation_station_1[2][VJ_LOWER + 31 : VJ_LOWER];
-
+          if (alu1_ready) begin
+            alu1_Vk <= reservation_station_1[2][VK_LOWER + 31 : VK_LOWER];
+            alu1_Vj <= reservation_station_1[2][VJ_LOWER + 31 : VJ_LOWER];
+            //TODO: Copy paste changes to all branches of if/else if
+          end else if (alu2_ready) begin
+            alu2_Vk <= reservation_station_2[2][VK_LOWER + 31 : VK_LOWER];
+            alu2_Vj <= reservation_station_2[2][VJ_LOWER + 31 : VJ_LOWER];
+            //TODO: Copy paste changes to all branches of if/else if
+          end
     end
   end
-  alu my_alu(
-      .rval1_in(alu_Vj),
-      .rval2_in(alu_Vk),
-      .aluFunc_in(alu_opcode),
-      .data_out(alu_result) // write to bus somehow
+
+  logic [3:0] alu1_reservation_station_row;
+  logic [3:0] alu2_reservation_station_row;
+
+  alu functional_unit_alu1(
+      .rval1_in(alu1_Vj),
+      .rval2_in(alu1_Vk),
+      .aluFunc_in(alu1_opcode),
+      .data_out(alu1_result), // write to bus somehow
+      .ready_out(alu1_ready)
   );
 
+  alu functional_unit_alu2(
+      .rval1_in(alu2_Vj),
+      .rval2_in(alu2_Vk),
+      .aluFunc_in(alu2_opcode),
+      .data_out(alu2_result), // write to bus somehow
+      .ready_out(alu2_ready)
+  );
 
+  logic [1:0] cdb_result_reservation_station;
+  logic [2:0] cdb_result_reservation_station_row;
+  logic signed [31:0] cdb_result;
 
+  always_comb begin
+    if (alu1_ready) begin
+      cdb_result_reservation_station = 1;
+      cdb_result_reservation_station_row = alu1_reservation_station_row;
+      cdb_result = alu1_result;
+    end else if (alu2_ready) begin
+      //TODO: What do we do here?
+    end
+  end
+
+  always_ff @(posedge clk_100mhz) begin
+    if (alu1_ready || alu2_ready) begin
+      for (int rs_idx = 0; rs_idx < 3; rs_idx++) begin
+        for (int row_idx = 0; row_idx < 3; row_idx++) begin
+          if (RS rs_idx Row row_idx Q_j == {cdb_result_reservation_station, cdb_result_reservation_station_row}) begin
+            RS rs_idx Row row_idx V_j <= cdb_result;
+            RS rs_idx Row row_idx Q_j <= 0; 
+          end
+          if (RS rs_idx Row row_idx Q_k == {cdb_result_reservation_station, cdb_result_reservation_station_row}) begin
+            RS rs_idx Row row_idx V_k <= cdb_result;
+            RS rs_idx Row row_idx Q_k <= 0;
+          end
+        end
+      end
+    end
+  end
 
 endmodule
 

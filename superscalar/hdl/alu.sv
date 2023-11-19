@@ -7,7 +7,8 @@ module alu(
     input wire signed [31:0] rval1_in,
     input wire signed [31:0] rval2_in,
     input wire [3:0] aluFunc_in,
-    output logic signed [31:0] data_out
+    output logic signed [31:0] data_out,
+    output logic ready_out
 );
     logic [31:0] rval1_u, rval2_u;
     assign rval1_u = rval1_in;
@@ -27,6 +28,7 @@ module alu(
             default : data_out = 0;
         endcase
     end
+    assign ready_out = 1'b1;
 endmodule //alu
 
 `default_nettype wire
