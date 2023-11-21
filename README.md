@@ -32,3 +32,10 @@ TODO:
 - Single Cycle: Copy the processor.sv into this top_level and integrate together for single cycle processor testbench
 - Pipeline: Make sure changes are consistent and test with testbenches
 
+BRAM Read Delay
+- BRAM Reads take two clock cycles, can we change from High perforamnce -> low latency to reduce to one clock cycle?
+- Should we implement a cache to store instruction reads?
+
+Common Data Bus
+- Should we expand the width or should we add a buffer of some sort?
+- Should we make a wider bus?
