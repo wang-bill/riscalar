@@ -17,7 +17,18 @@ Integrate the instruction memory into the processor (how should we load the memo
 
 Pipeline the processor (I anticipate this will be more of a challenge than we expect logistically); we might need to add depth to the registers for the pc for example to calculate on multiple pc values at a time...?\n
 
-Questions:
-How do we handle branches?\n
-ALU as a functional unit?\n
+Questions for OH:
+
+How do we handle branches?
+
+ALU as a functional unit?
+
+How to resolve common data bus sharing issue?
+
+Is it a good idea to group all RS into one 3D array?
+
+TODO: 
+- Superscalar: Ask above questions in OH
+- Single Cycle: Copy the processor.sv into this top_level and integrate together for single cycle processor testbench
+- Pipeline: Make sure changes are consistent and test with testbenches
 
