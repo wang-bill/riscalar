@@ -24,9 +24,6 @@ module processor(
   logic [11:0] effective_pc;
   logic wea_inst;
 
-  logic bram_stall_1;
-  logic bram_stall_2;
-
   logic past_single_cycle_clk;
   assign wea_inst = 0;
   assign effective_pc = pc[13:2];
@@ -47,7 +44,7 @@ module processor(
     .douta(inst_fetched)      // RAM output data, width determined from RAM_WIDTH
   );
   
-  logic [5:0] counter;
+  logic [2:0] counter;
   logic single_cycle_clk;
 
   always_ff @(posedge clk_100mhz) begin
@@ -55,21 +52,21 @@ module processor(
       //Simulates instruction fetch
       pc <= 32'h0000_0000; // hard coded for now
       inst <= 0;
-      counter <= 0;
+      counter <= 1;
       single_cycle_clk <= 0;
     end else begin
-      if (counter % 4 == 0) begin
+      if (counter == 4) begin
         single_cycle_clk <= !single_cycle_clk;
-        counter <= counter + 1;
+        counter <= 1;
         past_single_cycle_clk <= single_cycle_clk;
       end else begin
         counter <= counter + 1;
       end
-    end
 
-    if (!past_single_cycle_clk && single_cycle_clk) begin
-      pc <= nextPc;
-      inst <= inst_fetched;
+      if (!past_single_cycle_clk && single_cycle_clk) begin
+        pc <= nextPc;
+        inst <= inst_fetched;
+      end
     end
   end
 
@@ -84,8 +81,7 @@ module processor(
   logic [4:0] rd;
 
   decode decoder(
-    .clk_in(clk_100mhz),
-    .instruction_in(inst), // fill in from fetch
+   .instruction_in(inst), // fill in from fetch
 
     .iType_out(iType),
     .aluFunc_out(aluFunc),
@@ -102,7 +98,7 @@ module processor(
   logic we;
 
   register_file registers(
-    .clk_in(clk_100mhz),
+    .clk_in(single_cycle_clk),
     .rst_in(rst_in),
     .rs1_in(rs1),
     .rs2_in(rs2),

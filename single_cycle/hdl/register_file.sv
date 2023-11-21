@@ -4,6 +4,7 @@
 module register_file
   (
     input wire clk_in,
+    input wire pulse_in,
     input wire rst_in,
     input wire [4:0] rs1_in,
     input wire [4:0] rs2_in,
@@ -25,8 +26,10 @@ module register_file
       end
       registers[11] <= 0; // HARD CODED a0 and a1 REGISTER FOR TESTING PURPOSES, DELETE LATER
     end else if (we_in) begin
-      //writing to register
-      registers[wa_in] <= wd_in;
+      if (pulse_in) begin
+        //writing to register
+        registers[wa_in] <= wd_in;
+      end
     end
   end
 

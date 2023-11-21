@@ -3,7 +3,7 @@
 `include "hdl/types.svh"
 
 `ifdef SYNTHESIS
-`define FPATH(X) `"data/X`"
+`define FPATH(X) `"X`"
 `else /* ! SYNTHESIS */
 `define FPATH(X) `"X`"
 `endif  /* ! SYNTHESIS */
@@ -16,6 +16,8 @@ module top_level(
   output logic [2:0] rgb0, //rgb led
   output logic [2:0] rgb1 //rgb led
 );
+
+//TODO: Copy the processor.sv into this top_level and integrate together
   //shut up those rgb LEDs (active high):
   assign rgb1= 0;
   assign rgb0 = 0;
@@ -25,11 +27,14 @@ module top_level(
 
   // instruction fetch
   logic [31:0] pc;
-  logic [31:0] inst;
   logic [11:0] effective_pc;
+  logic wea_inst;
+
   assign effective_pc = pc[13:2]; // different than pc for indexing into the BRAM
 
+  assign wea_inst = 0;
   logic [31:0] inst_fetched;
+
   xilinx_single_port_ram_read_first #(
     .RAM_WIDTH(32),                       // Specify RAM data width
     .RAM_DEPTH(128),                     // Specify RAM depth (number of entries)
@@ -39,21 +44,33 @@ module top_level(
     .addra(effective_pc),     // Address bus, width determined from RAM_DEPTH
     .dina(0),       // RAM input data, width determined from RAM_WIDTH
     .clka(clk_100mhz),       // Clock
-    .wea(1'b0),         // Write enable
+    .wea(wea_inst),         // Write enable
     .ena(1'b1),         // RAM Enable, for additional power savings, disable port when not in use
     .rsta(sys_rst),       // Output reset (does not affect memory contents)
     .regcea(1'b1),   // Output register enable
     .douta(inst_fetched)      // RAM output data, width determined from RAM_WIDTH
   );
+  localparam PULSE_PERIOD = 5;
+  logic [5:0] counter;
+  logic single_cycle_pulse;
 
   always_ff @(posedge clk_100mhz) begin
     if (sys_rst) begin
       //Simulates instruction fetch
-      inst <= inst_fetched;
       pc <= 32'h0000_0000; // hard coded for now
+      counter <= 0;
+      single_cycle_pulse <= 0;
     end else begin
-      inst <= inst_fetched;
-      pc <= nextPc;
+      if (counter == PULSE_PERIOD-1) begin
+        single_cycle_pulse <= 1;
+        counter <= 1;
+      end else begin
+        single_cycle_pulse <= 0;
+        counter <= counter + 1;
+      end
+      if (single_cycle_pulse && inst_fetched!=0) begin
+        pc <= nextPc;
+      end
     end
   end
 
@@ -68,9 +85,7 @@ module top_level(
   logic [4:0] rd;
 
   decode decoder(
-    .clk_in(clk_100mhz),
-    .instruction_in(inst), // fill in from fetch
-
+    .instruction_in(inst_fetched), // fill in from fetch
     .iType_out(iType),
     .aluFunc_out(aluFunc),
     .brFunc_out(brFunc),
@@ -87,6 +102,7 @@ module top_level(
 
   register_file registers(
     .clk_in(clk_100mhz),
+    .pulse_in(single_cycle_pulse),
     .rst_in(sys_rst),
     .rs1_in(rs1),
     .rs2_in(rs2),
@@ -144,10 +160,10 @@ module top_level(
   // writeback
   assign wd = (iType == LOAD) ? mem_output : result;
   assign wa = rd;
-  assign we = (iType != BRANCH) && (iType != STORE) && (rd != 0);
+  assign we = (iType != BRANCH) && (iType != STORE) && (rd != 0) && (inst_fetched != 0);
 
   //Testing Output:
-  assign led = data_out[15:0];
+  assign led = result[15:0];
 endmodule
 
 `default_nettype wire

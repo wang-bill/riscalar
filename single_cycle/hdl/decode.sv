@@ -3,9 +3,7 @@
 `include "hdl/types.svh"
 module decode 
   (
-    input wire clk_in,
     input wire [31:0] instruction_in,
-
     output logic [3:0] iType_out,
     output logic [3:0] aluFunc_out,
     output logic [2:0] brFunc_out,
