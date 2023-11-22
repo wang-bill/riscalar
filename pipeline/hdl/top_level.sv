@@ -70,14 +70,12 @@ module top_level(
       // EXE -> MEM
       if (ready_exe) begin
         rval1_mem <= rval1;
-        rval2_mem <= rval2;
         imm_mem <= imm_exe;
         iType_mem <= iType_exe;
         result_exe <= result;
         rd_mem <= rd_exe;
       end else if (ready_mem) begin
         rval1_mem <= 0;
-        rval2_mem <= 0;
         imm_mem <= 0;
         iType_mem <= NOP;
         result_exe <= result;
@@ -144,8 +142,8 @@ module top_level(
 
   // instruction fetch
   logic [31:0] pc;
-  logic [11:0] effective_pc;
-  assign effective_pc = pc[13:2]; // different than pc for indexing into the BRAM
+  logic [6:0] effective_pc;
+  assign effective_pc = pc[8:2]; // different than pc for indexing into the BRAM
 
   logic [31:0] inst_fetched;
   xilinx_single_port_ram_read_first #(
@@ -218,7 +216,7 @@ module top_level(
     end else if (rs1 == rd_mem) begin
       rval1 = (iType_mem != LOAD) ? result_mem : 0;
     end else if (rs1 == rd_write) begin
-      rval1 = ready_mem ? result_write : 0; // @Cat, check that I filled this in correctly - Bill
+      rval1 = result_write;
     end else begin
       rval1 = rd1_out;
     end
@@ -228,7 +226,7 @@ module top_level(
     end else if (rs2 == rd_mem) begin
       rval2 = (iType_mem != LOAD) ? result_mem : 0;
     end else if (rs2 == rd_write) begin
-      rval2 = ready_mem ? result_write : 0; // @Cat, check that I filled this in correctly - Bill
+      rval2 = result_write;
     end else begin
       rval2 = rd2_out;
     end
@@ -269,14 +267,14 @@ module top_level(
   logic signed [31:0] mem_output;
   logic writing;
 
-  logic signed [31:0] rval1_mem, rval2_mem; // Is rval2_mem needed?
+  logic signed [31:0] rval1_mem;
   logic signed imm_mem;
   logic [3:0] iType_mem;
   logic signed [31:0] result_mem;
   logic [4:0] rd_mem;
 
-  assign mem_addr = rval1_mem + imm_mem; // Is `rval1_mem` right?
-  assign effective_mem_addr = mem_addr[13:2];
+  assign mem_addr = rval1_mem + imm_mem;
+  assign effective_mem_addr = mem_addr[8:2];
   assign writing = (iType_mem == STORE) ? 1 : 0;
   xilinx_single_port_ram_read_first #(
     .RAM_WIDTH(32),                       // Specify RAM data width
