@@ -54,22 +54,35 @@ module top_level(
   logic [5:0] counter;
   logic single_cycle_pulse;
 
+  logic [31:0] final_result;
+  logic one_cycle_after_done;
+
   always_ff @(posedge clk_100mhz) begin
     if (sys_rst) begin
       //Simulates instruction fetch
       pc <= 32'h0000_0000; // hard coded for now
       counter <= 0;
       single_cycle_pulse <= 0;
+      one_cycle_after_done <= 1;
     end else begin
-      if (counter == PULSE_PERIOD-1) begin
-        single_cycle_pulse <= 1;
-        counter <= 1;
+      if (inst_fetched != 32'h00000000) begin
+        if (counter == PULSE_PERIOD-1) begin
+          single_cycle_pulse <= 1;
+          counter <= 1;
+        end else begin
+          single_cycle_pulse <= 0;
+          counter <= counter + 1;
+        end
+        if (single_cycle_pulse) begin
+          pc <= nextPc;
+        end
       end else begin
-        single_cycle_pulse <= 0;
-        counter <= counter + 1;
-      end
-      if (single_cycle_pulse && inst_fetched!=0) begin
-        pc <= nextPc;
+        // nothing
+        if (one_cycle_after_done) begin
+          // final_result <= result;
+          // led <= result;
+          // one_cycle_after_done <= 0;
+        end
       end
     end
   end
@@ -160,7 +173,7 @@ module top_level(
   // writeback
   assign wd = (iType == LOAD) ? mem_output : result;
   assign wa = rd;
-  assign we = (iType != BRANCH) && (iType != STORE) && (rd != 0) && (inst_fetched != 0);
+  assign we = (iType != BRANCH) && (iType != STORE) && (rd != 0);
 
   //Testing Output:
   assign led = result[15:0];
