@@ -57,6 +57,8 @@ module top_level(
   logic [31:0] final_result;
   logic one_cycle_after_done;
 
+  logic [31:0] previous_result;
+
   always_ff @(posedge clk_100mhz) begin
     if (sys_rst) begin
       //Simulates instruction fetch
@@ -75,14 +77,10 @@ module top_level(
         end
         if (single_cycle_pulse) begin
           pc <= nextPc;
+          previous_result <= result;
         end
       end else begin
-        // nothing
-        if (one_cycle_after_done) begin
-          // final_result <= result;
-          // led <= result;
-          // one_cycle_after_done <= 0;
-        end
+        led <= previous_result;
       end
     end
   end
@@ -176,7 +174,7 @@ module top_level(
   assign we = (iType != BRANCH) && (iType != STORE) && (rd != 0);
 
   //Testing Output:
-  assign led = result[15:0];
+  // assign led = result[15:0];
 endmodule
 
 `default_nettype wire
