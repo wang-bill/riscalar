@@ -14,12 +14,12 @@ module top_level(
   input wire [3:0] btn,
   output logic [15:0] led,
   output logic [2:0] rgb0, //rgb led
-  output logic [2:0] rgb1, //rgb led
+  output logic [2:0] rgb1 //rgb led
 );
-  paramter STORE_PERIOD = 2; // number of clock cycles for a memory write
-  parameter LOAD_PERIOD = 2; // number of clock cycles for a memory read
+  localparam STORE_PERIOD = 2; // number of clock cycles for a memory write
+  localparam LOAD_PERIOD = 2; // number of clock cycles for a memory read
 
-  assign led = sw; //for debugging
+  // assign led = sw; //for debugging
   //shut up those rgb LEDs (active high):
   assign rgb1= 0;
   assign rgb0 = 0;
@@ -115,6 +115,7 @@ module top_level(
         result_write <= result_exe;
       end
     end
+    led <= result;
   end
 
   always_comb begin
@@ -122,7 +123,7 @@ module top_level(
     // Using -1 because even before the data is ready, the instruction can be moved to the next stage one clock cycle early
     // So that the data is available when the instruction is in the next stage
     // TODO: Testbench this carefully
-    ready_mem = !((iType_mem == STORE && store_counter < STORE_COUNTER-1) || (iType_mem == LOAD && load_counter < LOAD_COUNTER-1));
+    ready_mem = !((iType_mem == STORE && store_counter < STORE_PERIOD-1) || (iType_mem == LOAD && load_counter < LOAD_PERIOD-1));
     // EXE is ready when the calculations have finished and MEM is ready
     exe_complete = 1; //for now the execute is always complete because all logic is combinational
     ready_exe = ready_mem && exe_complete;
@@ -151,7 +152,7 @@ module top_level(
     .RAM_WIDTH(32),                       // Specify RAM data width
     .RAM_DEPTH(128),                     // Specify RAM depth (number of entries)
     .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
-    .INIT_FILE(`FPATH(data/inst.mem))           // Specify name/location of RAM initialization file if using one (leave blank if not)
+    .INIT_FILE(`FPATH(inst.mem))           // Specify name/location of RAM initialization file if using one (leave blank if not)
   ) inst_mem (
     .addra(effective_pc),     // Address bus, width determined from RAM_DEPTH
     .dina(0),       // RAM input data, width determined from RAM_WIDTH
@@ -193,6 +194,7 @@ module top_level(
   logic signed [31:0] wd;
   logic [4:0] wa;
   logic we;
+  logic [31:0] rd1_out, rd2_out;
 
   // registers (part of decode)
   register_file registers(
@@ -216,7 +218,7 @@ module top_level(
     end else if (rs1 == rd_mem) begin
       rval1 = (iType_mem != LOAD) ? result_mem : 0;
     end else if (rs1 == rd_write) begin
-      rval1 = result_write : 0;
+      rval1 = ready_mem ? result_write : 0; // @Cat, check that I filled this in correctly - Bill
     end else begin
       rval1 = rd1_out;
     end
@@ -226,7 +228,7 @@ module top_level(
     end else if (rs2 == rd_mem) begin
       rval2 = (iType_mem != LOAD) ? result_mem : 0;
     end else if (rs2 == rd_write) begin
-      rval2 = result_write : 0;
+      rval2 = ready_mem ? result_write : 0; // @Cat, check that I filled this in correctly - Bill
     end else begin
       rval2 = rd2_out;
     end
@@ -244,6 +246,7 @@ module top_level(
   logic [31:0] pc_exe;
 
   logic signed [31:0] result;
+  logic signed [31:0] result_exe;
   logic [31:0] addr, nextPc; 
 
   execute execute_module(
@@ -266,13 +269,13 @@ module top_level(
   logic signed [31:0] mem_output;
   logic writing;
 
-  logic signed [31:0] rval1_mem, rval2_mem;
+  logic signed [31:0] rval1_mem, rval2_mem; // Is rval2_mem needed?
   logic signed imm_mem;
   logic [3:0] iType_mem;
   logic signed [31:0] result_mem;
   logic [4:0] rd_mem;
 
-  assign mem_addr = rval1_exe + imm_mem;
+  assign mem_addr = rval1_mem + imm_mem; // Is `rval1_mem` right?
   assign effective_mem_addr = mem_addr[13:2];
   assign writing = (iType_mem == STORE) ? 1 : 0;
   xilinx_single_port_ram_read_first #(
