@@ -27,17 +27,19 @@ module top_level(
 
   // instruction fetch
   logic [31:0] pc;
-  logic [11:0] effective_pc;
+  logic [15:0] effective_pc;
   logic wea_inst;
 
-  assign effective_pc = pc[13:2]; // different than pc for indexing into the BRAM
+  logic [31:0] total_clock_cycle;
+
+  assign effective_pc = pc[17:2]; // different than pc for indexing into the BRAM
 
   assign wea_inst = 0;
   logic [31:0] inst_fetched;
 
   xilinx_single_port_ram_read_first #(
     .RAM_WIDTH(32),                       // Specify RAM data width
-    .RAM_DEPTH(128),                     // Specify RAM depth (number of entries)
+    .RAM_DEPTH(2**16),                     // Specify RAM depth (number of entries)
     .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
     .INIT_FILE(`FPATH(data/inst.mem))           // Specify name/location of RAM initialization file if using one (leave blank if not)
   ) inst_mem (
@@ -66,12 +68,13 @@ module top_level(
       counter <= 0;
       single_cycle_pulse <= 0;
       one_cycle_after_done <= 1;
+      total_clock_cycle <= 0;
     end else begin
       if (inst_fetched != 32'h00000000) begin
         if (counter == PULSE_PERIOD-1) begin
           single_cycle_pulse <= 1;
           counter <= 1;
-        end else begin
+        end else begin // should it be initlaized to 0 or 1?
           single_cycle_pulse <= 0;
           counter <= counter + 1;
         end
@@ -80,7 +83,7 @@ module top_level(
           previous_result <= result;
         end
       end else begin
-        led <= previous_result;
+        // led <= previous_result;
       end
     end
   end
@@ -145,7 +148,7 @@ module top_level(
 
   // data memory
   logic[31:0] mem_addr;
-  logic[11:0] effective_mem_addr;
+  logic[15:0] effective_mem_addr;
   logic signed [31:0] mem_output;
   logic writing;
 
@@ -154,7 +157,7 @@ module top_level(
   assign writing = (iType == STORE) ? 1 : 0;
   xilinx_single_port_ram_read_first #(
     .RAM_WIDTH(32),                       // Specify RAM data width
-    .RAM_DEPTH(4096),                     // Specify RAM depth (number of entries)
+    .RAM_DEPTH(2**16),                     // Specify RAM depth (number of entries)
     .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
     .INIT_FILE()          // Specify name/location of RAM initialization file if using one (leave blank if not)
   ) data_mem (
@@ -175,6 +178,15 @@ module top_level(
 
   //Testing Output:
   // assign led = result[15:0];
+
+  always_ff @(posedge clk_100mhz) begin
+    if (inst_fetched != 32'h0000_0000) begin
+      total_clock_cycle <= total_clock_cycle + 1;
+    end else begin
+      led <= total_clock_cycle;
+    end
+  end
+
 endmodule
 
 `default_nettype wire

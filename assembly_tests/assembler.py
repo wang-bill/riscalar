@@ -19,4 +19,5 @@ f = open("data/inst.mem", "w")
 
 for inst in insts:
   f.write(inst[2:])
+f.write("00000000")
 f.close()

@@ -46,7 +46,11 @@ module top_level(
     end else begin
       // IF
       if (ready_decode) begin
-        pc <= (correct_branch) ? pc + 4 : nextPc;
+        if (end_of_file === 1'bx) begin
+          pc <= (correct_branch || nextPc === 32'bx) ? pc + 4 : nextPc;
+        end else begin
+          pc <= (end_of_file) ? pc : (correct_branch || nextPc === 32'bx) ? pc + 4 : nextPc;
+        end
         // IF -> ID
         inst <= (correct_branch) ? inst_fetched : 0;
         pc_decode <= pc;
@@ -59,6 +63,8 @@ module top_level(
         imm_exe <= imm;
         rd_exe <= rd;
         pc_exe <= pc_decode;
+        rval1_exe <= rval1;
+        rval2_exe <= rval2;
       end else if (ready_exe) begin
         iType_exe <= NOP;
         aluFunc_exe <= NoAlu;
@@ -66,19 +72,22 @@ module top_level(
         imm_exe <= 0;
         rd_exe <= 0;
         pc_exe <= 0;
+        rval1_exe <= 0;
+        rval2_exe <= 0;
       end
       // EXE -> MEM
       if (ready_exe) begin
-        rval1_mem <= rval1;
+        rval1_mem <= rval1_exe;
+        // rval1_mem <= rval1;
         imm_mem <= imm_exe;
         iType_mem <= iType_exe;
-        result_exe <= result;
+        result_mem <= result;
         rd_mem <= rd_exe;
       end else if (ready_mem) begin
         rval1_mem <= 0;
         imm_mem <= 0;
         iType_mem <= NOP;
-        result_exe <= result;
+        result_mem <= 0;
         rd_mem <= 0;
       end
       // MEM
@@ -105,15 +114,14 @@ module top_level(
         iType_write <= iType_exe;
         rd_write <= rd_mem;
         mem_output_write <= mem_output;
-        result_write <= result_exe;
+        result_write <= result_mem;
       end else begin
         iType_write <= NOP;
         rd_write <= 0;
         mem_output_write <= mem_output;
-        result_write <= result_exe;
+        result_write <= result_mem;
       end
     end
-    led <= result;
   end
 
   always_comb begin
@@ -121,14 +129,14 @@ module top_level(
     // Using -1 because even before the data is ready, the instruction can be moved to the next stage one clock cycle early
     // So that the data is available when the instruction is in the next stage
     // TODO: Testbench this carefully
-    ready_mem = !((iType_mem == STORE && store_counter < STORE_PERIOD-1) || (iType_mem == LOAD && load_counter < LOAD_PERIOD-1));
+    ready_mem = iType_mem === 4'bxxxx || !((iType_mem == STORE && store_counter < STORE_PERIOD-1) || (iType_mem == LOAD && load_counter < LOAD_PERIOD-1)); 
     // EXE is ready when the calculations have finished and MEM is ready
     exe_complete = 1; //for now the execute is always complete because all logic is combinational
     ready_exe = ready_mem && exe_complete;
     // ID is ready when all its operands are ready and EXE is ready
     // TODO: Review this, it's a little suspicious
     if (ready_exe) begin
-      if (rd_mem == rs1 || rd_mem == rs2 && iType_mem == LOAD) begin
+      if ((rd_mem == rs1 || rd_mem == rs2) && iType_mem == LOAD) begin
         // Load-to-stall (RAW) Hazard
         ready_decode = 1'b0;
       end else begin
@@ -142,13 +150,13 @@ module top_level(
 
   // instruction fetch
   logic [31:0] pc;
-  logic [6:0] effective_pc;
-  assign effective_pc = pc[8:2]; // different than pc for indexing into the BRAM
+  logic [13:0] effective_pc;
+  assign effective_pc = pc[15:2]; // different than pc for indexing into the BRAM
 
   logic [31:0] inst_fetched;
   xilinx_single_port_ram_read_first #(
     .RAM_WIDTH(32),                       // Specify RAM data width
-    .RAM_DEPTH(128),                     // Specify RAM depth (number of entries)
+    .RAM_DEPTH(2**10),                     // Specify RAM depth (number of entries)
     .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
     .INIT_FILE(`FPATH(inst.mem))           // Specify name/location of RAM initialization file if using one (leave blank if not)
   ) inst_mem (
@@ -192,7 +200,7 @@ module top_level(
   logic signed [31:0] wd;
   logic [4:0] wa;
   logic we;
-  logic [31:0] rd1_out, rd2_out;
+  logic signed [31:0] rd1_out, rd2_out;
 
   // registers (part of decode)
   register_file registers(
@@ -208,11 +216,14 @@ module top_level(
     .rd2_out(rd2_out)
   );
 
+
+  logic signed [31:0] rval1;
+  logic signed [31:0] rval2;
   //Bypassing 
   //TODO: Check
   always_comb begin
     if (rs1 == rd_exe) begin
-      rval1 = (ready_exe) ? result_exe : 0;
+      rval1 = (ready_exe) ? result : 0;
     end else if (rs1 == rd_mem) begin
       rval1 = (iType_mem != LOAD) ? result_mem : 0;
     end else if (rs1 == rd_write) begin
@@ -222,7 +233,7 @@ module top_level(
     end
 
     if (rs2 == rd_exe) begin
-      rval2 = (ready_exe) ? result_exe : 0;
+      rval2 = (ready_exe) ? result : 0;
     end else if (rs2 == rd_mem) begin
       rval2 = (iType_mem != LOAD) ? result_mem : 0;
     end else if (rs2 == rd_write) begin
@@ -233,7 +244,7 @@ module top_level(
   end
 
   // execute
-  logic signed [31:0] rval1, rval2;
+  logic signed [31:0] rval1_exe, rval2_exe;
 
   logic[3:0] iType_exe;
   logic[3:0] aluFunc_exe;
@@ -244,7 +255,6 @@ module top_level(
   logic [31:0] pc_exe;
 
   logic signed [31:0] result;
-  logic signed [31:0] result_exe;
   logic [31:0] addr, nextPc; 
 
   execute execute_module(
@@ -253,8 +263,8 @@ module top_level(
     .brFunc_in(brFunc_exe),
     .imm_in(imm_exe),
     .pc_in(pc_exe),
-    .rval1_in(rval1),
-    .rval2_in(rval2),
+    .rval1_in(rval1_exe),
+    .rval2_in(rval2_exe),
 
     .data_out(result),
     .addr_out(addr),
@@ -278,12 +288,12 @@ module top_level(
   assign writing = (iType_mem == STORE) ? 1 : 0;
   xilinx_single_port_ram_read_first #(
     .RAM_WIDTH(32),                       // Specify RAM data width
-    .RAM_DEPTH(4096),                     // Specify RAM depth (number of entries)
+    .RAM_DEPTH(1024),                     // Specify RAM depth (number of entries)
     .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
     .INIT_FILE()          // Specify name/location of RAM initialization file if using one (leave blank if not)
   ) data_mem (
     .addra(effective_mem_addr),     // Address bus, width determined from RAM_DEPTH
-    .dina(result_exe),       // RAM input data, width determined from RAM_WIDTH
+    .dina(result_mem),       // RAM input data, width determined from RAM_WIDTH
     .clka(clk_100mhz),       // Clock
     .wea(writing),         // Write enable
     .ena(1'b1),         // RAM Enable, for additional power savings, disable port when not in use
@@ -296,12 +306,50 @@ module top_level(
   logic [3:0] iType_write;
   logic [4:0] rd_write;
   logic signed [31:0] mem_output_write;
-
+  logic [31:0] previous_result;
   logic signed [31:0] result_write;
+  logic [1:0] end_of_file_counter;
+  logic final_result_wrote;
+
+  logic [31:0] total_clock_cycle;
 
   assign wd = (iType_write == LOAD) ? mem_output_write : result_write;
   assign wa = rd_write;
   assign we = (iType_write != BRANCH) && (iType_write != STORE) && (rd_write != 0);
+
+  always_ff @(posedge clk_100mhz) begin
+    if (sys_rst) begin
+      end_of_file_counter <= 0;
+      end_of_file <= 0;
+      final_result_wrote <= 0;
+      total_clock_cycle <= 0;
+    end else if (end_of_file) begin
+      if (end_of_file_counter == 2 && !final_result_wrote) begin
+        // final_result <= result_write;
+        final_result_wrote <= 1;
+        final_result <= total_clock_cycle;
+      end else begin
+        end_of_file_counter <= end_of_file_counter + 1;
+      end
+    end
+  end
+  logic end_of_file;
+  logic signed [31:0] final_result;
+  assign led = final_result;
+  always_ff @(posedge clk_100mhz) begin
+    if (inst_fetched === 32'b0 && pc > 0) begin
+      end_of_file <= 1;
+    end
+  end
+
+  always_ff @(posedge clk_100mhz) begin
+    if (inst_fetched != 32'b0) begin
+      total_clock_cycle <= total_clock_cycle + 1;
+    end
+  end
+
+  
+  // assign end_of_file = inst_fetched === 32'b0 && pc > 0;
 endmodule
 
 `default_nettype wire

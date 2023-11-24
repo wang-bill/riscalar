@@ -30,6 +30,8 @@ module top_level_tb();
   end
   //initial block...this is our test simulation
   initial begin
+    $dumpfile("top_level_tb.vcd"); //file to store value change dump (vcd)
+    $dumpvars(0,top_level_tb); //store everything at the current level and below
 
     clk_in = 1;
     btn = 0;
@@ -39,7 +41,7 @@ module top_level_tb();
     btn = 0;
     #10;
 
-    for (int i = 0; i<10**5; i=i+1)begin
+    for (int i = 0; i<10**6; i=i+1)begin
       #10;
     end
 

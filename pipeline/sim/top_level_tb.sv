@@ -29,17 +29,19 @@ module top_level_tb();
       clk_in = !clk_in;
   end
   //initial block...this is our test simulation
-  initial begin
 
+  initial begin
+    $dumpfile("top_level.vcd"); //file to store value change dump (vcd)
+    $dumpvars(0,top_level_tb);
     clk_in = 1;
     btn = 0;
     #10;
     btn = 1;
     #10;
     btn = 0;
-    #10;
+    #10
 
-    for (int i = 0; i<60; i=i+1)begin
+    for (int i = 0; i<10**3; i=i+1)begin
       #10;
     end
 

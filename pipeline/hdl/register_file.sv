@@ -15,15 +15,19 @@ module register_file
     output logic [31:0] rd2_out
   );
 
+  logic [31:0] a1, a2, a3, a4, a5;
+  assign a1 = registers[11];
+  assign a2 = registers[12];
+  assign a3 = registers[13];
+  assign a4 = registers[14];
+  assign a5 = registers[15];
+
   logic [31:0] registers [31:0]; // right number -> number of registers; left number -> size of registers
   always_ff @(posedge clk_in) begin
     if (rst_in) begin
-      for(integer i=0; i<31; i=i+1) begin
-        if (i != 11) begin
-          registers[i] <= 0;
-        end
+      for (integer i=0; i<31; i=i+1) begin
+        registers[i] <= 0;
       end
-      registers[11] <= 72; // HARD CODED a0 and a1 REGISTER FOR TESTING PURPOSES, DELETE LATER
     end else if (we_in) begin
       //writing to register
       registers[wa_in] <= wd_in;
