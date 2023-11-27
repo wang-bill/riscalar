@@ -17,14 +17,14 @@ module register_file
   );
 
   logic [31:0] registers [31:0]; // right number -> number of registers; left number -> size of registers
+  
+  logic [31:0] a1;
+  assign a1 = registers[11];
   always_ff @(posedge clk_in) begin
     if (rst_in) begin
       for(integer i=0; i<31; i=i+1) begin
-        if (i != 11) begin
-          registers[i] <= 0;
-        end
+        registers[i] <= 0; // HARD CODED a0 and a1 REGISTER FOR TESTING PURPOSES, DELETE LATER
       end
-      registers[11] <= 0; // HARD CODED a0 and a1 REGISTER FOR TESTING PURPOSES, DELETE LATER
     end else if (we_in) begin
       if (pulse_in) begin
         //writing to register

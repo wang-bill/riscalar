@@ -7,13 +7,13 @@ module execute(
         input wire [2:0] brFunc_in,
         
         input wire signed [31:0] imm_in,
-        input wire [31:0] pc_in,
+        input wire signed [31:0] pc_in,
         input wire signed [31:0] rval1_in,
         input wire signed [31:0] rval2_in,
 
         output logic signed [31:0] data_out,
-        output logic [31:0] addr_out,
-        output logic [31:0] nextPc_out
+        output logic signed [31:0] addr_out,
+        output logic signed [31:0] nextPc_out
     );
 
     logic signed [31:0] alu_rval1, alu_rval2, alu_result;

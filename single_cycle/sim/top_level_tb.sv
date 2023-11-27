@@ -41,7 +41,10 @@ module top_level_tb();
     btn = 0;
     #10;
 
-    for (int i = 0; i<10**6; i=i+1)begin
+    for (int i = 0; i<10**3 + 4; i=i+1)begin
+      //$display("%d\n", i);
+      //$display("%d\n", led_out);
+      //$display("===============");  
       #10;
     end
 

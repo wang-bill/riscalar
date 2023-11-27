@@ -26,7 +26,7 @@ module top_level(
   assign sys_rst = btn[0];
 
   // instruction fetch
-  logic [31:0] pc;
+  logic signed [31:0] pc;
   logic [15:0] effective_pc;
   logic wea_inst;
 
@@ -69,11 +69,12 @@ module top_level(
       single_cycle_pulse <= 0;
       one_cycle_after_done <= 1;
       total_clock_cycle <= 0;
+      previous_result <= 0;
     end else begin
       if (inst_fetched != 32'h00000000) begin
         if (counter == PULSE_PERIOD-1) begin
           single_cycle_pulse <= 1;
-          counter <= 1;
+          counter <= 0;
         end else begin // should it be initlaized to 0 or 1?
           single_cycle_pulse <= 0;
           counter <= counter + 1;
@@ -81,9 +82,10 @@ module top_level(
         if (single_cycle_pulse) begin
           pc <= nextPc;
           previous_result <= result;
+          led <= previous_result;
         end
-      end else begin
-        // led <= previous_result;
+      end else if (pc > 0) begin
+        led <= previous_result;
       end
     end
   end
@@ -129,7 +131,7 @@ module top_level(
   );
 
   logic signed [31:0] result;
-  logic [31:0] addr, nextPc; 
+  logic signed [31:0] addr, nextPc; 
 
   // execute
   execute execute_module(
@@ -154,12 +156,12 @@ module top_level(
 
   assign mem_addr = rval1 + imm;
   assign effective_mem_addr = mem_addr[13:2];
-  assign writing = (iType == STORE) ? 1 : 0;
+  assign writing = (iType == STORE && counter == 3) ? 1 : 0;
   xilinx_single_port_ram_read_first #(
     .RAM_WIDTH(32),                       // Specify RAM data width
-    .RAM_DEPTH(2**16),                     // Specify RAM depth (number of entries)
+    .RAM_DEPTH(2**7),                     // Specify RAM depth (number of entries)
     .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
-    .INIT_FILE()          // Specify name/location of RAM initialization file if using one (leave blank if not)
+    .INIT_FILE(`FPATH(data/data.mem))          // Specify name/location of RAM initialization file if using one (leave blank if not)
   ) data_mem (
     .addra(effective_mem_addr),     // Address bus, width determined from RAM_DEPTH
     .dina(result),       // RAM input data, width determined from RAM_WIDTH
@@ -179,13 +181,13 @@ module top_level(
   //Testing Output:
   // assign led = result[15:0];
 
-  always_ff @(posedge clk_100mhz) begin
-    if (inst_fetched != 32'h0000_0000) begin
-      total_clock_cycle <= total_clock_cycle + 1;
-    end else begin
-      led <= total_clock_cycle;
-    end
-  end
+  // always_ff @(posedge clk_100mhz) begin
+  //   if (inst_fetched != 32'h0000_0000) begin
+  //     total_clock_cycle <= total_clock_cycle + 1;
+  //   end else begin
+  //     led <= total_clock_cycle;
+  //   end
+  // end
 
 endmodule
 
