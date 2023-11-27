@@ -35,24 +35,52 @@ module top_level(
   logic[1:0] store_counter;
   logic[1:0] load_counter;
   logic exe_complete;
+
+  logic signed [31:0] pc_bram;
+  logic first, second, third;
+  logic first_two_or_branch;
+
   assign correct_branch = (iType_exe != BRANCH && iType_exe != JAL && iType_exe != JALR) || nextPc == (pc_exe + 4);
+  // assign first_two_or_branch = sys_rst || first || second || third || !correct_branch; 
   always_ff @(posedge clk_100mhz) begin
     if (sys_rst) begin
       //Simulates instruction fetch
-      inst <= inst_fetched;
+      // inst <= inst_fetched;
       pc <= 32'h0000_0000;
       store_counter <= 0;
       load_counter <= 0;
+      first <= 1;
+      first_two_or_branch <= 1;
     end else begin
       // IF
+      
       if (ready_decode) begin
-        if (end_of_file === 1'bx) begin
+        if (first_two_or_branch) begin
+          if (first) begin
+            pc_bram <= pc;
+            first <= 0;
+            second <= 1;
+          end else if (second) begin
+            pc_bram <= pc + 4;
+            second <= 0;
+            third <= 1;
+          end else if (third) begin
+            pc_bram <= pc + 8;
+            third <= 0;
+            first_two_or_branch <= 0;
+            first <= 1;
+          end
+        end else if (end_of_file === 1'bx) begin
           pc <= (correct_branch || nextPc === 32'bx) ? pc + 4 : nextPc;
+          pc_bram <= pc + 8 + 4;
+          first_two_or_branch <= (correct_branch) ? 0 : 1;
         end else begin
           pc <= (end_of_file) ? pc : (correct_branch || nextPc === 32'bx) ? pc + 4 : nextPc;
+          pc_bram <= pc + 8 + 4;
+          first_two_or_branch <= (correct_branch) ? 0 : 1;
         end
         // IF -> ID
-        inst <= (correct_branch) ? inst_fetched : 0;
+        inst <= (!correct_branch || (first_two_or_branch && !third)) ? 0 : inst_fetched;
         pc_decode <= pc;
       end
       // ID -> EXE
@@ -61,7 +89,7 @@ module top_level(
         aluFunc_exe <= (correct_branch) ? aluFunc : NoAlu;
         brFunc_exe <= (correct_branch) ? brFunc : Dbr;
         imm_exe <= imm;
-        rd_exe <= rd;
+        rd_exe <= (correct_branch) ? rd : 0;
         pc_exe <= pc_decode;
         rval1_exe <= rval1;
         rval2_exe <= rval2;
@@ -111,7 +139,7 @@ module top_level(
       end
       // MEM -> WB
       if (ready_mem) begin
-        iType_write <= iType_exe;
+        iType_write <= iType_mem;
         rd_write <= rd_mem;
         mem_output_write <= mem_output;
         result_write <= result_mem;
@@ -149,9 +177,9 @@ module top_level(
   end
 
   // instruction fetch
-  logic [31:0] pc;
+  logic signed [31:0] pc;
   logic [13:0] effective_pc;
-  assign effective_pc = pc[15:2]; // different than pc for indexing into the BRAM
+  assign effective_pc = pc_bram[15:2]; // different than pc for indexing into the BRAM
 
   logic [31:0] inst_fetched;
   xilinx_single_port_ram_read_first #(
@@ -181,10 +209,9 @@ module top_level(
   logic [4:0] rs2;
   logic [4:0] rd;
 
-  logic [31:0] pc_decode;
+  logic signed [31:0] pc_decode;
 
   decode decoder(
-    .clk_in(clk_100mhz),
     .instruction_in(inst), // fill in from fetch
 
     .iType_out(iType),
@@ -252,10 +279,10 @@ module top_level(
 
   logic signed [31:0] imm_exe;
   logic [4:0] rd_exe;
-  logic [31:0] pc_exe;
+  logic signed [31:0] pc_exe;
 
   logic signed [31:0] result;
-  logic [31:0] addr, nextPc; 
+  logic signed [31:0] addr, nextPc; 
 
   execute execute_module(
     .iType_in(iType_exe),
@@ -290,7 +317,7 @@ module top_level(
     .RAM_WIDTH(32),                       // Specify RAM data width
     .RAM_DEPTH(1024),                     // Specify RAM depth (number of entries)
     .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
-    .INIT_FILE()          // Specify name/location of RAM initialization file if using one (leave blank if not)
+    .INIT_FILE(`FPATH(data.mem))          // Specify name/location of RAM initialization file if using one (leave blank if not)
   ) data_mem (
     .addra(effective_mem_addr),     // Address bus, width determined from RAM_DEPTH
     .dina(result_mem),       // RAM input data, width determined from RAM_WIDTH
@@ -325,9 +352,9 @@ module top_level(
       total_clock_cycle <= 0;
     end else if (end_of_file) begin
       if (end_of_file_counter == 2 && !final_result_wrote) begin
-        // final_result <= result_write;
+        final_result <= result_write;
         final_result_wrote <= 1;
-        final_result <= total_clock_cycle;
+        // final_result <= total_clock_cycle; 
       end else begin
         end_of_file_counter <= end_of_file_counter + 1;
       end

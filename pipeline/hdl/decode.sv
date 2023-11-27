@@ -3,9 +3,7 @@
 `include "hdl/types.svh"
 module decode 
   (
-    input wire clk_in,
     input wire [31:0] instruction_in,
-
     output logic [3:0] iType_out,
     output logic [3:0] aluFunc_out,
     output logic [2:0] brFunc_out,
@@ -22,7 +20,7 @@ module decode
   logic [4:0] rs1;
   logic [4:0] rs2;
   logic [4:0] rd;
-  logic [31:0] imm; // value may be different depending on instruction type
+  logic signed [31:0] imm; // value may be different depending on instruction type
 
   typedef enum {R, I, S, B, U, J, N} inst_types;
   
@@ -96,7 +94,10 @@ module decode
      rs1 = 0;
      rs2 = 0;
      rd = instruction_in[11:7];
-     imm = {11'b0, instruction_in[31], instruction_in[21:12], instruction_in[22], instruction_in[30:23], 1'b0};
+    //  imm = {11'b0, instruction_in[31], instruction_in[21:12], instruction_in[22], instruction_in[30:23], 1'b0};
+      // imm = 64;
+     imm = instruction_in[31] == 1'b1 ? {11'b111_1111_1111, instruction_in[31], instruction_in[19:12], instruction_in[20], instruction_in[30:21], 1'b0} : {11'b000_0000_0000, instruction_in[31], instruction_in[19:12], instruction_in[20], instruction_in[30:21], 1'b0};
+      // imm = 32'b1;
     end else begin //N type (no valid op)
       funct3 = 0;
       funct7 = 0;
