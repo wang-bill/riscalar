@@ -462,4 +462,4 @@ for inst in inst_arr:
 
   
   f.write(final_inst + "\n")
-  
+f.close() 
