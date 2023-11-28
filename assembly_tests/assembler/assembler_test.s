@@ -1,4 +1,8 @@
-addi a1, a1, 10
-sw a1, 44(x0)
-addi a1, a1, 20
-lw a1, 44(x0)
+jal a1, 44
+add a1, a1, a2
+addi a1, a1, 44
+lw a1, 44(a0)
+sw a2, 44(a0)
+beq a1, a1, 44
+jalr a1, a1, 44
+lui a1, 77

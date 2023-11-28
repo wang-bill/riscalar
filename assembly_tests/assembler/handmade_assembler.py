@@ -43,6 +43,8 @@ def dtb_imm(n):
         if result[i] == "0":
           result[i] = "1"
           break
+        if i == 0:
+          result = 32 * "0"
       bin_str = result
 
     return bin_str
@@ -112,23 +114,24 @@ def R_type(funct7, rs2, rs1, funct3, rd, opcode):
   return funct7 + rs2 + rs1 + funct3 + rd + opcode
 
 def I_type(imm, rs1, funct3, rd, opcode):
-  imm = dtb_imm(imm)[20:32]
+  imm = imm[20:32]
   return imm + rs1 + funct3 + rd + opcode
 
 def S_type(imm, rs2, rs1, funct3, opcode):
-  imm = dtb_imm(imm)
   l_imm = imm[20:27]
   r_imm = imm[27:32]
   return l_imm + rs2 + rs1 + funct3 + r_imm + opcode
 
 def B_type(imm, rs2, rs1, funct3, opcode):
-  pass
+  l_imm = imm[19] + imm[21:27]
+  r_imm = imm[27:31] + imm[20]
+  return l_imm + rs2 + rs1 + funct3 + r_imm + opcode
 
 def U_type(imm, rd, opcode):
-  pass
+  return imm[0:20] + rd + opcode
 
 def J_type(imm, rd, opcode):
-  pass
+  return imm[11] + imm[21:31] + imm[20] + imm[12:20] + rd + opcode
 
 def find_type(inst_name):
   '''
@@ -171,7 +174,7 @@ def find_funct3(inst_type, inst_name):
   Find the funct3 number
   '''
 
-  funct3 = "you messed up somehow"
+  funct3 = None
   
   if inst_type == "R":
     if inst_name == "add":
@@ -225,6 +228,9 @@ def find_funct3(inst_type, inst_name):
       funct3 = "100"
     if inst_name == "lhu":
       funct3 = "101"
+    
+    if inst_name == "jalr":
+      funct3 = "000"
 
   if inst_type == "S":
     if inst_name == "sb":
@@ -233,11 +239,28 @@ def find_funct3(inst_type, inst_name):
       funct3 = "001"
     if inst_name == "sw":
       funct3 = "010"
+  
+  if inst_type == "B":
+    if inst_name == "beq":
+      funct3 = "000"
+    if inst_name == "bne":
+      funct3 = "001"
+    if inst_name == "blt":
+      funct3 = "100"
+    if inst_name == "bge":
+      funct3 = "101"
+    if inst_name == "bltu":
+      funct3 = "110"
+    if inst_name == "bgeu":
+      funct3 = "111"
+
+  assert funct3 != None, "there's an unchecked case in funct3"
 
   return funct3
   
 
 def find_opcode(inst_type, inst_name):
+  opcode = None
   if inst_type == "R":
     opcode = "0110011"
 
@@ -249,11 +272,27 @@ def find_opcode(inst_type, inst_name):
   
   if inst_type == "S":
     opcode = "0100011"
+  
+  if inst_type == "B":
+    opcode = "1100011"
+  
+  if inst_type == "J":
+    opcode = "1101111"
+  
+  if inst_type == "U":
+    if inst_name == "lui":
+      opcode = "0110111"
+    else:
+      opcode = "0010111"
+
+  assert opcode != None, "There's an unchecked case in opcode"
 
   return opcode
 
 def find_imm(inst_type, inst_components):
-  if (inst_type == "I"):
+  imm = None
+
+  if inst_type == "I":
     inst_name = inst_components[0]
     if inst_name in ["lb", "lh", "lw", "lbu", "lhu"]:
       imm = inst_components[2]
@@ -262,8 +301,19 @@ def find_imm(inst_type, inst_components):
 
   if inst_type == "S":
     imm = inst_components[2]
+  
+  if inst_type == "B":
+    imm = inst_components[3]
 
-  return imm
+  if inst_type == "J":
+    imm = inst_components[2]
+  
+  if inst_type == "U":
+    imm = inst_components[2]
+  
+  assert imm != None, "There's an unchecked case in imm"
+
+  return dtb_imm(imm)
 
 def sanitize_inst(inst_type, inst_components):
   '''
@@ -307,6 +357,28 @@ def sanitize_inst(inst_type, inst_components):
         sanitized_inst.append(offset_rs1[1][:-1].strip()) # get rid of parantheses
       else:
         sanitized_inst.append(inst_components[i].strip())
+  
+  if inst_type == "B": # beq a1, a2, 40 -> [beq, a1, a2, 40]
+    for i in range(len(inst_components)):
+      if i == 1 or i == 2:
+        sanitized_inst.append(inst_components[i][:-1].strip()) # get rid of trailing comma
+      else:
+        sanitized_inst.append(inst_components[i].strip())
+  
+  if inst_type == "J": # jal a1, 40 -> [jal, a1, 40]
+    for i in range(len(inst_components)):
+      if i == 1:
+        sanitized_inst.append(inst_components[i][:-1].strip()) # get rid of trailing comma
+      else:
+        sanitized_inst.append(inst_components[i].strip())
+  
+  if inst_type == "U": # lui a1, 44 -> [lui, a1, 44]
+    for i in range(len(inst_components)):
+      if i == 1:
+        sanitized_inst.append(inst_components[i][:-1].strip()) # get rid of trailing comma
+      else:
+        sanitized_inst.append(inst_components[i].strip())
+
   return sanitized_inst
 
 ################################
@@ -351,7 +423,31 @@ for inst in inst_arr:
     opcode = find_opcode(inst_type, inst_name)
     
     final_inst = S_type(imm, rs2, rs1, funct3, opcode)
-    print(len(final_inst))
+  
+  if inst_type == "B":
+    imm = find_imm(inst_type, sanitized_inst)
+    um_rs2, um_rs1 = sanitized_inst[2], sanitized_inst[1]
+    rs2, rs1 = register_map(um_rs2), register_map(um_rs1)
+    funct3 = find_funct3(inst_type, inst_name)
+    opcode = find_opcode(inst_type, inst_name)
+
+    final_inst = B_type(imm, rs2, rs1, funct3, opcode)
+  
+  if inst_type == "J":
+    imm = find_imm(inst_type, sanitized_inst)
+    um_rd = sanitized_inst[1]
+    rd = register_map(um_rd)
+    opcode = find_opcode(inst_type, inst_name)
+
+    final_inst = J_type(imm, rd, opcode)
+  
+  if inst_type == "U":
+    imm = find_imm(inst_type, sanitized_inst)
+    um_rd = sanitized_inst[1]
+    rd = register_map(um_rd)
+    opcode = find_opcode(inst_type, inst_name)
+
+    final_inst = U_type(imm, rd, opcode)
 
 
   
