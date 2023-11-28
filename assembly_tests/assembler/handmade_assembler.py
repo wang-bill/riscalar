@@ -56,37 +56,36 @@ def register_map(register):
   converts register string to number
   '''
   reg_len = len(register)
+  reg_num = None
 
   if register == "zero":
-    return dtb_register(0)
+    reg_num = 0
   
   if register == "ra":
-    return dtb_register(1)
+    reg_num = 1
 
   if register == "sp":
-    return dtb_register(2)
+    reg_num = 2
   
   if register == "gp":
-    return dtb_register(3)
+    reg_num = 3
 
   if register == "tp":
-    return dtb_register(4)
+    reg_num = 4
 
   if register == "fp":
-    return dtb_register(8)
+    reg_num = 8
 
   assert reg_len == 2 or reg_len == 3, "check your register declaration"
 
   if register[0] == "x":
     reg_num = int(register[1:])
     assert reg_num >= 0 and reg_num <= 31, "check register number (x)"
-    return dtb_register(reg_num)
   
   elif register[0] == "a":
     reg_num = int(register[1:])
     assert reg_num >= 0 and reg_num <= 7, "check register number (a)"
     reg_num = reg_num + 10
-    return dtb_register(reg_num)
   
   elif register[0] == "s":
     reg_num = int(register[1:])
@@ -95,7 +94,6 @@ def register_map(register):
       reg_num = reg_num + 8
     else:
       reg_num = reg_num + 16
-    return dtb_register(reg_num)
 
   elif register[0] == "t":
     reg_num = int(register[1:])
@@ -104,11 +102,13 @@ def register_map(register):
       reg_num = reg_num + 5
     else:
       reg_num = reg_num + 25
-    return dtb_register(reg_num)
 
   else:
     raise Exception("Invalid register letter")
   
+  assert reg_num != None, "Unchecked case in register map"
+  
+  return dtb_register(reg_num)
 
 def R_type(funct7, rs2, rs1, funct3, rd, opcode):
   return funct7 + rs2 + rs1 + funct3 + rd + opcode
@@ -157,17 +157,22 @@ def find_type(inst_name):
         return "U"
       if i < 49:
         return "I"
-  return "It's impossible for the loop to reach here, so if you see this you messed up really badly somehow"
+  return "Something, not sure what, is wrong with the assembly instructions"
 
 def find_funct7(inst_name): 
   '''
   finds the funct7 number 
   funct7 only exists for R type instructions
   '''
+  funct7 = None
   if inst_name in ["sub", "sra"]:
-    return "0100000" # 0x20
+    funct7 = "0100000" # 0x20
   else:
-    return "0000000" # 0x00
+    funct7 = "0000000" # 0x00
+  
+  assert funct7 != None, "Unchecked case in funct7"
+  
+  return funct7
 
 def find_funct3(inst_type, inst_name):
   '''
@@ -378,6 +383,9 @@ def sanitize_inst(inst_type, inst_components):
         sanitized_inst.append(inst_components[i][:-1].strip()) # get rid of trailing comma
       else:
         sanitized_inst.append(inst_components[i].strip())
+  
+
+  assert len(sanitized_inst) == 3 or len(sanitized_inst) == 4, "Either your instruction: " + str(inst_components[0]) + " is wrong or sanitize_inst is implemented wrong"
 
   return sanitized_inst
 
@@ -387,6 +395,8 @@ f = open("inst.mem", "w")
 
 for inst in inst_arr:
   inst_components = inst.split(" ")
+  assert len(inst_components) == 3 or len(inst_components) == 4, "Instruction: " + str(inst) + " is written improperly"
+
   inst_name = inst_components[0]
 
   assert inst_name in inst_names, inst_name + " is not supported"
