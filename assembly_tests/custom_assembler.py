@@ -1,10 +1,5 @@
 import sys
-assembly_file = sys.argv[1]
-f = open(assembly_file, "r")
-
-inst_arr = [line.strip() for line in f]
-
-f.close()
+import os
 
 inst_names = ["add", "sub", "xor", "or", "and", "sll", "srl", "sra", "slt", "sltu", # 10, R
               "addi", "xori", "ori", "andi", "slli", "srli", "srai", "slti", "sltiu", # 9, I
@@ -391,7 +386,16 @@ def sanitize_inst(inst_type, inst_components):
 
 ################################
 
-f = open("inst.mem", "w")
+assembly_file = sys.argv[1]
+f = open(assembly_file, "r")
+
+inst_arr = [line.strip() for line in f if len(line.strip())]
+
+f.close()
+if os.path.isfile("data/inst.mem"):
+  os.remove("data/inst.mem")
+
+f = open("data/inst.mem", "w")
 
 for inst in inst_arr:
   inst_components = inst.split(" ")
