@@ -30,7 +30,7 @@ module top_level(
   assign sys_rst = btn[0];
   
   logic signed [31:0] pc;
-  logic signed [31:0] instruction_fetched, instruction_out, instruction_decode;
+  logic signed [31:0] instruction_fetched, instruction_out;
   logic valid, output_read;
   logic iq_ready, iq_inst_available;
   instruction_queue #(.SIZE(4)) inst_queue (
@@ -55,8 +55,6 @@ module top_level(
   logic [4:0] rs2;
   logic [4:0] rd;
 
-  logic signed [31:0] pc_decode;
-
   decode decoder(
     .instruction_in(instruction_out), // fill in from fetch
     .iType_out(iType),
@@ -67,8 +65,67 @@ module top_level(
     .rs2_out(rs2),
     .rd_out(rd)
   );
-  
 
+  // Writeback Stage Register Wires
+  logic signed [31:0] wd;
+  logic [2:0] wrob_ix;
+  logic [4:0] wa;
+  logic we;
+
+  // Decode Stage Register Read Wires
+  logic signed [31:0] rd1_out, rd2_out, rob_ix1_out, rob_ix2_out;
+
+  // Flush ROB Wires
+  logic flush;
+  logic [7:0] flush_addrs;
+
+  // registers (part of decode)
+  register_file registers(
+    .clk_in(clk_100mhz),
+    .rst_in(sys_rst),
+    .rs1_in(rs1),
+    .rs2_in(rs2),
+    .wa_in(wa),
+    .we_in(we),
+    .wd_in(wd),
+    .rob_ix_in(wrob_ix),
+    .flush_in(flush),
+    .flush_addrs_in(flush_addrs),
+
+    .rd1_out(rd1_out), //available 1 clock cycle later
+    .rd2_out(rd2_out),
+    .rob_ix1_out(rob_ix1_out),
+    .rob_ix2_out(rob_ix2_out)
+  );
+
+  // Issue instruction
+  // Check if RS and ROB is ready
+  logic wire ready_to_issue;
+  logic wire rob_ready;
+  logic wire rs_alu_ready, rs_brAlu_ready, rs_mul_ready, rs_div_ready, rs_mem_ready;
+  always_comb begin
+    if (iType == LOAD || iType == STORE) begin
+      ready_to_issue = rs_mem_ready && rob_ready;
+    end else if (iType == BRANCH || iType == JAL || iType == JALR) begin
+      ready_to_issue = rs_brAlu_ready && rob_ready;
+    end else if (iType == MUL) begin
+      ready_to_issue = rs_mul_ready && rob_ready;
+    end else if (iType == DIV) begin
+      ready_to_issue = rs_div_ready && rob_ready;
+    end else if (iType == NOP) begin
+      ready_to_issue = 1'b1;
+    end else begin
+      ready_to_issue = rs_alu_ready && rob_ready;
+    end
+  end
+
+  always_ff @(posedge clk_100mhz) begin
+    
+  end
+
+  // Reservation Stations
+  reservation_station #(.DEPTH())
+  
   // Convert from 109 bits to separate registers
   localparam BUSY_LOWER = 0;
   localparam ADDRESS_LOWER = 1;

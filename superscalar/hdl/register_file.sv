@@ -11,8 +11,8 @@ module register_file
     input wire we_in, // write enable, high for one clock cycle during write
     input wire [31:0] wd_in, // write data
     input wire [2:0] rob_ix_in,
-    input wire flush, //when flush is high, do something
-    input wire [4:0] flush_addrs [7:0], //addresses to flush rob_ixs for 
+    input wire flush_in, //when flush is high, do something
+    input wire [4:0] flush_addrs_in [7:0], //addresses to flush rob_ixs for 
 
     output logic [31:0] rd1_out,
     output logic [31:0] rd2_out,
@@ -27,9 +27,9 @@ module register_file
       for(integer i=0; i<31; i=i+1) begin
           registers[i] <= 0;
       end
-    end else if (flush) begin
+    end else if (flush_in) begin
       for(integer i=0; i<8; i=i+1) begin
-        rob_ixs[flush_addrs[i]] <= 3'bxxx;
+        rob_ixs[flush_addrs_in[i]] <= 3'bxxx;
       end
     end else if (we_in) begin
       //writing to register

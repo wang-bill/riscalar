@@ -39,3 +39,16 @@ BRAM Read Delay
 Common Data Bus
 - Should we expand the width or should we add a buffer of some sort?
 - Should we make a wider bus?
+
+Issues Detected:
+- Solving stopping the BRAM once we read end of file
+- Issues with gtkwave having an off-by-one clock cycle issue/slightly strange results
+
+11/25
+- Single Cycle: Resolve load/store + branching issues (4/5 clock cycles)
+- Pipeline: Set up load/stores + branching, resolve multi-cycle bram read/writes
+- Begin implementing Superscalar (9:00)
+
+11/29 TA Discussion:
+- genvar for loop with "break" condition
+- how to create write-first bram memory

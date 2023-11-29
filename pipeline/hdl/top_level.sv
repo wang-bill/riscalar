@@ -16,8 +16,7 @@ module top_level(
   output logic [2:0] rgb0, //rgb led
   output logic [2:0] rgb1 //rgb led
 );
-  localparam STORE_PERIOD = 2; // number of clock cycles for a memory write
-  localparam LOAD_PERIOD = 2; // number of clock cycles for a memory read
+  localparam LOAD_WAIT = 1; // clock cycles to wait for a load to complete once load reaches WB stage (1 not 2 because we already waited on clock cycle for load to move from MEM to WB)
 
   // assign led = sw; //for debugging
   //shut up those rgb LEDs (active high):
@@ -28,13 +27,9 @@ module top_level(
   assign sys_rst = btn[0];
 
   logic correct_branch;
-  logic ready_decode;
-  logic ready_exe;
-  logic ready_mem;
+  logic ready_decode, stall_entire_pipeline;
 
-  logic[1:0] store_counter;
-  logic[1:0] load_counter;
-  logic exe_complete;
+  logic load_counter;
 
   logic signed [31:0] pc_bram;
   logic first, second, third;
@@ -47,132 +42,126 @@ module top_level(
       //Simulates instruction fetch
       // inst <= inst_fetched;
       pc <= 32'h0000_0000;
-      store_counter <= 0;
       load_counter <= 0;
       first <= 1;
       first_two_or_branch <= 1;
     end else begin
-      // IF
-      
-      if (ready_decode) begin
-        if (first_two_or_branch) begin
-          if (first) begin
-            pc_bram <= pc;
-            first <= 0;
-            second <= 1;
-          end else if (second) begin
-            pc_bram <= pc + 4;
-            second <= 0;
-            third <= 1;
-          end else if (third) begin
-            pc_bram <= pc + 8;
-            third <= 0;
-            first_two_or_branch <= 0;
-            first <= 1;
+      if (!stall_entire_pipeline) begin
+        // IF
+        if (ready_decode) begin
+          if (first_two_or_branch) begin
+            if (first) begin
+              pc_bram <= pc;
+              first <= 0;
+              second <= 1;
+            end else if (second) begin
+              pc_bram <= pc + 4;
+              second <= 0;
+              third <= 1;
+            end else if (third) begin
+              pc_bram <= pc + 8;
+              third <= 0;
+              first_two_or_branch <= 0;
+              first <= 1;
+            end
+          end else if (end_of_file === 1'bx) begin
+            pc <= (correct_branch || nextPc === 32'bx) ? pc + 4 : nextPc;
+            pc_bram <= pc + 8 + 4;
+            first_two_or_branch <= (correct_branch) ? 0 : 1;
+          end else begin
+            pc <= (end_of_file) ? pc : (correct_branch || nextPc === 32'bx) ? pc + 4 : nextPc;
+            pc_bram <= pc + 8 + 4;
+            first_two_or_branch <= (correct_branch) ? 0 : 1;
           end
-        end else if (end_of_file === 1'bx) begin
-          pc <= (correct_branch || nextPc === 32'bx) ? pc + 4 : nextPc;
-          pc_bram <= pc + 8 + 4;
-          first_two_or_branch <= (correct_branch) ? 0 : 1;
-        end else begin
-          pc <= (end_of_file) ? pc : (correct_branch || nextPc === 32'bx) ? pc + 4 : nextPc;
-          pc_bram <= pc + 8 + 4;
-          first_two_or_branch <= (correct_branch) ? 0 : 1;
+          // IF -> ID
+          inst <= (!correct_branch || (first_two_or_branch && !third)) ? 0 : inst_fetched;
+          pc_decode <= pc;
         end
-        // IF -> ID
-        inst <= (!correct_branch || (first_two_or_branch && !third)) ? 0 : inst_fetched;
-        pc_decode <= pc;
-      end
-      // ID -> EXE
-      if (ready_decode) begin
-        iType_exe <= (correct_branch) ? iType : NOP;
-        aluFunc_exe <= (correct_branch) ? aluFunc : NoAlu;
-        brFunc_exe <= (correct_branch) ? brFunc : Dbr;
-        imm_exe <= imm;
-        rd_exe <= (correct_branch) ? rd : 0;
-        pc_exe <= pc_decode;
-        rval1_exe <= rval1;
-        rval2_exe <= rval2;
-      end else if (ready_exe) begin
-        iType_exe <= NOP;
-        aluFunc_exe <= NoAlu;
-        brFunc_exe <= Dbr;
-        imm_exe <= 0;
-        rd_exe <= 0;
-        pc_exe <= 0;
-        rval1_exe <= 0;
-        rval2_exe <= 0;
-      end
-      // EXE -> MEM
-      if (ready_exe) begin
+        // ID -> EXE
+        if (ready_decode) begin
+          iType_exe <= (correct_branch) ? iType : NOP;
+          aluFunc_exe <= (correct_branch) ? aluFunc : NoAlu;
+          brFunc_exe <= (correct_branch) ? brFunc : Dbr;
+          imm_exe <= imm;
+          rd_exe <= (correct_branch) ? rd : 0;
+          pc_exe <= pc_decode;
+          rval1_exe <= rval1;
+          rval2_exe <= rval2;
+        end else begin
+          iType_exe <= NOP;
+          aluFunc_exe <= NoAlu;
+          brFunc_exe <= Dbr;
+          imm_exe <= 0;
+          rd_exe <= 0;
+          pc_exe <= 0;
+          rval1_exe <= 0;
+          rval2_exe <= 0;
+        end
+        // EXE -> MEM
+        
         rval1_mem <= rval1_exe;
-        // rval1_mem <= rval1;
         imm_mem <= imm_exe;
         iType_mem <= iType_exe;
         result_mem <= result;
         rd_mem <= rd_exe;
-      end else if (ready_mem) begin
-        rval1_mem <= 0;
-        imm_mem <= 0;
-        iType_mem <= NOP;
-        result_mem <= 0;
-        rd_mem <= 0;
-      end
-      // MEM
-      if (iType_mem == LOAD) begin
-        if (load_counter == LOAD_PERIOD) begin
+
+        // MEM -> WB
+        iType_write <= iType_mem;
+        rd_write <= rd_mem;
+        // mem_output_write <= mem_output;
+        result_write <= result_mem;
+      end 
+      // WB for LOAD Instructions
+      if (iType_write == LOAD) begin
+        if (load_counter == LOAD_WAIT) begin
           load_counter <= 0;
         end else begin
           load_counter <= load_counter + 1;
         end
-        store_counter <= 0;
-      end else if (iType_mem == STORE) begin
-        if (store_counter == STORE_PERIOD) begin
-          store_counter <= 0;
-        end else begin
-          store_counter <= store_counter + 1;
-        end
-        load_counter <= 0;
-      end else begin
-        load_counter <= 0;
-        store_counter <= 0;
-      end
-      // MEM -> WB
-      if (ready_mem) begin
-        iType_write <= iType_mem;
-        rd_write <= rd_mem;
-        mem_output_write <= mem_output;
-        result_write <= result_mem;
-      end else begin
-        iType_write <= NOP;
-        rd_write <= 0;
-        mem_output_write <= mem_output;
-        result_write <= result_mem;
       end
     end
   end
 
   always_comb begin
-    // MEM is ready when the store and load are complete 
-    // Using -1 because even before the data is ready, the instruction can be moved to the next stage one clock cycle early
-    // So that the data is available when the instruction is in the next stage
-    // TODO: Testbench this carefully
-    ready_mem = iType_mem === 4'bxxxx || !((iType_mem == STORE && store_counter < STORE_PERIOD-1) || (iType_mem == LOAD && load_counter < LOAD_PERIOD-1)); 
-    // EXE is ready when the calculations have finished and MEM is ready
-    exe_complete = 1; //for now the execute is always complete because all logic is combinational
-    ready_exe = ready_mem && exe_complete;
-    // ID is ready when all its operands are ready and EXE is ready
-    // TODO: Review this, it's a little suspicious
-    if (ready_exe) begin
-      if ((rd_mem == rs1 || rd_mem == rs2) && iType_mem == LOAD) begin
-        // Load-to-stall (RAW) Hazard
+    if (iType_write === 4'bxxxx) begin
+      stall_entire_pipeline = 1'b0;
+    end else begin
+      stall_entire_pipeline = iType_write == LOAD && load_counter < LOAD_WAIT;
+    end
+
+    if (iType_exe === 4'bxxxx) begin
+      ready_decode = 1'b1;
+    end else begin
+      if ((rs1 == rd_exe && iType_exe == LOAD) || (rs2 == rd_exe && iType_exe == LOAD)) begin
         ready_decode = 1'b0;
       end else begin
-        ready_decode = 1'b1;
+        if (iType_mem === 4'bxxxx) begin
+          ready_decode = 1'b1;
+        end else begin
+          if ((rs1 == rd_mem && iType_mem == LOAD) || (rs2 == rd_mem && iType_mem == LOAD)) begin
+            ready_decode = 1'b0;
+          end else begin
+            ready_decode = 1'b1;
+          end
+        end
       end
-    end else begin
-      ready_decode = 1'b0;
     end
+    // ready_mem = iType_mem === 4'bxxxx || !((iType_mem == STORE && store_counter < STORE_PERIOD-1) || (iType_mem == LOAD && load_counter < LOAD_PERIOD-1)); 
+    // // EXE is ready when the calculations have finished and MEM is ready
+    // exe_complete = 1; //for now the execute is always complete because all logic is combinational
+    // ready_exe = ready_mem && exe_complete;
+    // // ID is ready when all its operands are ready and EXE is ready
+    // // TODO: Review this, it's a little suspicious
+    // if (ready_exe) begin
+    //   if ((rd_mem == rs1 || rd_mem == rs2) && iType_mem == LOAD) begin
+    //     // Load-to-stall (RAW) Hazard
+    //     ready_decode = 1'b0;
+    //   end else begin
+    //     ready_decode = 1'b1;
+    //   end
+    // end else begin
+    //   ready_decode = 1'b0;
+    // end
     //ready_decode = ready_exe && (rs1 === 1'bx || (rd_exe != rs1 && rd_exe != rs2 && rd_mem != rs1 && rd_mem != rs2 && rd_write != rs1 && rd_write != rs2));
   end
 
@@ -247,24 +236,25 @@ module top_level(
   logic signed [31:0] rval1;
   logic signed [31:0] rval2;
   //Bypassing 
-  //TODO: Check
+  //TODO: Check rd_write case
   always_comb begin
     if (rs1 == rd_exe) begin
-      rval1 = (ready_exe) ? result : 0;
+      rval1 = (ready_decode) ? result : 0;
     end else if (rs1 == rd_mem) begin
-      rval1 = (iType_mem != LOAD) ? result_mem : 0;
+    //seems to be going here
+      rval1 = (ready_decode) ? result_mem : 0;
     end else if (rs1 == rd_write) begin
-      rval1 = result_write;
+      rval1 = (!stall_entire_pipeline) ? result_write : 0;
     end else begin
       rval1 = rd1_out;
     end
 
     if (rs2 == rd_exe) begin
-      rval2 = (ready_exe) ? result : 0;
+      rval2 = (ready_decode) ? result : 0;
     end else if (rs2 == rd_mem) begin
-      rval2 = (iType_mem != LOAD) ? result_mem : 0;
+      rval2 = (ready_decode) ? result_mem : 0;
     end else if (rs2 == rd_write) begin
-      rval2 = result_write;
+      rval2 = (!stall_entire_pipeline) ? result_write : 0;
     end else begin
       rval2 = rd2_out;
     end
@@ -305,7 +295,7 @@ module top_level(
   logic writing;
 
   logic signed [31:0] rval1_mem;
-  logic signed imm_mem;
+  logic signed [31:0] imm_mem;
   logic [3:0] iType_mem;
   logic signed [31:0] result_mem;
   logic [4:0] rd_mem;
@@ -332,7 +322,7 @@ module top_level(
   // writeback
   logic [3:0] iType_write;
   logic [4:0] rd_write;
-  logic signed [31:0] mem_output_write;
+  // logic signed [31:0] mem_output_write;
   logic [31:0] previous_result;
   logic signed [31:0] result_write;
   logic [1:0] end_of_file_counter;
@@ -340,9 +330,9 @@ module top_level(
 
   logic [31:0] total_clock_cycle;
 
-  assign wd = (iType_write == LOAD) ? mem_output_write : result_write;
+  assign wd = (iType_write == LOAD) ? mem_output : result_write;
   assign wa = rd_write;
-  assign we = (iType_write != BRANCH) && (iType_write != STORE) && (rd_write != 0);
+  assign we = (iType_write != BRANCH) && (iType_write != STORE) && (rd_write != 0) && (!stall_entire_pipeline);
 
   always_ff @(posedge clk_100mhz) begin
     if (sys_rst) begin
