@@ -21,6 +21,53 @@ module top_level(
   output logic [31:0] addr_out,
   output logic [31:0] nextPc_out
 );
+  // assign led = sw; //for debugging
+  //shut up those rgb LEDs (active high):
+  assign rgb1 = 0;
+  assign rgb0 = 0;
+
+  logic sys_rst;
+  assign sys_rst = btn[0];
+  
+  logic signed [31:0] pc;
+  logic signed [31:0] instruction_fetched, instruction_out, instruction_decode;
+  logic valid, output_read;
+  logic iq_ready, iq_inst_available;
+  instruction_queue #(.SIZE(4)) inst_queue (
+    .clk_in(clk_100mhz),
+    .rst_in(sys_rst),
+    .valid_in(valid),
+    .output_read_in(output_read),
+    .instruction_in(instruction_fetched),
+    .inst_available_out(iq_ready),
+    .instruction_out(instruction_out),
+    .ready_out(iq_inst_available)
+  );
+
+  // decode
+  logic [31:0] inst;
+  logic[3:0] iType;
+  logic[3:0] aluFunc;
+  logic[2:0] brFunc;
+
+  logic signed [31:0] imm;
+  logic [4:0] rs1;
+  logic [4:0] rs2;
+  logic [4:0] rd;
+
+  logic signed [31:0] pc_decode;
+
+  decode decoder(
+    .instruction_in(instruction_out), // fill in from fetch
+    .iType_out(iType),
+    .aluFunc_out(aluFunc),
+    .brFunc_out(brFunc),
+    .imm_out(imm),
+    .rs1_out(rs1),
+    .rs2_out(rs2),
+    .rd_out(rd)
+  );
+  
 
   // Convert from 109 bits to separate registers
   localparam BUSY_LOWER = 0;
