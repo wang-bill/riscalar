@@ -37,7 +37,7 @@ module top_level(
   assign wea_inst = 0;
   logic [31:0] inst_fetched;
 
-  xilinx_single_port_ram_read_first #(
+  xilinx_single_port_ram_write_first #(
     .RAM_WIDTH(32),                       // Specify RAM data width
     .RAM_DEPTH(2**16),                     // Specify RAM depth (number of entries)
     .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
@@ -157,7 +157,7 @@ module top_level(
   assign mem_addr = rval1 + imm;
   assign effective_mem_addr = mem_addr[13:2];
   assign writing = (iType == STORE && counter == 3) ? 1 : 0;
-  xilinx_single_port_ram_read_first #(
+  xilinx_single_port_ram_write_first #(
     .RAM_WIDTH(32),                       // Specify RAM data width
     .RAM_DEPTH(2**7),                     // Specify RAM depth (number of entries)
     .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 

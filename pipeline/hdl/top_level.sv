@@ -171,7 +171,7 @@ module top_level(
   assign effective_pc = pc_bram[15:2]; // different than pc for indexing into the BRAM
 
   logic [31:0] inst_fetched;
-  xilinx_single_port_ram_read_first #(
+  xilinx_single_port_ram_write_first #(
     .RAM_WIDTH(32),                       // Specify RAM data width
     .RAM_DEPTH(2**10),                     // Specify RAM depth (number of entries)
     .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
@@ -303,7 +303,7 @@ module top_level(
   assign mem_addr = rval1_mem + imm_mem;
   assign effective_mem_addr = mem_addr[8:2];
   assign writing = (iType_mem == STORE) ? 1 : 0;
-  xilinx_single_port_ram_read_first #(
+  xilinx_single_port_ram_write_first #(
     .RAM_WIDTH(32),                       // Specify RAM data width
     .RAM_DEPTH(1024),                     // Specify RAM depth (number of entries)
     .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
