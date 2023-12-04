@@ -123,13 +123,13 @@ module top_level(
   logic [31:0] rval1_alu_fu, rval2_alu_fu;
   logic [3:0] opcode_alu_fu;
   logic [2:0] rob_idx_alu_fu;
-  logic rs_alu_ready_out;
-  logic valid_output_alu;
+  logic rs_alu_free;
+  logic output_valid_alu;
 
   reservation_station rs_alu(
     .clk_in(clk_100mhz),
     .rst_in(rst_in),
-    .valid_in(), // get from decode
+    .valid_input_in(), // get from decode
     .fu_busy(fu_busy), // get from fu
     .Q_i_in(), // get from decode
     .Q_j_in(), // get from decode
@@ -144,24 +144,27 @@ module top_level(
     .rval2_out(rval2_alu_fu),
     .opcode_out(opcode_alu_fu),
     .rob_idx_out(rob_idx_alu_fu),
-    .ready_out(rs_alu_ready_out),
-    .valid_output(valid_output_alu)
+    .rs_free_for_input_out(rs_alu_free),
+    .rs_output_valid_out(output_valid_alu)
   );
 
 
-  logic fu_busy;
+  logic fu_alu_busy, alu1_ready, alu1_output_valid;
+  logic signed [31:0] alu1_result;
+  
   alu fu_alu(
       .clk_in(clk_100mhz),
 ,     .rst_in(rst_in),
-      .valid_in(valid_output_alu),
+      .valid_in(output_valid_alu),
       .rval1_in(rval1_alu_fu),
       .rval2_in(rval2_alu_fu),
       .aluFunc_in(opcode_alu_fu),
       .rob_idx_in(rob_idx_alu_fu),
 
       .data_out(alu1_result), // write to bus somehow
-      .ready_out(alu1_ready),
-      .busy_out(fu_busy)
+      .ready_out(alu1_ready), // ready for another input
+      .valid_out(alu1_output_valid), // goes high for one clock cycle after output is computed
+      .busy_out(fu_alu_busy) // fu is currently in use
   );
 
   

@@ -6,8 +6,8 @@
 module reservation_station(
     input wire clk_in,
     input wire rst_in,
-    input wire valid_in, // input is valid
-    input wire fu_busy, // busy = can't send value
+    input wire valid_input_in, // input is valid
+    input wire fu_busy, // corresponding functional unit is busy
     input wire [31:0] Q_i_in,
     input wire [31:0] Q_j_in,
     input wire [31:0] V_i_in,
@@ -21,8 +21,8 @@ module reservation_station(
     output logic [31:0] rval2_out,
     output logic [3:0] opcode_out,
     output logic [2:0] rob_idx_out,
-    output logic ready_out, // tells whether reservation station is ready for another input
-    output logic valid_output // output from RS is valid
+    output logic rs_free_for_input_out, // tells whether reservation station is ready for another input
+    output logic rs_output_valid_out // output from RS is valid
 );
 
   localparam RS_DEPTH = 3;
@@ -39,7 +39,7 @@ module reservation_station(
   logic [$clog2(RS_DEPTH):0] open_row;
   logic [$clog2(RS_DEPTH):0] occupied_row;
 
-  logic valid_output;
+  logic rs_output_valid_out;
 
   logic row_ready; // whether any entry in the RS is ready to be sent to FU
 
@@ -48,9 +48,10 @@ module reservation_station(
       for (int i = 0; i < RS_DEPTH; i = i+1) begin
         busy_row[i] <= 0;
       end
-      ready_out <= 1;
+      rs_free_for_input_out <= 1;
     end else begin
-      if (valid_in && ready_out) begin // ready_out check is technically not needed, but put just in case -- verifies that input is going into valid row
+      if (valid_in && rs_free_for_input_out) begin // rs_free_for_input_out check is technically not needed, but put just in case -- verifies that input is going into valid row
+        // putting value into reservation station
         Q_i_row[open_row] <= Q_i_in;
         Q_j_row[open_row] <= Q_j_in;
         V_i_row[open_row] <= V_i_in;
@@ -63,14 +64,15 @@ module reservation_station(
       end
 
       if (!fu_busy && row_ready) begin
+        // extracting value from reservation station
         rval1_out <= V_i_row[occupied_row];
         rval2_out <= V_j_row[occupied_row];
         opcode_out <= opcode_row[occupied_row];
         rob_idx_out <= rob_idx_row[occupied_row];
         busy_row[occupied_row] <= 0;
-        valid_output <= 1;
+        rs_output_valid_out <= 1;
       end else begin
-        valid_output <= 0;
+        rs_output_valid_out <= 0;
       end
     end
   end
@@ -80,7 +82,7 @@ module reservation_station(
     for (int i = RS_DEPTH - 1; i >= 0; i = i-1) begin // iterating through backwards to maintain order
       open_row = !busy_row[i] ? i : open_row;
     end
-    ready_out = !(open_row == RS_DEPTH);
+    rs_free_for_input_out = !(open_row == RS_DEPTH);
 
     occupied_row = RS_DEPTH
     for (int i = 0; i < RS_DEPTH; i = i + 1) begin

@@ -14,21 +14,28 @@ module alu(
 
     output logic signed [31:0] data_out,
     output logic ready_out,
+    output logic valid_out,
     output logic busy_out
 );
 
     localparam STALL_DURATION = 25;
     logic [STALL_DURATION-1:0] stall;
+    logic stall_done;
 
     always_ff @(posedge clk_in) begin // artificial stall
         if (rst_in) begin
             ready_out <= 0;
-            busy_out <= 0; 
+            valid_out <= 0;
+            busy_out <= 0;
+            stall_done <= 0; 
         end else begin
-            if (ready_in) begin
-                busy_out <= 1;
+            if (valid_in) begin
                 ready_out <= 0;
+                valid_out <= 0;
+                busy_out <= 1;
+                
                 stall <= 1;
+                stall_done <= 0;
             end else begin
                 for (int i = 1; i < STALL_DURATION; i=i+1) begin
                     stall[i] <= stall[i-1];
@@ -37,6 +44,14 @@ module alu(
 
             if (stall[STALL_DURATION-1] == 1) begin // stall is over
                 ready_out <= 1;
+                valid_out <= 1;
+                busy_out <= 0;
+                stall_done <= 1;
+            end
+
+            if (stall_done) begin
+                ready_out <= 1;
+                valid_out <= 0;
                 busy_out <= 0;
             end
         end
