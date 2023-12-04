@@ -21,7 +21,8 @@ module reservation_station(
     output logic [31:0] rval2_out,
     output logic [3:0] opcode_out,
     output logic [2:0] rob_idx_out,
-    output logic ready_out // tells whether reservation station is ready for another input
+    output logic ready_out, // tells whether reservation station is ready for another input
+    output logic valid_output // output from RS is valid
 );
 
   localparam RS_DEPTH = 3;
@@ -37,6 +38,8 @@ module reservation_station(
 
   logic [$clog2(RS_DEPTH):0] open_row;
   logic [$clog2(RS_DEPTH):0] occupied_row;
+
+  logic valid_output;
 
   logic row_ready; // whether any entry in the RS is ready to be sent to FU
 
@@ -65,6 +68,9 @@ module reservation_station(
         opcode_out <= opcode_row[occupied_row];
         rob_idx_out <= rob_idx_row[occupied_row];
         busy_row[occupied_row] <= 0;
+        valid_output <= 1;
+      end else begin
+        valid_output <= 0;
       end
     end
   end

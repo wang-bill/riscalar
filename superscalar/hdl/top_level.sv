@@ -124,6 +124,7 @@ module top_level(
   logic [3:0] opcode_alu_fu;
   logic [2:0] rob_idx_alu_fu;
   logic rs_alu_ready_out;
+  logic valid_output_alu;
 
   reservation_station rs_alu(
     .clk_in(clk_100mhz),
@@ -143,12 +144,16 @@ module top_level(
     .rval2_out(rval2_alu_fu),
     .opcode_out(opcode_alu_fu),
     .rob_idx_out(rob_idx_alu_fu),
-    .ready_out(rs_alu_ready_out)
+    .ready_out(rs_alu_ready_out),
+    .valid_output(valid_output_alu)
   );
 
 
   logic fu_busy;
   alu fu_alu(
+      .clk_in(clk_100mhz),
+,     .rst_in(rst_in),
+      .valid_in(valid_output_alu),
       .rval1_in(rval1_alu_fu),
       .rval2_in(rval2_alu_fu),
       .aluFunc_in(opcode_alu_fu),
