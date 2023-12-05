@@ -30,17 +30,18 @@ module top_level(
   assign sys_rst = btn[0];
   
   logic signed [31:0] pc;
-  logic signed [31:0] instruction_fetched, instruction_out;
-  logic valid, output_read;
+  logic signed [31:0] instruction_fetched, iq_instruction_out;
+  logic iq_valid, iq_output_read;
   logic iq_ready, iq_inst_available;
+
   instruction_queue #(.SIZE(4)) inst_queue (
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
-    .valid_in(valid),
-    .output_read_in(output_read),
+    .valid_in(iq_valid),
+    .output_read_in(iq_output_read),
     .instruction_in(instruction_fetched),
     .inst_available_out(iq_ready),
-    .instruction_out(instruction_out),
+    .instruction_out(iq_instruction_out),
     .ready_out(iq_inst_available)
   );
 
@@ -56,7 +57,7 @@ module top_level(
   logic [4:0] rd;
 
   decode decoder(
-    .instruction_in(instruction_out), // fill in from fetch
+    .instruction_in(iq_instruction_out), // from instruction queue
     .iType_out(iType),
     .aluFunc_out(aluFunc),
     .brFunc_out(brFunc),
@@ -100,33 +101,64 @@ module top_level(
 
   // Issue instruction
   // Check if RS and ROB is ready
-  logic wire ready_to_issue;
-  logic wire rs_ready;
   logic wire rob_ready;
   logic wire rs_alu_ready, rs_brAlu_ready, rs_mul_ready, rs_div_ready, rs_mem_ready;
+  logic wire rs_alu_valid_in, rs_brAlu_valid_in, rs_mul_valid_in, rs_div_valid_in, rs_mem_valid_in;
+
+  // always_comb begin
+  //   if (iType == LOAD || iType == STORE) begin
+  //     rs_ready = rs_mem_ready;
+  //   end else if (iType == BRANCH || iType == JAL || iType == JALR) begin
+  //     rs_ready = rs_brAlu_ready;
+  //   end else if (iType == MUL) begin
+  //     rs_ready = rs_mul_ready;
+  //   end else if (iType == DIV) begin
+  //     rs_ready = rs_div_ready;
+  //   end else if (iType == NOP) begin
+  //     rs_ready = 1'b1;
+  //   end else begin
+  //     rs_ready = rs_alu_ready;
+  //   end
+  //   ready_to_issue = rs_ready && rob_ready;
+  // end
 
   always_comb begin
-    if (iType == LOAD || iType == STORE) begin
-      rs_ready = rs_mem_ready;
-    end else if (iType == BRANCH || iType == JAL || iType == JALR) begin
-      rs_ready = rs_brAlu_ready;
-    end else if (iType == MUL) begin
-      rs_ready = rs_mul_ready;
-    end else if (iType == DIV) begin
-      rs_ready = rs_div_ready;
-    end else if (iType == NOP) begin
-      rs_ready = 1'b1;
-    end else begin
-      rs_ready = rs_alu_ready;
+    rs_alu_valid_in = 1'b0;
+    rs_brAlu_valid_in = 1'b0;
+    rs_mul_valid_in = 1'b0;
+    rs_div_valid_in = 1'b0;
+    rs_mem_valid_in = 1'b0;
+    if (iq_inst_available && rob_ready) begin
+      if ((iType == LOAD || iType == STORE) && rs_mem_ready) begin
+        rs_mem_valid_in = 1'b1;
+      end else if ((iType == BRANCH || iType == JAL || iType == JALR) && rs_brAlu_ready) begin
+        rs_brAlu_valid_in = 1'b1;
+      end else if ((iType == MUL) && rs_mul_ready) begin
+        rs_mul_valid_in = 1'b1;
+      end else if ((iType == DIV) && rs_div_ready) begin
+        rs_div_valid_in = 1'b1;
+      end else if (iType == NOP) begin
+      end else if (rs_alu_ready) begin
+        rs_alu_valid_in = 1'b1;
+      end
     end
-    ready_to_issue = rs_ready && rob_ready;
   end
 
+  always_ff @(posedge clk_100mhz) begin
+    if (sys_rst) begin
+      
+    end else begin
+
+    end
+  end
+
+  // Reservation Station inputs
+  logic [] reservation_station_Q_i;
+  logic [] reservation_station_Q_j;
 
   logic [31:0] rval1_alu_fu, rval2_alu_fu;
   logic [3:0] opcode_alu_fu;
   logic [2:0] rob_idx_alu_fu;
-  logic rs_alu_free;
   logic output_valid_alu;
 
   reservation_station rs_alu(
@@ -147,7 +179,7 @@ module top_level(
     .rval2_out(rval2_alu_fu),
     .opcode_out(opcode_alu_fu),
     .rob_idx_out(rob_idx_alu_fu),
-    .rs_free_for_input_out(rs_alu_free),
+    .rs_free_for_input_out(rs_alu_ready),
     .rs_output_valid_out(output_valid_alu)
   );
 
