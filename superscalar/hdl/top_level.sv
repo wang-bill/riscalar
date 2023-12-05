@@ -101,22 +101,25 @@ module top_level(
   // Issue instruction
   // Check if RS and ROB is ready
   logic wire ready_to_issue;
+  logic wire rs_ready;
   logic wire rob_ready;
   logic wire rs_alu_ready, rs_brAlu_ready, rs_mul_ready, rs_div_ready, rs_mem_ready;
+  
   always_comb begin
     if (iType == LOAD || iType == STORE) begin
-      ready_to_issue = rs_mem_ready && rob_ready;
+      rs_ready = rs_mem_ready;
     end else if (iType == BRANCH || iType == JAL || iType == JALR) begin
-      ready_to_issue = rs_brAlu_ready && rob_ready;
+      rs_ready = rs_brAlu_ready;
     end else if (iType == MUL) begin
-      ready_to_issue = rs_mul_ready && rob_ready;
+      rs_ready = rs_mul_ready;
     end else if (iType == DIV) begin
-      ready_to_issue = rs_div_ready && rob_ready;
+      rs_ready = rs_div_ready;
     end else if (iType == NOP) begin
-      ready_to_issue = 1'b1;
+      rs_ready = 1'b1;
     end else begin
-      ready_to_issue = rs_alu_ready && rob_ready;
+      rs_ready = rs_alu_ready;
     end
+    ready_to_issue = rs_ready && rob_ready;
   end
 
   always_ff @(posedge clk_100mhz) begin
