@@ -9,8 +9,8 @@ module instruction_queue#(parameter SIZE=4)(
     output logic ready_out
 );
     localparam COUNTER_SIZE = $clog2(SIZE);
-    logic [COUNTER_SIZE-1:0] write_counter;
-    logic [COUNTER_SIZE-1:0] read_counter;
+    logic [31:0] write_counter;
+    logic [31:0] read_counter;
     logic [31:0] instruction_queue [SIZE-1:0];
     logic [31:0] instruction_queue_0;
     logic [31:0] instruction_queue_1;
