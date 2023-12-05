@@ -39,9 +39,9 @@ module reservation_station(
   logic [$clog2(RS_DEPTH):0] open_row;
   logic [$clog2(RS_DEPTH):0] occupied_row;
 
-  logic rs_output_valid_out;
-
   logic row_ready; // whether any entry in the RS is ready to be sent to FU
+
+  logic valid_in;
 
   always_ff @(posedge clk_in) begin
     if (rst_in) begin
@@ -84,9 +84,9 @@ module reservation_station(
     end
     rs_free_for_input_out = !(open_row == RS_DEPTH);
 
-    occupied_row = RS_DEPTH
+    occupied_row = RS_DEPTH;
     for (int i = 0; i < RS_DEPTH; i = i + 1) begin
-      occupied_row = (i_ready && j_ready) ? i : occupied_row
+      occupied_row = (i_ready && j_ready) ? i : occupied_row;
     end
     row_ready = !(occupied_row == RS_DEPTH);
   end
