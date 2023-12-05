@@ -104,7 +104,7 @@ module top_level(
   logic wire rs_ready;
   logic wire rob_ready;
   logic wire rs_alu_ready, rs_brAlu_ready, rs_mul_ready, rs_div_ready, rs_mem_ready;
-  
+
   always_comb begin
     if (iType == LOAD || iType == STORE) begin
       rs_ready = rs_mem_ready;
@@ -133,7 +133,7 @@ module top_level(
     .clk_in(clk_100mhz),
     .rst_in(rst_in),
     .valid_input_in(), // get from decode
-    .fu_busy(fu_busy), // get from fu
+    .fu_busy_in(fu_alu_busy), // get from fu
     .Q_i_in(), // get from decode
     .Q_j_in(), // get from decode
     .V_i_in(), // get from decode
@@ -170,6 +170,16 @@ module top_level(
       .valid_out(alu1_output_valid), // goes high after output is ready, goes low after read
   );
 
+  // logic cdb_result;
+  // logic fu1_read_in;
+  // logic fu2_read_in;
+  // if (functional_unit1_ready) begin
+  //   cdb_result <= fu_1_result;
+  //   fu1_read_in <= 1;
+  // else begin
+  //   cdb_result <= fu_2_result;
+  //   fu2_read_in <= 1;
+  // end
   
 
 endmodule
