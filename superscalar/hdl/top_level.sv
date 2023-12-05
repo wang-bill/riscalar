@@ -122,140 +122,55 @@ module top_level(
     ready_to_issue = rs_ready && rob_ready;
   end
 
-  always_ff @(posedge clk_100mhz) begin
-    
-  end
 
-  // Reservation Stations
-  reservation_station #(.DEPTH())
-  
-  // Convert from 109 bits to separate registers
-  localparam BUSY_LOWER = 0;
-  localparam ADDRESS_LOWER = 1;
-  localparam VK_LOWER = 33;
-  localparam VJ_LOWER = 65;
-  localparam QK_LOWER = 97;
-  localparam QJ_LOWER = 101;
-  localparam OPERATION_LOWER = 105;
+  logic [31:0] rval1_alu_fu, rval2_alu_fu;
+  logic [3:0] opcode_alu_fu;
+  logic [2:0] rob_idx_alu_fu;
+  logic rs_alu_free;
+  logic output_valid_alu;
 
-  logic [31:0] instruction_queue [5:0];
+  reservation_station rs_alu(
+    .clk_in(clk_100mhz),
+    .rst_in(rst_in),
+    .valid_input_in(), // get from decode
+    .fu_busy(fu_busy), // get from fu
+    .Q_i_in(), // get from decode
+    .Q_j_in(), // get from decode
+    .V_i_in(), // get from decode
+    .V_j_in(), // get from decode
+    .rob_idx_in(), // from decode
+    .opcode_in(), // decode
+    .i_ready(), // decode
+    .j_ready(), // decode
 
-  // decode to find alu_opcode
+    .rval1_out(rval1_alu_fu),
+    .rval2_out(rval2_alu_fu),
+    .opcode_out(opcode_alu_fu),
+    .rob_idx_out(rob_idx_alu_fu),
+    .rs_free_for_input_out(rs_alu_free),
+    .rs_output_valid_out(output_valid_alu)
+  );
 
-  logic [108:0] reservation_station_1 [2:0]; // ALU 1
-  logic [108:0] reservation_station_2 [1:0]; // ALU 2
 
-
-  // ALU 1
-  logic signed [31:0] alu1_Vj, alu1_Vk;
+  logic fu_alu_busy, alu1_ready, alu1_output_valid;
   logic signed [31:0] alu1_result;
-  logic [3:0] alu1_opcode; // get from decode
+  
+  alu fu_alu(
+      .clk_in(clk_100mhz),
+,     .rst_in(rst_in),
+      .valid_in(output_valid_alu),
+      .rval1_in(rval1_alu_fu),
+      .rval2_in(rval2_alu_fu),
+      .aluFunc_in(opcode_alu_fu),
+      .rob_idx_in(rob_idx_alu_fu),
 
-  logic alu1_ready;
-
-  // ALU 2
-  logic signed [31:0] alu2_Vj, alu2_Vk;
-  logic signed [31:0] alu2_result;
-  logic [3:0] alu2_opcode; // get from decode
-
-  logic alu2_ready;
-
-
-  always_ff @(posedge clk_100mhz ) begin
-    if (sys_rst) begin
-    end
-    //TODO: Refactor this to use genvar for loop
-    if (reservation_station_1[0][BUSY_LOWER] && !reservation_station_1[0][QK_LOWER + 3 : QK_LOWER] &&
-        !reservation_station_1[0][QJ_LOWER + 3 : QJ_LOWER]) begin
-          if (alu1_ready) begin
-            alu1_Vk <= reservation_station_1[0][VK_LOWER + 31 : VK_LOWER];
-            alu1_Vj <= reservation_station_1[0][VJ_LOWER + 31 : VJ_LOWER];
-            reservation_station_1[0][BUSY_LOWER] <= 0;
-
-            alu1_result_reservation_station_row <= 0;
-          end else if (alu2_ready) begin
-            alu2_Vk <= reservation_station_2[0][VK_LOWER + 31 : VK_LOWER];
-            alu2_Vj <= reservation_station_2[0][VJ_LOWER + 31 : VJ_LOWER];
-            reservation_station_2[0][BUSY_LOWER] <= 0;
-
-            alu2_result_reservation_station_row <= 0;
-          end
-    end else if (reservation_station_1[1][BUSY_LOWER] && !reservation_station_1[1][QK_LOWER + 3 : QK_LOWER] &&
-        !reservation_station_1[1][QJ_LOWER + 3 : QJ_LOWER]) begin
-          if (alu1_ready) begin
-            alu1_Vk <= reservation_station_1[1][VK_LOWER + 31 : VK_LOWER];
-            alu1_Vj <= reservation_station_1[1][VJ_LOWER + 31 : VJ_LOWER];
-            reservation_station_1[0][BUSY_LOWER] <= 0;
-
-            alu1_result_reservation_station_row <= 1;
-          end else if (alu2_ready) begin
-            alu2_Vk <= reservation_station_2[1][VK_LOWER + 31 : VK_LOWER];
-            alu2_Vj <= reservation_station_2[1][VJ_LOWER + 31 : VJ_LOWER];
-            //TODO: Copy paste changes to all branches of if/else if
-          end
-    end else if (reservation_station_1[2][BUSY_LOWER] && !reservation_station_1[2][QK_LOWER + 3 : QK_LOWER] &&
-        !reservation_station_1[2][QJ_LOWER + 3 : QJ_LOWER]) begin
-          if (alu1_ready) begin
-            alu1_Vk <= reservation_station_1[2][VK_LOWER + 31 : VK_LOWER];
-            alu1_Vj <= reservation_station_1[2][VJ_LOWER + 31 : VJ_LOWER];
-            //TODO: Copy paste changes to all branches of if/else if
-          end else if (alu2_ready) begin
-            alu2_Vk <= reservation_station_2[2][VK_LOWER + 31 : VK_LOWER];
-            alu2_Vj <= reservation_station_2[2][VJ_LOWER + 31 : VJ_LOWER];
-            //TODO: Copy paste changes to all branches of if/else if
-          end
-    end
-  end
-
-  logic [3:0] alu1_reservation_station_row;
-  logic [3:0] alu2_reservation_station_row;
-
-  alu functional_unit_alu1(
-      .rval1_in(alu1_Vj),
-      .rval2_in(alu1_Vk),
-      .aluFunc_in(alu1_opcode),
       .data_out(alu1_result), // write to bus somehow
-      .ready_out(alu1_ready)
+      .ready_out(alu1_ready), // ready for another input
+      .valid_out(alu1_output_valid), // goes high for one clock cycle after output is computed
+      .busy_out(fu_alu_busy) // fu is currently in use
   );
 
-  alu functional_unit_alu2(
-      .rval1_in(alu2_Vj),
-      .rval2_in(alu2_Vk),
-      .aluFunc_in(alu2_opcode),
-      .data_out(alu2_result), // write to bus somehow
-      .ready_out(alu2_ready)
-  );
-
-  logic [1:0] cdb_result_reservation_station;
-  logic [2:0] cdb_result_reservation_station_row;
-  logic signed [31:0] cdb_result;
-
-  always_comb begin
-    if (alu1_ready) begin
-      cdb_result_reservation_station = 1;
-      cdb_result_reservation_station_row = alu1_reservation_station_row;
-      cdb_result = alu1_result;
-    end else if (alu2_ready) begin
-      //TODO: What do we do here?
-    end
-  end
-
-  always_ff @(posedge clk_100mhz) begin
-    if (alu1_ready || alu2_ready) begin
-      for (int rs_idx = 0; rs_idx < 3; rs_idx++) begin
-        for (int row_idx = 0; row_idx < 3; row_idx++) begin
-          if (RS rs_idx Row row_idx Q_j == {cdb_result_reservation_station, cdb_result_reservation_station_row}) begin
-            RS rs_idx Row row_idx V_j <= cdb_result;
-            RS rs_idx Row row_idx Q_j <= 0; 
-          end
-          if (RS rs_idx Row row_idx Q_k == {cdb_result_reservation_station, cdb_result_reservation_station_row}) begin
-            RS rs_idx Row row_idx V_k <= cdb_result;
-            RS rs_idx Row row_idx Q_k <= 0;
-          end
-        end
-      end
-    end
-  end
+  
 
 endmodule
 
