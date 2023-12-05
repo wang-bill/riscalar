@@ -7,6 +7,7 @@ module iq_to_cdb_tb();
   logic [15:0] sw;
   logic [3:0] btn_in;
   logic [31:0] instruction;
+  logic iq_valid;
 
   logic [15:0] led_out;
   logic [2:0] rgb0_out, rgb1_out;
@@ -19,6 +20,7 @@ module iq_to_cdb_tb();
             .sw(sw),
             .btn(btn_in),
             .instruction(instruction),
+            .iq_valid(iq_valid),
 
             .led(led_out),
             .rgb0(rgb0_out),
@@ -47,8 +49,10 @@ module iq_to_cdb_tb();
 
     for (int i = 0; i < 10**3; i=i+1) begin
       #10;
+      iq_valid = 0;
       if (i == 20) begin
-        instruction = 00158593; // addi a1, a1, 1
+        instruction = 32'h00158593; // addi a1, a1, 1
+        iq_valid = 1;
       end
     end
 
