@@ -13,6 +13,7 @@ module top_level(
   input wire [15:0] sw,
   input wire [3:0] btn,
   input wire [31:0] instruction,
+  input wire iq_valid,
 
   output logic [15:0] led,
   output logic [2:0] rgb0, //rgb led
@@ -33,10 +34,9 @@ module top_level(
   
   logic signed [31:0] pc;
   logic signed [31:0] instruction_fetched, iq_instruction_out;
-  logic iq_valid, iq_output_read;
+  // logic iq_valid;
+  logic iq_output_read;
   logic iq_ready, iq_inst_available;
-
-  assign iq_valid = 1;
 
   instruction_queue #(.SIZE(4)) inst_queue (
     .clk_in(clk_100mhz),
