@@ -154,7 +154,7 @@ module top_level(
     .Q_i_in(rob_ix1_out), // get from decode
     .Q_j_in(rob_ix2_out), // get from decode
     .V_i_in(rd1_out), // get from decode
-    .V_j_in(rd2_out), // get from decode
+    .V_j_in((iType == OPIMM) ? imm : rd2_out), // get from decode
     .rob_idx_in(3'b0), // from decode
     .opcode_in(aluFunc), // decode
     .i_ready(rob1_valid_out), // decode
