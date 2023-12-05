@@ -7,18 +7,18 @@ module reservation_station(
     input wire clk_in,
     input wire rst_in,
     input wire valid_input_in, // input is valid
-    input wire fu_busy, // corresponding functional unit is busy
-    input wire [31:0] Q_i_in,
-    input wire [31:0] Q_j_in,
-    input wire [31:0] V_i_in,
-    input wire [31:0] V_j_in,
+    input wire fu_busy_in, // corresponding functional unit is busy
+    input wire [2:0] Q_i_in, //ROB entry number (ROB has size 8)
+    input wire [2:0] Q_j_in,
+    input wire signed [31:0] V_i_in,
+    input wire signed [31:0] V_j_in,
     input wire [2:0] rob_idx_in,
     input wire [3:0] opcode_in,
     input wire i_ready,
     input wire j_ready,
 
-    output logic [31:0] rval1_out,
-    output logic [31:0] rval2_out,
+    output logic signed [31:0] rval1_out,
+    output logic signed [31:0] rval2_out,
     output logic [3:0] opcode_out,
     output logic [2:0] rob_idx_out,
     output logic rs_free_for_input_out, // tells whether reservation station is ready for another input
@@ -27,8 +27,8 @@ module reservation_station(
 
   localparam RS_DEPTH = 3;
 
-  logic [31:0] Q_i_row [RS_DEPTH-1:0];
-  logic [31:0] Q_j_row [RS_DEPTH-1:0];
+  logic [2:0] Q_i_row [RS_DEPTH-1:0];
+  logic [2:0] Q_j_row [RS_DEPTH-1:0];
   logic [31:0] V_i_row [RS_DEPTH-1:0];
   logic [31:0] V_j_row [RS_DEPTH-1:0];
 
