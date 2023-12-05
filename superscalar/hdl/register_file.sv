@@ -11,13 +11,16 @@ module register_file
     input wire we_in, // write enable, high for one clock cycle during write
     input wire [31:0] wd_in, // write data
     input wire [2:0] rob_ix_in,
+    input wire rob_valid_in, // valid = 1 means the reg value is in the rob being calculated; valid = 0 means the reg value is updated
     input wire flush_in, //when flush is high, do something
     input wire [4:0] flush_addrs_in [7:0], //addresses to flush rob_ixs for 
 
     output logic [31:0] rd1_out,
     output logic [31:0] rd2_out,
     output logic [2:0] rob_ix1_out,
-    output logic [2:0] rob_ix2_out
+    output logic [2:0] rob_ix2_out,
+    output logic rob1_valid_out;
+    output logic rob2_valid_out;
   );
 
   logic [31:0] registers [31:0]; // right number -> number of registers; left number -> size of registers
