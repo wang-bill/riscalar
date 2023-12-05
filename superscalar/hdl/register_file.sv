@@ -19,8 +19,8 @@ module register_file
     output logic [31:0] rd2_out,
     output logic [2:0] rob_ix1_out,
     output logic [2:0] rob_ix2_out,
-    output logic rob1_valid_out;
-    output logic rob2_valid_out;
+    output logic rob1_valid_out,
+    output logic rob2_valid_out
   );
 
   logic [31:0] registers [31:0]; // right number -> number of registers; left number -> size of registers

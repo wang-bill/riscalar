@@ -11,7 +11,7 @@ module alu(
     input wire signed [31:0] rval1_in,
     input wire signed [31:0] rval2_in,
     input wire [3:0] aluFunc_in,
-    input wire [2:0] rob_idx,
+    input wire [2:0] rob_idx_in,
 
     output logic signed [31:0] data_out,
     output logic ready_out,
@@ -21,6 +21,7 @@ module alu(
     localparam STALL_DURATION = 25;
     logic [STALL_DURATION-1:0] stall;
     logic stall_done;
+    logic stall_can_start;
 
 
     always_ff @(posedge clk_in) begin

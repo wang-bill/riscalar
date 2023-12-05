@@ -1,14 +1,14 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module processor_tb();
+module iq_to_cdb_tb();
 
   logic clk_in;
-  logic rst_in;
-  logic [3:0] btn;
+  logic [15:0] sw;
+  logic [3:0] btn_in;
   logic [31:0] instruction;
 
-  logic [15:0] led;
+  logic [15:0] led_out;
   logic [2:0] rgb0_out, rgb1_out;
   logic signed [31:0] data_out;
   logic [31:0] addr_out;
@@ -16,8 +16,8 @@ module processor_tb();
 
   top_level uut
           ( .clk_100mhz(clk_in),
-            .rst_in(rst_in),
-            .btn(btn),
+            .sw(sw),
+            .btn(btn_in),
             .instruction(instruction),
 
             .led(led_out),
@@ -35,6 +35,7 @@ module processor_tb();
   //initial block...this is our test simulation
   initial begin
     $dumpfile("iq_to_cdb.vcd");
+    $dumpvars(0,iq_to_cdb_tb);
 
     clk_in = 1;
     btn_in = 0;

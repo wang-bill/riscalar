@@ -36,6 +36,8 @@ module top_level(
   logic iq_valid, iq_output_read;
   logic iq_ready, iq_inst_available;
 
+  assign iq_valid = 1;
+
   instruction_queue #(.SIZE(4)) inst_queue (
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
@@ -83,7 +85,8 @@ module top_level(
 
   // Flush ROB Wires
   logic flush;
-  logic [7:0] flush_addrs;
+  // logic [7:0] flush_addrs;
+  logic [4:0] flush_addrs [7:0];
 
   // registers (part of decode)
   register_file registers(
@@ -104,14 +107,14 @@ module top_level(
     .rob_ix1_out(rob_ix1_out),
     .rob_ix2_out(rob_ix2_out),
     .rob1_valid_out(rob1_valid_out),
-    .rob1_valid_out(rob2_valid_out)
+    .rob2_valid_out(rob2_valid_out)
   );
 
   // Issue instruction
   // Check if RS and ROB is ready
-  logic wire rob_ready;
-  logic wire rs_alu_ready, rs_brAlu_ready, rs_mul_ready, rs_div_ready, rs_mem_ready;
-  logic wire rs_alu_valid_in, rs_brAlu_valid_in, rs_mul_valid_in, rs_div_valid_in, rs_mem_valid_in;
+  logic rob_ready;
+  logic rs_alu_ready, rs_brAlu_ready, rs_mul_ready, rs_div_ready, rs_mem_ready;
+  logic rs_alu_valid_in, rs_brAlu_valid_in, rs_mul_valid_in, rs_div_valid_in, rs_mem_valid_in;
   
   assign rob_ready = 1;
 
@@ -145,7 +148,7 @@ module top_level(
 
   reservation_station rs_alu(
     .clk_in(clk_100mhz),
-    .rst_in(rst_in),
+    .rst_in(sys_rst),
     .valid_input_in(rs_alu_valid_in), // get from decode
     .fu_busy_in(!alu1_ready), // get from fu
     .Q_i_in(rob_ix1_out), // get from decode
@@ -165,14 +168,16 @@ module top_level(
     .rs_output_valid_out(output_valid_alu)
   );
 
-  logic alu1_ready, alu1_output_valid;
   logic fu_alu_busy, alu1_ready, alu1_output_valid;
   logic signed [31:0] alu1_result;
+  logic read_in;
+  assign read_in =1;
   
   alu fu_alu(
       .clk_in(clk_100mhz),
-,     .rst_in(rst_in),
+      .rst_in(sys_rst),
       .valid_in(output_valid_alu),
+      .read_in(read_in),
       .rval1_in(rval1_alu_fu),
       .rval2_in(rval2_alu_fu),
       .aluFunc_in(opcode_alu_fu),
@@ -180,8 +185,7 @@ module top_level(
 
       .data_out(alu1_result), // write to bus somehow
       .ready_out(alu1_ready), // ready for another input
-      .valid_out(alu1_output_valid), // goes high for one clock cycle after output is computed
-      .busy_out(fu_alu_busy) // fu is currently in use
+      .valid_out(alu1_output_valid) // goes high for one clock cycle after output is computed
   );
 
   assign led = alu1_result;
