@@ -12,11 +12,11 @@ module top_level(
   input wire clk_100mhz,
   input wire [15:0] sw,
   input wire [3:0] btn,
+  input wire [31:0] instruction,
+
   output logic [15:0] led,
   output logic [2:0] rgb0, //rgb led
   output logic [2:0] rgb1, //rgb led
-
-  input wire [31:0] instruction,
   output logic signed [31:0] data_out,
   output logic [31:0] addr_out,
   output logic [31:0] nextPc_out
@@ -28,6 +28,8 @@ module top_level(
 
   logic sys_rst;
   assign sys_rst = btn[0];
+
+  assign instruction_fetched = instruction;
   
   logic signed [31:0] pc;
   logic signed [31:0] instruction_fetched, instruction_out;
@@ -133,7 +135,7 @@ module top_level(
     .clk_in(clk_100mhz),
     .rst_in(rst_in),
     .valid_input_in(), // get from decode
-    .fu_busy_in(fu_alu_busy), // get from fu
+    .fu_busy_in(!alu1_ready), // alu1 not ready means fu is busy
     .Q_i_in(), // get from decode
     .Q_j_in(), // get from decode
     .V_i_in(), // get from decode
@@ -151,8 +153,7 @@ module top_level(
     .rs_output_valid_out(output_valid_alu)
   );
 
-
-  logic fu_alu_busy, alu1_ready, alu1_output_valid;
+  logic alu1_ready, alu1_output_valid;
   logic signed [31:0] alu1_result;
   
   alu fu_alu(
@@ -169,6 +170,8 @@ module top_level(
       .ready_out(alu1_ready), // ready for another input
       .valid_out(alu1_output_valid), // goes high after output is ready, goes low after read
   );
+
+  assign led = alu1_result;
 
   // logic cdb_result;
   // logic fu1_read_in;

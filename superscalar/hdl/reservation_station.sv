@@ -63,7 +63,7 @@ module reservation_station(
         busy_row[open_row] <= 1;
       end
 
-      if (!fu_busy && row_ready) begin
+      if (!fu_busy_in && row_ready) begin
         // extracting value from reservation station
         rval1_out <= V_i_row[occupied_row];
         rval2_out <= V_j_row[occupied_row];
