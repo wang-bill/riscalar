@@ -191,6 +191,7 @@ module top_level(
       .clk_in(clk_100mhz),
 ,     .rst_in(rst_in),
       .valid_in(output_valid_alu),
+      .read_in(), // comes from cdb
       .rval1_in(rval1_alu_fu),
       .rval2_in(rval2_alu_fu),
       .aluFunc_in(opcode_alu_fu),
@@ -198,8 +199,7 @@ module top_level(
 
       .data_out(alu1_result), // write to bus somehow
       .ready_out(alu1_ready), // ready for another input
-      .valid_out(alu1_output_valid), // goes high for one clock cycle after output is computed
-      .busy_out(fu_alu_busy) // fu is currently in use
+      .valid_out(alu1_output_valid), // goes high after output is ready, goes low after read
   );
 
   // logic cdb_result;
