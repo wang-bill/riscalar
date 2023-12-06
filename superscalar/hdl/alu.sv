@@ -26,7 +26,7 @@ module alu(
 
     always_ff @(posedge clk_in) begin
         if (rst_in) begin
-            ready_out <= 0;
+            ready_out <= 1;
             valid_out <= 0;
             stall_done <= 0;
             stall_can_start <= 0;
