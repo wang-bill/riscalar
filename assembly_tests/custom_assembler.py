@@ -8,7 +8,8 @@ inst_names = ["add", "sub", "xor", "or", "and", "sll", "srl", "sra", "slt", "slt
               "beq", "bne", "blt", "bge", "bltu", "bgeu", # 6, B
               "jal", "jalr", # 2, J, I
               "lui", "aupic", # 2, U 
-              "ecall", "ebreak"] # 2, I
+              "ecall", "ebreak", # 2, I
+              "mul", "mulh", "mulsu", "mulu", "div", "divu", "rem", "remu"] # 8, R 
 
 def dtb_register(n):
     '''
@@ -162,6 +163,8 @@ def find_funct7(inst_name):
   funct7 = None
   if inst_name in ["sub", "sra"]:
     funct7 = "0100000" # 0x20
+  elif inst_name in ["mul", "mulh", "mulsu", "mulu", "div", "divu", "rem", "remu"]:
+    funct7 = "0000001" # 0x01
   else:
     funct7 = "0000000" # 0x00
   
@@ -197,6 +200,22 @@ def find_funct3(inst_type, inst_name):
       funct3 = "010"
     if inst_name == "sltu":
       funct3 = "011"
+    if inst_name == "mul":
+      funct3 = "000"
+    if inst_name == "mulh":
+      funct3 = "001"
+    if inst_name == "mulsu":
+      funct3 = "010"
+    if inst_name == "mulu":
+      funct3 = "011"
+    if inst_name == "div":
+      funct3 = "100"
+    if inst_name == "divu":
+      funct3 = "101"
+    if inst_name == "rem":
+      funct3 = "110"
+    if inst_name == "remu":
+      funct3 = "111"
 
   if inst_type == "I":
     if inst_name == "addi":

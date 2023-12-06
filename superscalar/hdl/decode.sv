@@ -112,27 +112,32 @@ module decode
 
     // determines enum types
     if (inst_type == R) begin
-      iType_out = OP;
-      if (funct3 == 4'h0 && funct7 == 8'h00) begin
-        aluFunc_out = Add;
-      end else if (funct3 == 4'h0 && funct7 == 8'h20) begin
-        aluFunc_out = Sub;
-      end else if (funct3 == 4'h4 && funct7 == 8'h00) begin
-        aluFunc_out = Xor;
-      end else if (funct3 == 4'h6 && funct7 == 8'h00) begin
-        aluFunc_out = Or;
-      end else if (funct3 == 4'h7 && funct7 == 8'h00) begin
-        aluFunc_out = And;
-      end else if (funct3 == 4'h1 && funct7 == 8'h00) begin
-        aluFunc_out = Sll;
-      end else if (funct3 == 4'h5 && funct7 == 8'h00) begin
-        aluFunc_out = Srl;
-      end else if (funct3 == 4'h5 && funct7 == 8'h20) begin
-        aluFunc_out = Sra;
-      end else if (funct3 == 4'h2 && funct7 == 8'h00) begin
-        aluFunc_out = Slt;
-      end else if (funct3 == 4'h3 && funct7 == 8'h00) begin
-        aluFunc_out = Sltu;
+      if (funct7 == 8'h01) begin // RV32M
+        iType_out = (funct3 < 4) ? MUL : DIV;
+        aluFunc_out = NoAlu;
+      end else begin // normal
+        iType_out = OP;
+        if (funct3 == 4'h0 && funct7 == 8'h00) begin
+          aluFunc_out = Add;
+        end else if (funct3 == 4'h0 && funct7 == 8'h20) begin
+          aluFunc_out = Sub;
+        end else if (funct3 == 4'h4 && funct7 == 8'h00) begin
+          aluFunc_out = Xor;
+        end else if (funct3 == 4'h6 && funct7 == 8'h00) begin
+          aluFunc_out = Or;
+        end else if (funct3 == 4'h7 && funct7 == 8'h00) begin
+          aluFunc_out = And;
+        end else if (funct3 == 4'h1 && funct7 == 8'h00) begin
+          aluFunc_out = Sll;
+        end else if (funct3 == 4'h5 && funct7 == 8'h00) begin
+          aluFunc_out = Srl;
+        end else if (funct3 == 4'h5 && funct7 == 8'h20) begin
+          aluFunc_out = Sra;
+        end else if (funct3 == 4'h2 && funct7 == 8'h00) begin
+          aluFunc_out = Slt;
+        end else if (funct3 == 4'h3 && funct7 == 8'h00) begin
+          aluFunc_out = Sltu;
+        end
       end
     end else if (inst_type == I) begin
       iType_out = OPIMM;
