@@ -36,6 +36,7 @@ module alu(
                 stall <= 1;
                 stall_done <= 0;
                 stall_can_start <= 1;
+                ready_out <= 0;
             end
 
             if (stall_can_start) begin

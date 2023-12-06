@@ -47,16 +47,37 @@ module iq_to_cdb_tb();
     btn_in = 0;
 
 
-    for (int i = 0; i < 10**3; i=i+1) begin
+    for (int i = 0; i < 10**2; i=i+1) begin
       #10;
-      iq_valid = 0;
-      if (i == 20) begin
-        instruction = 32'h00158593; // addi a1, a1, 1
+      if (i == 4) begin
         iq_valid = 1;
+        instruction = 32'h00158593;
+      end 
+      else if (i == 10) begin
+        iq_valid = 1;
+        instruction = 32'h00260613;
       end
+      // else if (i == 5) begin
+      //   iq_valid = 1;
+      //   instruction = 32'h00260613;
+      // end 
+      // else if (i == 6) begin
+      //   iq_valid = 1;
+      //   instruction = 32'h00368693;
+      // end else if (i == 7) begin
+      //   iq_valid = 1;
+      //   instruction = 32'h00470713;
+      // end else if (i == 8) begin
+      //   iq_valid = 1;
+      //   instruction = 32'h00578793;
+      // end else if (i == 9) begin
+      //   iq_valid = 1;
+      //   instruction = 32'h00680813;
+      // end
+      $display("%d", led_out);
     end
 
-    $display("%d", led_out);
+    
 
     $finish;
   end

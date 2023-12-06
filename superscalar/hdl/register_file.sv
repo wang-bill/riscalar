@@ -28,7 +28,7 @@ module register_file
   always_ff @(posedge clk_in) begin
     if (rst_in) begin
       for(integer i=0; i<31; i=i+1) begin
-          registers[i] <= 0;
+        registers[i] <= 0;
       end
     end else if (flush_in) begin
       for(integer i=0; i<8; i=i+1) begin

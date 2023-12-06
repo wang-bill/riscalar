@@ -138,6 +138,8 @@ module top_level(
         rs_alu_valid_in = 1'b1;
       end
     end
+    iq_output_read = (rs_alu_valid_in || rs_brAlu_valid_in || rs_mul_valid_in || 
+                      rs_div_valid_in || rs_mem_valid_in || iType == NOP);
   end
 
   // Reservation Station inputs are the reg file outputs

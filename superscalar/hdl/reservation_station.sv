@@ -34,26 +34,22 @@ module reservation_station(
 
   logic [2:0] rob_idx_row [RS_DEPTH-1:0];
   logic [3:0] opcode_row [RS_DEPTH-1:0];
-  logic busy_row [RS_DEPTH-1:0]; // 1: busy, 0: not busy
+  logic [RS_DEPTH-1:0] busy_row; // 1: busy, 0: not busy
 
   logic [$clog2(RS_DEPTH):0] open_row;
-  logic [$clog2(RS_DEPTH):0] occupied_row;
+  logic [7:0] occupied_row;
 
   logic [2:0] i_ready_row;
   logic [2:0] j_ready_row;
 
   logic row_ready; // whether any entry in the RS is ready to be sent to FU
 
-  logic valid_in;
-
   always_ff @(posedge clk_in) begin
     if (rst_in) begin
-      for (int i = 0; i < RS_DEPTH; i = i+1) begin
-        busy_row[i] <= 0;
-      end
+      busy_row <= 0;
       rs_free_for_input_out <= 1;
     end else begin
-      if (valid_in && rs_free_for_input_out) begin // rs_free_for_input_out check is technically not needed, but put just in case -- verifies that input is going into valid row
+      if (valid_input_in && rs_free_for_input_out) begin // rs_free_for_input_out check is technically not needed, but put just in case -- verifies that input is going into valid row
         // putting value into reservation station
         Q_i_row[open_row] <= Q_i_in;
         Q_j_row[open_row] <= Q_j_in;
