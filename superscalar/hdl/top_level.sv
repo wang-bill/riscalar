@@ -190,10 +190,10 @@ module top_level(
     .V_j_in((iType == OPIMM) ? imm : rd2_out), // get from decode
     .rob_idx_in(rob_ix_in), // from decode
     .opcode_in(aluFunc), // decode
-    // .i_ready(rob1_valid_out), // decode
-    // .j_ready(rob2_valid_out), // decode
-    .i_ready(1),
-    .j_ready(1),
+    .i_ready(rob1_valid_out), // decode
+    .j_ready(rob2_valid_out), // decode
+    // .i_ready(1),
+    // .j_ready(1),
 
     .rval1_out(rval1_alu_fu),
     .rval2_out(rval2_alu_fu),
