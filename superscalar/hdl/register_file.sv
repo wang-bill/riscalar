@@ -41,7 +41,7 @@ module register_file
       for (integer j=0; j<8; j=j+1) begin
         rob_ixs[flush_addrs_in[j]] <= 3'bx; //some value that will help for debugging for now
         // rob_ixs[i] <= 3'b0; //will set to this later
-        rob_valid[flush_addrs_in[i]] <= 0;
+        rob_valid[flush_addrs_in[j]] <= 0;
       end 
     end else begin
       if (we_in) begin
