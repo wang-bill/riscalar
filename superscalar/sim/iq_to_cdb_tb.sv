@@ -50,34 +50,10 @@ module iq_to_cdb_tb();
     for (int i = 0; i < 2*10**2; i=i+1) begin
       #10;
       
-      if (i == 4) begin
+      if (i == 10) begin
         iq_valid = 1;
         instruction = 32'h00158593;
-      end else if (i == 5) begin
-        iq_valid = 1;
-        instruction = 32'h00260613;
-      end else if (i == 6) begin
-        iq_valid = 1;
-        instruction = 32'h00368693;
-      end else if (i == 7) begin
-        iq_valid = 1;
-        instruction = 32'h00470713;
-      end else begin
-        iq_valid = 0;
       end
-      // else if (i == 6) begin
-      //   iq_valid = 1;
-      //   instruction = 32'h00368693;
-      // end else if (i == 7) begin
-      //   iq_valid = 1;
-      //   instruction = 32'h00470713;
-      // end else if (i == 8) begin
-      //   iq_valid = 1;
-      //   instruction = 32'h00578793;
-      // end else if (i == 9) begin
-      //   iq_valid = 1;
-      //   instruction = 32'h00680813;
-      // end
       $display("%d", led_out);
     end
 

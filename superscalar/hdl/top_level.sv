@@ -97,7 +97,9 @@ module top_level(
     .we_in(we),
     .wd_in(wd),
     
-    .issue_in(iq_output_read && (iType == OP || iType == OPIMM || iType == LUI || iType == JAL || iType == JALR || iType == STORE || iq == LUI || iq == MUL || iq == DIV)),
+    .issue_in(iq_output_read && (iType == OP || iType == OPIMM || iType == LUI 
+                                || iType == JAL || iType == JALR || iType == STORE 
+                                || iType == LUI || iType == MUL || iType == DIV)),
     .rob_ix_in(issue_rob_ix),
     .rd_in(rd),
     
@@ -235,7 +237,7 @@ module top_level(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
     .valid_input_in(rs_mul_valid_in), // get from decode
-    .fu_busy_in(!mul_ready), // get from fu
+    .fu_busy_in(!fu_mul_ready), // get from fu
     .Q_i_in(rob_ix1_out), // get from decode
     .Q_j_in(rob_ix2_out), // get from decode
     .V_i_in(rd1_out), // get from decode
@@ -257,7 +259,6 @@ module top_level(
   logic [2:0] fu_mul_rob_ix_out;
   logic signed [31:0] fu_mul_result;
   logic fu_mul_read_in;
-  assign fu_mul_read_in = 1;
   
   multiplier fu_mul(
     .clk_in(clk_100mhz),
@@ -280,12 +281,6 @@ module top_level(
   assign wd = rob_commit_value;
   assign wa = rob_commit_dest;
   assign we = commit_out;
-
-
-  logic [2:0] cdb_rob_ix_in;
-  logic [31:0] cdb_value_in;
-  logic [31:0] cdb_dest_in;
-  logic cdb_valid_in;
   
   // Write to CDB
   always_ff @(posedge clk_100mhz) begin

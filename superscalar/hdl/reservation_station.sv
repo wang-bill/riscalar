@@ -20,7 +20,7 @@ module reservation_station(
     input wire j_ready_in,
 
     //CDB Inputs
-    input wire [PTR_SIZE-1:0] cdb_rob_ix_in,
+    input wire [2:0] cdb_rob_ix_in,
     input wire signed [31:0] cdb_value_in,
     input wire signed [31:0] cdb_dest_in,
     input wire cdb_valid_in,
