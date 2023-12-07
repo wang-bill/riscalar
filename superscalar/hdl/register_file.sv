@@ -52,13 +52,3 @@ end
 endmodule
 
 `default_nettype wire
-
-
-
-always_ff @(posedge) begin
-  a <= 1;
-end
-
-always_comb begin
-  b = !a
-end
