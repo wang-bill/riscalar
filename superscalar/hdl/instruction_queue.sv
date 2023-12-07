@@ -4,6 +4,7 @@ module instruction_queue#(parameter SIZE=4)(
     input wire valid_in,
     input wire output_read_in,
     input wire [31:0] instruction_in,
+    
     output logic inst_available_out,
     output logic [31:0] instruction_out,
     output logic ready_out

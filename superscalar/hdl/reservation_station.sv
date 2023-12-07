@@ -52,7 +52,7 @@ module reservation_station(
       rs_free_for_input_out <= 1;
       one_cycle_after_sending <= 0;
     end else begin
-      if (valid_input_in) begin // rs_free_for_input_out check is technically not needed, but put just in case -- verifies that input is going into valid row
+      if (valid_input_in && rs_free_for_input_out) begin // rs_free_for_input_out check is technically not needed, but put just in case -- verifies that input is going into valid row
         // putting value into reservation station
         Q_i_row[open_row] <= Q_i_in;
         Q_j_row[open_row] <= Q_j_in;

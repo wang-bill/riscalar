@@ -18,7 +18,7 @@ module alu(
     output logic valid_out // high until output is read
 );
 
-    localparam STALL_DURATION = 25;
+    localparam STALL_DURATION = 15;
     logic [STALL_DURATION-1:0] stall;
     logic stall_done;
     logic stall_can_start;
