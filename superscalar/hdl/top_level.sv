@@ -123,8 +123,6 @@ module top_level(
 
   // CDB Inputs
   logic [2:0] rob_ix_in;
-  
-  logic [2:0] rob_ix_in;
   logic [31:0] cdb_value_in, cdb_dest_in;
   logic cdb_valid_in;
   logic commit_out;
