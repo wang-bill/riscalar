@@ -99,9 +99,9 @@ module top_level(
     .we_in(we),
     .wd_in(wd),
     
-    .issue_in(),
+    .issue_in(iq_output_read && iType != NOP),
     .rob_ix_in(wrob_ix),
-    .rd_in(),
+    .rd_in(rd),
     
     .flush_in(flush),
     .flush_addrs_in(flush_addrs),
@@ -133,8 +133,8 @@ module top_level(
   rob #(.SIZE(8)) reorder_buffer( 
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
+
     .valid_in(iq_output_read && iType != NOP),
-    
     .iType_in(iType),
     .value_in(32'hFFFF_FFFF), //might be an uneccesary input since we never know the actual value yet initially
     .dest_in(rd),
