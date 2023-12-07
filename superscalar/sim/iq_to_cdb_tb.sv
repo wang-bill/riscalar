@@ -49,6 +49,7 @@ module iq_to_cdb_tb();
 
     for (int i = 0; i < 10**2; i=i+1) begin
       #10;
+      iq_valid = 0;
       if (i == 4) begin
         iq_valid = 1;
         instruction = 32'h00158593;
@@ -56,11 +57,10 @@ module iq_to_cdb_tb();
       else if (i == 10) begin
         iq_valid = 1;
         instruction = 32'h00260613;
-      end
-      // else if (i == 5) begin
-      //   iq_valid = 1;
-      //   instruction = 32'h00260613;
-      // end 
+      end else if (i == 7) begin
+        iq_valid = 1;
+        instruction = 32'h00368693;
+      end 
       // else if (i == 6) begin
       //   iq_valid = 1;
       //   instruction = 32'h00368693;

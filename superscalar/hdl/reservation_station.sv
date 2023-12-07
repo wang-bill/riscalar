@@ -37,10 +37,12 @@ module reservation_station(
   logic [RS_DEPTH-1:0] busy_row; // 1: busy, 0: not busy
 
   logic [$clog2(RS_DEPTH):0] open_row;
-  logic [7:0] occupied_row;
+  logic [$clog2(RS_DEPTH):0] occupied_row;
 
   logic [2:0] i_ready_row;
   logic [2:0] j_ready_row;
+
+  logic one_cycle_after_sending;
 
   logic row_ready; // whether any entry in the RS is ready to be sent to FU
 
@@ -48,8 +50,9 @@ module reservation_station(
     if (rst_in) begin
       busy_row <= 0;
       rs_free_for_input_out <= 1;
+      one_cycle_after_sending <= 0;
     end else begin
-      if (valid_input_in && rs_free_for_input_out) begin // rs_free_for_input_out check is technically not needed, but put just in case -- verifies that input is going into valid row
+      if (valid_input_in) begin // rs_free_for_input_out check is technically not needed, but put just in case -- verifies that input is going into valid row
         // putting value into reservation station
         Q_i_row[open_row] <= Q_i_in;
         Q_j_row[open_row] <= Q_j_in;
@@ -65,7 +68,7 @@ module reservation_station(
         j_ready_row[open_row] <= j_ready;
       end
 
-      if (!fu_busy_in && row_ready) begin
+      if (!fu_busy_in && row_ready && !one_cycle_after_sending) begin
         // extracting value from reservation station
         rval1_out <= V_i_row[occupied_row];
         rval2_out <= V_j_row[occupied_row];
@@ -73,7 +76,9 @@ module reservation_station(
         rob_idx_out <= rob_idx_row[occupied_row];
         busy_row[occupied_row] <= 0;
         rs_output_valid_out <= 1;
+        one_cycle_after_sending <= 1;
       end else begin
+        one_cycle_after_sending <= 0;
         rs_output_valid_out <= 0;
       end
     end
