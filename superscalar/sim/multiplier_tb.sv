@@ -29,19 +29,19 @@ module multiplier_tb();
     .ready_out(ready_out),
     .valid_out(valid_out) // high until output is read
   );
-  mult_gen_0 mult(
-    .CLK(clk_in),
-    .A(a_in),
-    .B(b_in),
-    .P(product_out)
-  );
+  // mult_gen_0 mult(
+  //   .CLK(clk_in),
+  //   .A(a_in),
+  //   .B(b_in),
+  //   .P(product_out)
+  // );
 
-  mult_gen_1 mult_pipelined10(
-    .CLK(clk_in),
-    .A(a_in),
-    .B(b_in),
-    .P(product_out_small)
-  );
+  // mult_gen_1 mult_pipelined10(
+  //   .CLK(clk_in),
+  //   .A(a_in),
+  //   .B(b_in),
+  //   .P(product_out_small)
+  // );
 
   always begin
     #5;  //every 5 ns switch...so period of clock is 10 ns...100 MHz clock
@@ -49,6 +49,8 @@ module multiplier_tb();
   end
 
   initial begin
+    $dumpfile("multiplier_tb.vcd");
+    $dumpvars(0,multiplier_tb);
     #5;
     clk_in = 1;
     #5;
@@ -65,7 +67,6 @@ module multiplier_tb();
     read_in = 0;
     rob_ix_in = 32'h0;
     for (int i = 0; i < 10; i = i+1) begin
-      // $display("%d: %d  %d", i, product_out, product_out_small);
       if (i == 0) begin
         valid_in = 1;
       end else if (i == 1) begin

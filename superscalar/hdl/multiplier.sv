@@ -24,18 +24,39 @@ module multiplier(
   logic old_calculating;
   logic signed [31:0] a_val;
   logic signed [31:0] b_val;
+  logic signed [31:0] p0;
+  logic signed [31:0] p1;
+  logic signed [31:0] p2;
+  logic signed [31:0] p3;
+  logic signed [31:0] p4;
 
   always_ff @(posedge clk_in) begin
     if (rst_in) begin
       counter <= 0;
+      p0 <= 0;
+      p1 <= 0;
+      p2 <= 0;
+      p3 <= 0;
+      p4 <= 0;
     end else begin
       if (valid_in) begin
         counter <= 1;
         rob_ix_out <= rob_ix_in;
+        p0 <= rval1_in * rval2_in;
       end else if (counter >= 1'b1 && counter <= LATENCY-1) begin
+        p1 <= p0;
+        p2 <= p1;
+        p3 <= p2;
+        p4 <= p3;
+        data_out <= p4;
         counter <= counter + 1;
       end else if (valid_out && read_in) begin
         counter <= 0;
+        p0 <= 0;
+        p1 <= 0;
+        p2 <= 0;
+        p3 <= 0;
+        p4 <= 0;
       end
     end
   end
@@ -45,10 +66,10 @@ module multiplier(
     ready_out = counter == 0;
   end
 
-  mult_gen_1 mult(
-    .CLK(clk_in),
-    .A(rval1_in),
-    .B(rval2_in),
-    .P(data_out)
-  );
+  // mult_gen_1 mult(
+  //   .CLK(clk_in),
+  //   .A(rval1_in),
+  //   .B(rval2_in),
+  //   .P(data_out)
+  // );
 endmodule
