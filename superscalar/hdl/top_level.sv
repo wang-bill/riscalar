@@ -121,10 +121,15 @@ module top_level(
   logic rs_alu_ready, rs_brAlu_ready, rs_mul_ready, rs_div_ready, rs_mem_ready;
   logic rs_alu_valid_in, rs_brAlu_valid_in, rs_mul_valid_in, rs_div_valid_in, rs_mem_valid_in;
   
+  logic [2:0] rob_ix_in;
+  logic [31:0] cdb_value_in, cdb_dest_in;
+  logic cdb_valid_in;
+  logic commit_out;
+
   rob #(.SIZE(8)) reorder_buffer( 
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
-    .valid_in(iq_output_read),
+    .valid_in(iq_output_read && iType != NOP),
     
     .iType_in(iType),
     .value_in(32'hFFFF_FFFF), //might be an uneccesary input since we never know the actual value yet initially
@@ -133,7 +138,7 @@ module top_level(
     //CDB Inputs
     .rob_ix_in(rob_ix_in),
     .cdb_value_in(cdb_value_in),
-    .cdb_dest_in(cdb_value_in),
+    .cdb_dest_in(cdb_dest_in),
     .cdb_valid_in(cdb_valid_in),
     //Commit Outputs
     .iType_out(rob_commit_iType),
@@ -183,7 +188,7 @@ module top_level(
     .Q_j_in(rob_ix2_out), // get from decode
     .V_i_in(rd1_out), // get from decode
     .V_j_in((iType == OPIMM) ? imm : rd2_out), // get from decode
-    .rob_idx_in(3'b0), // from decode
+    .rob_idx_in(rob_ix_in), // from decode
     .opcode_in(aluFunc), // decode
     // .i_ready(rob1_valid_out), // decode
     // .j_ready(rob2_valid_out), // decode
