@@ -44,9 +44,10 @@ module top_level(
     .valid_in(iq_valid),
     .output_read_in(iq_output_read),
     .instruction_in(instruction_fetched),
-    .inst_available_out(iq_ready),
+
+    .inst_available_out(iq_inst_available),
     .instruction_out(iq_instruction_out),
-    .ready_out(iq_inst_available)
+    .ready_out(iq_ready)
   );
 
   // decode
