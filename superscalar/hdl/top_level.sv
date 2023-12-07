@@ -294,7 +294,24 @@ module top_level(
   assign wd = rob_commit_value;
   assign wa = rob_commit_dest;
   assign we = commit_out;
+
+
+  logic [2:0] cdb_rob_ix_in;
+  logic [31:0] cdb_value_in;
+  logic [31:0] cdb_dest_in;
+  logic cdb_valid_in;
   
+
+  always_ff @(posedge clk_100mhz) begin
+    if (fu_alu_output_valid) begin
+      cdb_rob_ix_in <= 
+      cdb_value_in <= fu_alu_result;
+      cdb_dest_in <= 32'h0000; // not needed
+      cdb_valid_in <= 1;
+    end else if (fu_mul_output_valid) begin
+    
+    end
+  end
 
 endmodule
 
