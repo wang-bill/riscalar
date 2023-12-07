@@ -8,7 +8,7 @@ module multiplier_tb();
   logic ready_out, valid_out;
   logic signed [31:0] rval1_in, rval2_in;
   logic signed [31:0] data_out;
-  logic [2:0] rob_idx_in, rob_idx_out;
+  logic [2:0] rob_ix_in, rob_ix_out;
 
   logic signed [31:0] a_in, b_in;
   logic signed [63:0] product_out;
@@ -22,9 +22,9 @@ module multiplier_tb();
     
     .rval1_in(rval1_in),
     .rval2_in(rval2_in),
-    .rob_idx_in(rob_idx_in),
+    .rob_ix_in(rob_ix_in),
 
-    .rob_idx_out(rob_idx_out),
+    .rob_ix_out(rob_ix_out),
     .data_out(data_out),
     .ready_out(ready_out),
     .valid_out(valid_out) // high until output is read
@@ -63,7 +63,7 @@ module multiplier_tb();
     rval1_in = 32'h5;
     rval2_in = 32'h4;
     read_in = 0;
-    rob_idx_in = 32'h0;
+    rob_ix_in = 32'h0;
     for (int i = 0; i < 10; i = i+1) begin
       // $display("%d: %d  %d", i, product_out, product_out_small);
       if (i == 0) begin

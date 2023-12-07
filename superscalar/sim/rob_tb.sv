@@ -12,7 +12,7 @@ module rob_tb();
     //Issue Output
     logic [2:0] inst_rob_ix_out;
     //CDB Inputs
-    logic [2:0] rob_ix_in;
+    logic [2:0] cdb_rob_ix_in;
     logic signed [31:0] cdb_value_in;
     logic signed [31:0] cdb_dest_in;
     logic cdb_valid_in;
@@ -34,7 +34,7 @@ module rob_tb();
         .dest_in(dest_in),
         .inst_rob_ix_out(inst_rob_ix_out),
         //CDB Inputs
-        .rob_ix_in(rob_ix_in),
+        .cdb_rob_ix_in(cdb_rob_ix_in),
         .cdb_value_in(cdb_value_in),
         .cdb_dest_in(cdb_value_in),
         .cdb_valid_in(cdb_valid_in),
@@ -78,7 +78,7 @@ module rob_tb();
     valid_in = 1'b0; // stop writing values to buffer
     #100
     for (int i = 0; i < 8; i=i+1) begin
-      rob_ix_in = i;
+      cdb_rob_ix_in = i;
       cdb_dest_in = i+8;
       cdb_value_in = i+8;
       cdb_valid_in = 1'b1;

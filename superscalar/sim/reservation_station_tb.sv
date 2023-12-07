@@ -11,7 +11,7 @@ module reservation_station_tb();
     logic [2:0] Q_j_in;
     logic signed [31:0] V_i_in;
     logic signed [31:0] V_j_in;
-    logic [2:0] rob_idx_in;
+    logic [2:0] rob_ix_in;
     logic [3:0] opcode_in;
     logic i_ready_in;
     logic j_ready_in;
@@ -19,7 +19,7 @@ module reservation_station_tb();
     logic signed [31:0] rval1_out;
     logic signed [31:0] rval2_out;
     logic [3:0] opcode_out;
-    logic [2:0] rob_idx_out;
+    logic [2:0] rob_ix_out;
     logic rs_free_for_input_out; // tells whether reservation station is ready for another input
     logic rs_output_valid_out; // output from RS is valid
 
@@ -32,7 +32,7 @@ module reservation_station_tb();
       .Q_j_in(Q_j_in),
       .V_i_in(V_i_in),
       .V_j_in(V_j_in),
-      .rob_idx_in(rob_idx_in),
+      .rob_ix_in(rob_ix_in),
       .opcode_in(opcode_in),
       .i_ready_in(i_ready_in),
       .j_ready_in(j_ready_in),
@@ -40,7 +40,7 @@ module reservation_station_tb();
       .rval1_out(rval1_out),
       .rval2_out(rval2_out),
       .opcode_out(opcode_out),
-      .rob_idx_out(rob_idx_out),
+      .rob_ix_out(rob_ix_out),
       .rs_free_for_input_out(rs_free_for_input_out),
       .rs_output_valid_out(rs_output_valid_out)
   ); 
