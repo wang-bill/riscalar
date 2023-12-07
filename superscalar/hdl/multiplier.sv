@@ -9,9 +9,9 @@ module multiplier(
   
   input wire signed [31:0] rval1_in,
   input wire signed [31:0] rval2_in,
-  input wire [2:0] rob_idx_in,
+  input wire [2:0] rob_ix_in,
 
-  output logic [2:0] rob_idx_out,
+  output logic [2:0] rob_ix_out,
   output logic signed [31:0] data_out,
   output logic ready_out,
   output logic valid_out // high until output is read
@@ -31,7 +31,7 @@ module multiplier(
     end else begin
       if (valid_in) begin
         counter <= 1;
-        rob_idx_out <= rob_idx_in;
+        rob_ix_out <= rob_ix_in;
       end else if (counter >= 1'b1 && counter <= LATENCY-1) begin
         counter <= counter + 1;
       end else if (valid_out && read_in) begin

@@ -98,8 +98,11 @@ module top_level(
     .wa_in(wa),
     .we_in(we),
     .wd_in(wd),
+    
+    .issue_in(),
     .rob_ix_in(wrob_ix),
-    // .rob_valid_in(rf_rob_valid),
+    .rd_in(),
+    
     .flush_in(flush),
     .flush_addrs_in(flush_addrs),
 
@@ -113,7 +116,7 @@ module top_level(
 
   // Issue instruction
   // Check if RS and ROB is ready
-  logic rob_ready, rob_ix_issue;
+  logic rob_ready, issue_rob_ix;
   logic rob_commit;
   logic [3:0] rob_commit_iType;
   logic signed [31:0] rob_commit_value;
@@ -135,7 +138,7 @@ module top_level(
     .iType_in(iType),
     .value_in(32'hFFFF_FFFF), //might be an uneccesary input since we never know the actual value yet initially
     .dest_in(rd),
-    .inst_rob_ix_out(rob_ix_issue),
+    .inst_rob_ix_out(issue_rob_ix),
     //CDB Inputs
     .cdb_rob_ix_in(cdb_rob_ix_in),
     .cdb_value_in(cdb_value_in),
@@ -175,9 +178,9 @@ module top_level(
   end
 
   // Reservation Station inputs are the reg file outputs
-  logic [31:0] rval1_alu_fu, rval2_alu_fu;
-  logic [3:0] opcode_alu_fu;
-  logic [2:0] rob_idx_alu_fu;
+  logic [31:0] fu_alu_rval1, fu_alu_rval2;
+  logic [3:0] fu_alu_opcode;
+  logic [2:0] fu_alu_rob_ix_in, fu_alu_rob_ix_out;
   logic output_valid_alu;
   logic i_ready, j_ready;
   assign i_ready = !rob1_valid_out;
@@ -192,17 +195,15 @@ module top_level(
     .Q_j_in(rob_ix2_out), // get from decode
     .V_i_in(rd1_out), // get from decode
     .V_j_in((iType == OPIMM) ? imm : rd2_out), // get from decode
-    .rob_idx_in(rob_ix_issue), // from decode
+    .rob_ix_in(issue_rob_ix), // from decode
     .opcode_in(aluFunc), // decode
     .i_ready_in(i_ready), // decode
     .j_ready_in(j_ready), // decode
-    // .i_ready(1),
-    // .j_ready(1),
 
-    .rval1_out(rval1_alu_fu),
-    .rval2_out(rval2_alu_fu),
-    .opcode_out(opcode_alu_fu),
-    .rob_idx_out(rob_idx_alu_fu),
+    .rval1_out(fu_alu_rval1),
+    .rval2_out(fu_alu_rval2),
+    .opcode_out(fu_alu_opcode),
+    .rob_ix_out(fu_alu_rob_ix_in),
     .rs_free_for_input_out(rs_alu_ready),
     .rs_output_valid_out(output_valid_alu)
   );
@@ -217,19 +218,20 @@ module top_level(
     .rst_in(sys_rst),
     .valid_in(output_valid_alu),
     .read_in(fu_alu_read_in),
-    .rval1_in(rval1_alu_fu),
-    .rval2_in(rval2_alu_fu),
-    .aluFunc_in(opcode_alu_fu),
-    .rob_idx_in(rob_idx_alu_fu),
+    .rval1_in(fu_alu_rval1),
+    .rval2_in(fu_alu_rval2),
+    .aluFunc_in(fu_alu_opcode),
+    .rob_ix_in(fu_alu_rob_ix_in),
 
+    .rob_ix_out(fu_alu_rob_ix_out),
     .data_out(fu_alu_result), // write to bus somehow
     .ready_out(fu_alu_ready), // ready for another input
     .valid_out(fu_alu_output_valid) // goes high for one clock cycle after output is computed
   );
 
-  logic [31:0] rval1_mul_fu, rval2_mul_fu;
-  logic [3:0] opcode_mul_fu;
-  logic [2:0] rob_idx_mul_fu;
+  logic [31:0] fu_mul_rval1, fu_mul_rval2;
+  logic [3:0] fu_mul_opcode;
+  logic [2:0] fu_mul_rob_ix_in;
   logic output_valid_mul;
 
   reservation_station rs_mul(
@@ -241,20 +243,21 @@ module top_level(
     .Q_j_in(rob_ix2_out), // get from decode
     .V_i_in(rd1_out), // get from decode
     .V_j_in((iType == OPIMM) ? imm : rd2_out), // get from decode
-    .rob_idx_in(rob_ix_issue), // from decode
+    .rob_ix_in(issue_rob_ix), // from decode
     .opcode_in(aluFunc), // decode
     .i_ready_in(i_ready), // decode
     .j_ready_in(j_ready), // decode
 
-    .rval1_out(rval1_mul_fu),
-    .rval2_out(rval2_mul_fu),
-    .opcode_out(opcode_mul_fu),
-    .rob_idx_out(rob_idx_mul_fu),
+    .rval1_out(fu_mul_rval1),
+    .rval2_out(fu_mul_rval2),
+    .opcode_out(fu_mul_opcode),
+    .rob_ix_out(fu_mul_rob_ix_in),
     .rs_free_for_input_out(rs_mul_ready),
     .rs_output_valid_out(output_valid_mul)
   );
 
   logic fu_mul_busy, fu_mul_ready, fu_mul_output_valid;
+  logic [2:0] fu_mul_rob_ix_out;
   logic signed [31:0] fu_mul_result;
   logic fu_mul_read_in;
   assign fu_mul_read_in = 1;
@@ -264,10 +267,11 @@ module top_level(
     .rst_in(sys_rst),
     .valid_in(output_valid_mul),
     .read_in(fu_mul_read_in),
-    .rval1_in(rval1_mul_fu),
-    .rval2_in(rval2_mul_fu),
-    .rob_idx_in(rob_idx_mul_fu),
+    .rval1_in(fu_mul_rval1),
+    .rval2_in(fu_mul_rval2),
+    .rob_ix_in(fu_mul_rob_ix_in),
 
+    .rob_ix_out(fu_mul_rob_ix_out),
     .data_out(fu_mul_result), // write to bus somehow
     .ready_out(fu_mul_ready), // ready for another input
     .valid_out(fu_mul_output_valid) // stays high after output computed until output read

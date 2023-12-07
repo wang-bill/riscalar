@@ -11,8 +11,9 @@ module alu(
     input wire signed [31:0] rval1_in,
     input wire signed [31:0] rval2_in,
     input wire [3:0] aluFunc_in,
-    input wire [2:0] rob_idx_in,
+    input wire [2:0] rob_ix_in,
 
+    output wire [2:0] rob_ix_out,
     output logic signed [31:0] data_out,
     output logic ready_out,
     output logic valid_out // high until output is read

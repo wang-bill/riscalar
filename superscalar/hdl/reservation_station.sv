@@ -12,7 +12,7 @@ module reservation_station(
     input wire [2:0] Q_j_in,
     input wire signed [31:0] V_i_in,
     input wire signed [31:0] V_j_in,
-    input wire [2:0] rob_idx_in,
+    input wire [2:0] rob_ix_in,
     input wire [3:0] opcode_in,
     input wire i_ready_in,
     input wire j_ready_in,
@@ -20,7 +20,7 @@ module reservation_station(
     output logic signed [31:0] rval1_out,
     output logic signed [31:0] rval2_out,
     output logic [3:0] opcode_out,
-    output logic [2:0] rob_idx_out,
+    output logic [2:0] rob_ix_out,
     output logic rs_free_for_input_out, // tells whether reservation station is ready for another input
     output logic rs_output_valid_out // output from RS is valid
 );
@@ -32,7 +32,7 @@ module reservation_station(
   logic [31:0] V_i_row [RS_DEPTH-1:0];
   logic [31:0] V_j_row [RS_DEPTH-1:0];
 
-  logic [2:0] rob_idx_row [RS_DEPTH-1:0];
+  logic [2:0] rob_ix_row [RS_DEPTH-1:0];
   logic [3:0] opcode_row [RS_DEPTH-1:0];
   logic [RS_DEPTH-1:0] busy_row; // 1: busy, 0: not busy
 
@@ -59,7 +59,7 @@ module reservation_station(
         V_i_row[open_row] <= V_i_in;
         V_j_row[open_row] <= V_j_in;
 
-        rob_idx_row[open_row] <= rob_idx_in;
+        rob_ix_row[open_row] <= rob_ix_in;
         opcode_row[open_row] <= opcode_in;
 
         busy_row[open_row] <= 1;
@@ -73,7 +73,7 @@ module reservation_station(
         rval1_out <= V_i_row[occupied_row];
         rval2_out <= V_j_row[occupied_row];
         opcode_out <= opcode_row[occupied_row];
-        rob_idx_out <= rob_idx_row[occupied_row];
+        rob_ix_out <= rob_ix_row[occupied_row];
         busy_row[occupied_row] <= 0;
         rs_output_valid_out <= 1;
         one_cycle_after_sending <= 1;
