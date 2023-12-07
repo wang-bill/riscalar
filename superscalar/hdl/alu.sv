@@ -65,6 +65,7 @@ module alu(
     logic [31:0] rval1_u, rval2_u;
     assign rval1_u = rval1_in;
     assign rval2_u = rval2_in;
+    assign rob_ix_out = rob_ix_in;
     always_comb begin
         case (aluFunc_in)
             Add : data_out = rval1_in + rval2_in;

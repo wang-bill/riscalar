@@ -8,6 +8,8 @@ module reservation_station(
     input wire rst_in,
     input wire valid_input_in, // input is valid
     input wire fu_busy_in, // corresponding functional unit is busy
+    
+    // Issue
     input wire [2:0] Q_i_in, //ROB entry number (ROB has size 8)
     input wire [2:0] Q_j_in,
     input wire signed [31:0] V_i_in,
@@ -17,6 +19,13 @@ module reservation_station(
     input wire i_ready_in,
     input wire j_ready_in,
 
+    //CDB Inputs
+    input wire [PTR_SIZE-1:0] cdb_rob_ix_in,
+    input wire signed [31:0] cdb_value_in,
+    input wire signed [31:0] cdb_dest_in,
+    input wire cdb_valid_in,
+
+    // Outputs
     output logic signed [31:0] rval1_out,
     output logic signed [31:0] rval2_out,
     output logic [3:0] opcode_out,
@@ -52,6 +61,21 @@ module reservation_station(
       rs_free_for_input_out <= 1;
       one_cycle_after_sending <= 0;
     end else begin
+
+      if (cdb_valid_in) begin
+        for (int i = 0; i < RS_DEPTH; i = i+1) begin
+          if (Q_i_row[i] == cdb_rob_ix_in) begin
+            V_i_row[i] <= cdb_value_in;
+            i_ready_row[i] <= 1;
+          end
+
+          if (Q_j_row[i] == cdb_rob_ix_in) begin
+            V_j_row[i] <= cdb_value_in;
+            j_ready_row[i] <= 1;
+          end
+        end
+      end
+
       if (valid_input_in && rs_free_for_input_out) begin // rs_free_for_input_out check is technically not needed, but put just in case -- verifies that input is going into valid row
         // putting value into reservation station
         Q_i_row[open_row] <= Q_i_in;

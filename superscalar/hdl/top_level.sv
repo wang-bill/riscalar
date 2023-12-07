@@ -209,7 +209,6 @@ module top_level(
   logic fu_alu_busy, fu_alu_ready, fu_alu_output_valid;
   logic signed [31:0] fu_alu_result;
   logic fu_alu_read_in;
-  assign fu_alu_read_in = 1;
   
   alu fu_alu(
     .clk_in(clk_100mhz),
@@ -277,17 +276,6 @@ module top_level(
 
   assign led = fu_alu_result;
 
-  // logic cdb_result;
-  // logic fu1_read_in;
-  // logic fu2_read_in;
-  // if (functional_unit1_ready) begin
-  //   cdb_result <= fu_1_result;
-  //   fu1_read_in <= 1;
-  // else begin
-  //   cdb_result <= fu_2_result;
-  //   fu2_read_in <= 1;
-  // end
-
   //Commit Stage
   assign wd = rob_commit_value;
   assign wa = rob_commit_dest;
@@ -299,15 +287,24 @@ module top_level(
   logic [31:0] cdb_dest_in;
   logic cdb_valid_in;
   
-
+  // Write to CDB
   always_ff @(posedge clk_100mhz) begin
     if (fu_alu_output_valid) begin
-      cdb_rob_ix_in <= 
+      cdb_rob_ix_in <= fu_alu_rob_ix_out;
       cdb_value_in <= fu_alu_result;
-      cdb_dest_in <= 32'h0000; // not needed
+      cdb_dest_in <= 32'h0000; // destination address is not needed
       cdb_valid_in <= 1;
+      fu_alu_read_in <= 1;
     end else if (fu_mul_output_valid) begin
-    
+      cdb_rob_ix_in <= fu_mul_rob_ix_out;
+      cdb_value_in <= fu_mul_result;
+      cdb_dest_in <= 32'h0000;
+      cdb_valid_in <= 1;
+      fu_mul_read_in <= 1;
+    end else begin
+      cdb_valid_in <= 0;
+      fu_alu_read_in <= 0;
+      fu_mul_read_in <= 0;
     end
   end
 
