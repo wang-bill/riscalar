@@ -112,11 +112,36 @@ module top_level(
 
   // Issue instruction
   // Check if RS and ROB is ready
-  logic rob_ready;
+  logic rob_ready, rob_ix_issue;
+  logic rob_commit;
+  logic [3:0] rob_commit_iType;
+  logic signed [31:0] rob_commit_value;
+  logic signed [31:0] rob_commit_dest;
   logic rs_alu_ready, rs_brAlu_ready, rs_mul_ready, rs_div_ready, rs_mem_ready;
   logic rs_alu_valid_in, rs_brAlu_valid_in, rs_mul_valid_in, rs_div_valid_in, rs_mem_valid_in;
   
-  assign rob_ready = 1;
+  rob #(.SIZE(8)) reorder_buffer( 
+    .clk_in(clk_100mhz),
+    .rst_in(sys_rst),
+    .valid_in(iq_output_read),
+    
+    .iType_in(iType),
+    .value_in(32'hFFFF_FFFF), //might be an uneccesary input since we never know the actual value yet initially
+    .dest_in(rd),
+    .inst_rob_ix_out(rob_ix_issue),
+    //CDB Inputs
+    .rob_ix_in(rob_ix_in),
+    .cdb_value_in(cdb_value_in),
+    .cdb_dest_in(cdb_value_in),
+    .cdb_valid_in(cdb_valid_in),
+    //Commit Outputs
+    .iType_out(rob_commit_iType),
+    .value_out(rob_commit_value),
+    .dest_out(rob_commit_dest),
+
+    .ready_out(rob_ready),
+    .commit_out(commit_out)
+  );
 
   always_comb begin
     rs_alu_valid_in = 1'b0;
@@ -178,18 +203,18 @@ module top_level(
   assign read_in =1;
   
   alu fu_alu(
-      .clk_in(clk_100mhz),
-      .rst_in(sys_rst),
-      .valid_in(output_valid_alu),
-      .read_in(read_in),
-      .rval1_in(rval1_alu_fu),
-      .rval2_in(rval2_alu_fu),
-      .aluFunc_in(opcode_alu_fu),
-      .rob_idx_in(rob_idx_alu_fu),
+    .clk_in(clk_100mhz),
+    .rst_in(sys_rst),
+    .valid_in(output_valid_alu),
+    .read_in(read_in),
+    .rval1_in(rval1_alu_fu),
+    .rval2_in(rval2_alu_fu),
+    .aluFunc_in(opcode_alu_fu),
+    .rob_idx_in(rob_idx_alu_fu),
 
-      .data_out(alu1_result), // write to bus somehow
-      .ready_out(alu1_ready), // ready for another input
-      .valid_out(alu1_output_valid) // goes high for one clock cycle after output is computed
+    .data_out(alu1_result), // write to bus somehow
+    .ready_out(alu1_ready), // ready for another input
+    .valid_out(alu1_output_valid) // goes high for one clock cycle after output is computed
   );
 
   assign led = alu1_result;
@@ -204,6 +229,11 @@ module top_level(
   //   cdb_result <= fu_2_result;
   //   fu2_read_in <= 1;
   // end
+
+  //Commit Stage
+  assign wd = rob_commit_value;
+  assign wa = rob_commit_dest;
+  assign we = commit_out;
   
 
 endmodule
