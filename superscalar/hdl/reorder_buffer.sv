@@ -14,7 +14,7 @@ module rob#(parameter SIZE=8)(
     //Issue Output
     output logic [PTR_SIZE-1:0] inst_rob_ix_out,
     //CDB Inputs
-    input wire [PTR_SIZE-1:0] rob_ix_in,
+    input wire [PTR_SIZE-1:0] cdb_rob_ix_in,
     input wire signed [31:0] cdb_value_in,
     input wire signed [31:0] cdb_dest_in,
     input wire cdb_valid_in,
@@ -72,10 +72,12 @@ module rob#(parameter SIZE=8)(
         head <= head + 1;
       end
       if (cdb_valid_in) begin
-        value_buffer[rob_ix_in] <= cdb_value_in;
-        destination_buffer[rob_ix_in] <= cdb_dest_in;
-        if (iType_buffer[rob_ix_in] != STORE) begin
-          inst_ready_buffer[rob_ix_in] <= 1'b1;
+        value_buffer[cdb_rob_ix_in] <= cdb_value_in;
+        if (iType_buffer[cdb_rob_ix_in] == STORE) begin
+            destination_buffer[cdb_rob_ix_in] <= cdb_dest_in;
+        end
+        if (iType_buffer[cdb_rob_ix_in] != STORE) begin
+          inst_ready_buffer[cdb_rob_ix_in] <= 1'b1;
         end else begin
           //handle store instructions separately 
         end 

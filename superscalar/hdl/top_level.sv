@@ -75,7 +75,7 @@ module top_level(
   // Writeback Stage Register Wires
   logic signed [31:0] wd;
   logic [2:0] wrob_ix;
-  logic rf_rob_valid;
+  // logic rf_rob_valid;
   logic [4:0] wa;
   logic we;
 
@@ -87,7 +87,7 @@ module top_level(
   // Flush ROB Wires
   logic flush;
   // logic [7:0] flush_addrs;
-  logic [4:0] flush_addrs [7:0];
+  logic [4:0] flush_addrs [7:0]; // indices in the register file that we are flushing, if we are clearing fewer than 8 rob entries, we can just fill in with 0s
 
   // registers (part of decode)
   register_file registers(
@@ -99,7 +99,7 @@ module top_level(
     .we_in(we),
     .wd_in(wd),
     .rob_ix_in(wrob_ix),
-    .rob_valid_in(rf_rob_valid),
+    // .rob_valid_in(rf_rob_valid),
     .flush_in(flush),
     .flush_addrs_in(flush_addrs),
 
@@ -122,7 +122,7 @@ module top_level(
   logic rs_alu_valid_in, rs_brAlu_valid_in, rs_mul_valid_in, rs_div_valid_in, rs_mem_valid_in;
 
   // CDB Inputs  
-  logic [2:0] rob_ix_in;
+  logic [2:0] cdb_rob_ix_in;
   logic [31:0] cdb_value_in, cdb_dest_in;
   logic cdb_valid_in;
   logic commit_out;
@@ -137,7 +137,7 @@ module top_level(
     .dest_in(rd),
     .inst_rob_ix_out(rob_ix_issue),
     //CDB Inputs
-    .rob_ix_in(rob_ix_in),
+    .cdb_rob_ix_in(cdb_rob_ix_in),
     .cdb_value_in(cdb_value_in),
     .cdb_dest_in(cdb_dest_in),
     .cdb_valid_in(cdb_valid_in),
@@ -184,17 +184,17 @@ module top_level(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
     .valid_input_in(rs_alu_valid_in), // get from decode
-    .fu_busy_in(!alu1_ready), // get from fu
+    .fu_busy_in(!fu_alu_ready), // get from fu
     .Q_i_in(rob_ix1_out), // get from decode
     .Q_j_in(rob_ix2_out), // get from decode
     .V_i_in(rd1_out), // get from decode
     .V_j_in((iType == OPIMM) ? imm : rd2_out), // get from decode
-    .rob_idx_in(rob_ix_in), // from decode
+    .rob_idx_in(rob_ix_issue), // from decode
     .opcode_in(aluFunc), // decode
-    // .i_ready(rob1_valid_out), // decode
-    // .j_ready(rob2_valid_out), // decode
-    .i_ready(1),
-    .j_ready(1),
+    .i_ready(rob1_valid_out), // decode
+    .j_ready(rob2_valid_out), // decode
+    // .i_ready(1),
+    // .j_ready(1),
 
     .rval1_out(rval1_alu_fu),
     .rval2_out(rval2_alu_fu),
@@ -204,27 +204,75 @@ module top_level(
     .rs_output_valid_out(output_valid_alu)
   );
 
-  logic fu_alu_busy, alu1_ready, alu1_output_valid;
-  logic signed [31:0] alu1_result;
-  logic read_in;
-  assign read_in =1;
+  logic fu_alu_busy, fu_alu_ready, fu_alu_output_valid;
+  logic signed [31:0] fu_alu_result;
+  logic fu_alu_read_in;
+  assign fu_alu_read_in = 1;
   
   alu fu_alu(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
     .valid_in(output_valid_alu),
-    .read_in(read_in),
+    .read_in(fu_alu_read_in),
     .rval1_in(rval1_alu_fu),
     .rval2_in(rval2_alu_fu),
     .aluFunc_in(opcode_alu_fu),
     .rob_idx_in(rob_idx_alu_fu),
 
-    .data_out(alu1_result), // write to bus somehow
-    .ready_out(alu1_ready), // ready for another input
-    .valid_out(alu1_output_valid) // goes high for one clock cycle after output is computed
+    .data_out(fu_alu_result), // write to bus somehow
+    .ready_out(fu_alu_ready), // ready for another input
+    .valid_out(fu_alu_output_valid) // goes high for one clock cycle after output is computed
   );
 
-  assign led = alu1_result;
+  logic [31:0] rval1_mul_fu, rval2_mul_fu;
+  logic [3:0] opcode_mul_fu;
+  logic [2:0] rob_idx_mul_fu;
+  logic output_valid_mul;
+
+  reservation_station rs_mul(
+    .clk_in(clk_100mhz),
+    .rst_in(sys_rst),
+    .valid_input_in(rs_mul_valid_in), // get from decode
+    .fu_busy_in(!mul_ready), // get from fu
+    .Q_i_in(rob_ix1_out), // get from decode
+    .Q_j_in(rob_ix2_out), // get from decode
+    .V_i_in(rd1_out), // get from decode
+    .V_j_in((iType == OPIMM) ? imm : rd2_out), // get from decode
+    .rob_idx_in(rob_ix_issue), // from decode
+    .opcode_in(aluFunc), // decode
+    .i_ready(rob1_valid_out), // decode
+    .j_ready(rob2_valid_out), // decode
+    // .i_ready(1),
+    // .j_ready(1),
+
+    .rval1_out(rval1_mul_fu),
+    .rval2_out(rval2_mul_fu),
+    .opcode_out(opcode_mul_fu),
+    .rob_idx_out(rob_idx_mul_fu),
+    .rs_free_for_input_out(rs_mul_ready),
+    .rs_output_valid_out(output_valid_mul)
+  );
+
+  logic fu_mul_busy, fu_mul_ready, fu_mul_output_valid;
+  logic signed [31:0] fu_mul_result;
+  logic fu_mul_read_in;
+  assign fu_mul_read_in = 1;
+  
+  multiplier fu_mul(
+    .clk_in(clk_100mhz),
+    .rst_in(sys_rst),
+    .valid_in(output_valid_mul),
+    .read_in(fu_mul_read_in),
+    .rval1_in(rval1_mul_fu),
+    .rval2_in(rval2_mul_fu),
+    .rob_idx_in(rob_idx_mul_fu),
+
+    .data_out(fu_mul_result), // write to bus somehow
+    .ready_out(fu_mul_ready), // ready for another input
+    .valid_out(fu_mul_output_valid) // stays high after output computed until output read
+  );
+
+  assign led = fu_alu_result;
 
   // logic cdb_result;
   // logic fu1_read_in;
