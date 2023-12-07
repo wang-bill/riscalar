@@ -120,7 +120,8 @@ module top_level(
   logic signed [31:0] rob_commit_dest;
   logic rs_alu_ready, rs_brAlu_ready, rs_mul_ready, rs_div_ready, rs_mem_ready;
   logic rs_alu_valid_in, rs_brAlu_valid_in, rs_mul_valid_in, rs_div_valid_in, rs_mem_valid_in;
-  
+
+  // CDB Inputs  
   logic [2:0] rob_ix_in;
   logic [31:0] cdb_value_in, cdb_dest_in;
   logic cdb_valid_in;
