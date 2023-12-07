@@ -13,8 +13,8 @@ module reservation_station_tb();
     logic signed [31:0] V_j_in;
     logic [2:0] rob_idx_in;
     logic [3:0] opcode_in;
-    logic i_ready;
-    logic j_ready;
+    logic i_ready_in;
+    logic j_ready_in;
 
     logic signed [31:0] rval1_out;
     logic signed [31:0] rval2_out;
@@ -34,8 +34,8 @@ module reservation_station_tb();
       .V_j_in(V_j_in),
       .rob_idx_in(rob_idx_in),
       .opcode_in(opcode_in),
-      .i_ready(i_ready),
-      .j_ready(j_ready),
+      .i_ready_in(i_ready_in),
+      .j_ready_in(j_ready_in),
 
       .rval1_out(rval1_out),
       .rval2_out(rval2_out),
@@ -65,8 +65,8 @@ module reservation_station_tb();
   fu_busy_in = 1;
   #10;
 
-  i_ready = 1;
-  j_ready = 1;
+  i_ready_in = 1;
+  j_ready_in = 1;
   valid_input_in = 1;
 
   V_i_in = 3;
@@ -79,8 +79,8 @@ module reservation_station_tb();
     #10;
   end
 
-  i_ready = 1;
-  j_ready = 1;
+  i_ready_in = 1;
+  j_ready_in = 1;
   valid_input_in = 1;
   V_i_in = 5;
   V_j_in = 5;

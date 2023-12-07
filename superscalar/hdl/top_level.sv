@@ -179,6 +179,9 @@ module top_level(
   logic [3:0] opcode_alu_fu;
   logic [2:0] rob_idx_alu_fu;
   logic output_valid_alu;
+  logic i_ready, j_ready;
+  assign i_ready = !rob1_valid_out;
+  assign j_ready = !rob2_valid_out;
 
   reservation_station rs_alu(
     .clk_in(clk_100mhz),
@@ -191,8 +194,8 @@ module top_level(
     .V_j_in((iType == OPIMM) ? imm : rd2_out), // get from decode
     .rob_idx_in(rob_ix_issue), // from decode
     .opcode_in(aluFunc), // decode
-    .i_ready(rob1_valid_out), // decode
-    .j_ready(rob2_valid_out), // decode
+    .i_ready_in(i_ready), // decode
+    .j_ready_in(j_ready), // decode
     // .i_ready(1),
     // .j_ready(1),
 
@@ -240,10 +243,8 @@ module top_level(
     .V_j_in((iType == OPIMM) ? imm : rd2_out), // get from decode
     .rob_idx_in(rob_ix_issue), // from decode
     .opcode_in(aluFunc), // decode
-    .i_ready(rob1_valid_out), // decode
-    .j_ready(rob2_valid_out), // decode
-    // .i_ready(1),
-    // .j_ready(1),
+    .i_ready_in(i_ready), // decode
+    .j_ready_in(j_ready), // decode
 
     .rval1_out(rval1_mul_fu),
     .rval2_out(rval2_mul_fu),

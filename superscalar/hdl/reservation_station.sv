@@ -14,8 +14,8 @@ module reservation_station(
     input wire signed [31:0] V_j_in,
     input wire [2:0] rob_idx_in,
     input wire [3:0] opcode_in,
-    input wire i_ready,
-    input wire j_ready,
+    input wire i_ready_in,
+    input wire j_ready_in,
 
     output logic signed [31:0] rval1_out,
     output logic signed [31:0] rval2_out,
@@ -64,8 +64,8 @@ module reservation_station(
 
         busy_row[open_row] <= 1;
 
-        i_ready_row[open_row] <= i_ready;
-        j_ready_row[open_row] <= j_ready;
+        i_ready_row[open_row] <= i_ready_in;
+        j_ready_row[open_row] <= j_ready_in;
       end
 
       if (!fu_busy_in && row_ready && !one_cycle_after_sending) begin
@@ -93,7 +93,7 @@ module reservation_station(
 
     occupied_row = RS_DEPTH;
     for (int i = 0; i < RS_DEPTH; i = i + 1) begin
-      occupied_row = (i_ready && j_ready && busy_row[i]) ? i : occupied_row;
+      occupied_row = (i_ready_in && j_ready_in && busy_row[i]) ? i : occupied_row;
     end
     row_ready = !(occupied_row == RS_DEPTH);
   end
