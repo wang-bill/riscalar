@@ -74,8 +74,6 @@ module top_level(
 
   // Writeback Stage Register Wires
   logic signed [31:0] wd;
-  logic [2:0] wrob_ix;
-  // logic rf_rob_valid;
   logic [4:0] wa;
   logic we;
 
@@ -99,8 +97,8 @@ module top_level(
     .we_in(we),
     .wd_in(wd),
     
-    .issue_in(iq_output_read && iType != NOP),
-    .rob_ix_in(wrob_ix),
+    .issue_in(iq_output_read && (iType == OP || iType == OPIMM || iType == LUI || iType == JAL || iType == JALR || iType == STORE || iq == LUI || iq == MUL || iq == DIV)),
+    .rob_ix_in(issue_rob_ix),
     .rd_in(rd),
     
     .flush_in(flush),
