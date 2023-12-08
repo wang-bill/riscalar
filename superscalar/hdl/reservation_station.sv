@@ -119,7 +119,7 @@ module reservation_station(
 
     occupied_row = RS_DEPTH;
     for (int i = 0; i < RS_DEPTH; i = i + 1) begin
-      occupied_row = (i_ready_in && j_ready_in && busy_row[i]) ? i : occupied_row;
+      occupied_row = (i_ready_row[i] && j_ready_row[i] && busy_row[i]) ? i : occupied_row;
     end
     row_ready = !(occupied_row == RS_DEPTH);
   end
