@@ -37,14 +37,14 @@ module register_file
   always_ff @(posedge clk_in) begin
     if (rst_in) begin
       for(integer i=0; i<31; i=i+1) begin
-        if (i == 11) begin
-          registers[i] <= 8;
-        end else if (i == 12) begin
-          registers[i] <= 4;
-        end else begin
-          registers[i] <= 0;
-        end
-
+        // if (i == 11) begin
+        //   registers[i] <= 8;
+        // end else if (i == 12) begin
+        //   registers[i] <= 4;
+        // end else begin
+        //   registers[i] <= 0;
+        // end
+        registers[i] <= 0;
         rob_ixs[i] <= 0;
         rob_valid[i] <= 0;
       end

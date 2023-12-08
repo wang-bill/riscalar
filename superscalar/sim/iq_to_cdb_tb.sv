@@ -49,7 +49,7 @@ module iq_to_cdb_tb();
 
     for (int i = 0; i < 2*10**2; i=i+1) begin
       #10;
-      if (i > 10 && i < 18) begin
+      if (i == 10) begin
         iq_valid = 1;
         instruction = 32'h00158593;
       end else if (i == 11) begin
