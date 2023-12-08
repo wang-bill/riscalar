@@ -66,12 +66,12 @@ module reservation_station(
 
       if (cdb_valid_in) begin
         for (int i = 0; i < RS_DEPTH; i = i+1) begin
-          if (Q_i_row[i] == cdb_rob_ix_in) begin
+          if (Q_i_row[i] == cdb_rob_ix_in && !i_ready_row[i]) begin
             V_i_row[i] <= cdb_value_in;
             i_ready_row[i] <= 1;
           end
 
-          if (Q_j_row[i] == cdb_rob_ix_in) begin
+          if (Q_j_row[i] == cdb_rob_ix_in && !j_ready_row[i]) begin
             V_j_row[i] <= cdb_value_in;
             j_ready_row[i] <= 1;
           end

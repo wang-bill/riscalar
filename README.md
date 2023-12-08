@@ -56,3 +56,6 @@ Issues Detected:
 12/7 Fixes to Debug Superscalar:
 - RS: Figure out why inst are issueing even when operands are not ready
 - ROB: Check ROB for operand value when issueing
+
+12/8 
+- Reservation station shouldn't take a clock cycle to load out
