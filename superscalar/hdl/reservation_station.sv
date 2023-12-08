@@ -60,6 +60,8 @@ module reservation_station(
       busy_row <= 0;
       rs_free_for_input_out <= 1;
       one_cycle_after_sending <= 0;
+      i_ready_row <= 0;
+      j_ready_row <= 0;
     end else begin
 
       if (cdb_valid_in) begin
