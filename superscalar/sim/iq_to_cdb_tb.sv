@@ -51,15 +51,20 @@ module iq_to_cdb_tb();
       #10;
       if (i == 10) begin
         iq_valid = 1;
-        instruction = 32'h00168693; // addi a3, a3, 1
+        instruction = 32'h00158593;
       end else if (i == 11) begin
-        iq_valid = 1;
-        instruction = 32'h02C585B3; // mul a1, a1, a2
-      end else if (i == 25) begin
-        iq_valid = 1;
-        instruction = 32'h02C585B3; // mul a1, a1, a2
-      end
-      else begin
+        instruction = 32'h00260613;
+      end else if (i == 12) begin
+        instruction = 32'h00368693;
+      end else if (i == 13) begin
+        instruction = 32'h00470713;
+      end else if (i == 14) begin
+        instruction = 32'h00578793;
+      end else if (i == 15) begin
+        instruction = 32'h00680813;
+      end else if (i == 16) begin
+        instruction = 32'h00788893;
+      end else begin
         iq_valid = 0;
       end
       $display("%d", led_out);
