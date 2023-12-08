@@ -78,7 +78,7 @@ module top_level(
   logic we;
 
   // Decode Stage Register Read Wires
-  logic signed [31:0] rd1_out, rd2_out;
+  logic signed [31:0] rf_rval1, rf_rval2;
   logic [2:0] rob_ix1_out, rob_ix2_out;
   logic rob1_valid_out, rob2_valid_out;
 
@@ -106,8 +106,8 @@ module top_level(
     .flush_in(flush),
     .flush_addrs_in(flush_addrs),
 
-    .rd1_out(rd1_out), //available 1 clock cycle later
-    .rd2_out(rd2_out),
+    .rval1_out(rf_rval1), //available 1 clock cycle later
+    .rval2_out(rf_rval2),
     .rob_ix1_out(rob_ix1_out),
     .rob_ix2_out(rob_ix2_out),
     .rob1_valid_out(rob1_valid_out),
@@ -131,6 +131,12 @@ module top_level(
   logic cdb_valid_in;
   logic commit_out;
 
+  // ROB Decode Outputs - To deal with the case where we read our operands from the ROB rather than from the RF
+  logic signed [31:0] decode_rob_value1;
+  logic signed [31:0] decode_rob_value2;
+  logic decode_rob_ready1;
+  logic decode_rob_ready2;
+
   rob #(.SIZE(8)) reorder_buffer( 
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
@@ -139,12 +145,20 @@ module top_level(
     .iType_in(iType),
     .value_in(32'hFFFF_FFFF), //might be an uneccesary input since we never know the actual value yet initially
     .dest_in(rd),
+    //Issue Output
     .inst_rob_ix_out(issue_rob_ix),
+    //Decode Inputs
+    .decode_rob1_ix_in(rob_ix1_out),
+    .decode_rob2_ix_in(rob_ix2_out),
     //CDB Inputs
     .cdb_rob_ix_in(cdb_rob_ix_in),
     .cdb_value_in(cdb_value_in),
     .cdb_dest_in(cdb_dest_in),
     .cdb_valid_in(cdb_valid_in),
+    .decode_value1_out(decode_rob_value1),
+    .decode_ready1_out(decode_rob_ready1),
+    .decode_value2_out(decode_rob_value2),
+    .decode_ready2_out(decode_rob_ready2),
     //Commit Outputs
     .iType_out(rob_commit_iType),
     .value_out(rob_commit_value),
@@ -183,10 +197,43 @@ module top_level(
   logic [3:0] fu_alu_opcode;
   logic [2:0] fu_alu_rob_ix_in, fu_alu_rob_ix_out;
   logic output_valid_alu;
+  logic signed [31:0] rs_valuei;
+  logic signed [31:0] rs_valuej;
   logic i_ready, j_ready;
-  assign i_ready = !rob1_valid_out;
-  assign j_ready = !rob2_valid_out;
 
+  //Issue values from either ROB or RF
+  always_comb begin
+    if (rob1_valid_out) begin
+      if (decode_rob_ready1) begin
+        rs_valuei = decode_rob_value1;
+        i_ready = 1'b1;
+      end else begin
+        rs_valuei = rf_val1;
+        i_ready = 1'b0;
+      end
+    end else begin
+      rs_valuei = rf_rval1;
+      i_ready = 1'b1;
+    end
+
+    if (iType == OPIMM) begin
+      rs_valuej = imm;
+      j_ready = 1'b1;
+    end else begin
+      if (rob2_valid_out) begin
+        if (decode_rob_ready2) begin
+          rs_valuej = decode_rob_value2;
+          j_ready = 1'b1;
+        end else begin
+          rs_valuej = rf_val2;
+          j_ready = 1'b0;
+        end
+      end else begin
+        rs_valuej = rf_rval2;
+        j_ready = 1'b1;
+      end
+    end
+  end 
   reservation_station rs_alu(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
@@ -194,8 +241,8 @@ module top_level(
     .fu_busy_in(!fu_alu_ready), // get from fu
     .Q_i_in(rob_ix1_out), // get from decode
     .Q_j_in(rob_ix2_out), // get from decode
-    .V_i_in(rd1_out), // get from decode
-    .V_j_in((iType == OPIMM) ? imm : rd2_out), // get from decode
+    .V_i_in(rs_valuei), // get from decode
+    .V_j_in(rs_valuej), // get from decode
     .rob_ix_in(issue_rob_ix), // from decode
     .opcode_in(aluFunc), // decode
     .i_ready_in(i_ready), // decode
@@ -247,8 +294,8 @@ module top_level(
     .fu_busy_in(!fu_mul_ready), // get from fu
     .Q_i_in(rob_ix1_out), // get from decode
     .Q_j_in(rob_ix2_out), // get from decode
-    .V_i_in(rd1_out), // get from decode
-    .V_j_in((iType == OPIMM) ? imm : rd2_out), // get from decode
+    .V_i_in(rs_valuei), // get from decode
+    .V_j_in(rs_valuej), // get from decode
     .rob_ix_in(issue_rob_ix), // from decode
     .opcode_in(aluFunc), // decode
     .i_ready_in(i_ready), // decode

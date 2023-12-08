@@ -19,8 +19,8 @@ module register_file
     input wire flush_in, //when flush is high, do something
     input wire [4:0] flush_addrs_in [7:0], // indices in the register file that we are flushing
 
-    output logic [31:0] rd1_out,
-    output logic [31:0] rd2_out,
+    output logic [31:0] rval1_out,
+    output logic [31:0] rval2_out,
     output logic [2:0] rob_ix1_out,
     output logic [2:0] rob_ix2_out,
     output logic rob1_valid_out,
@@ -70,8 +70,8 @@ module register_file
   end
 
 always_comb begin
-  rd1_out = registers[rs1_in];
-  rd2_out = registers[rs2_in];
+  rval1_out = registers[rs1_in];
+  rval2_out = registers[rs2_in];
   rob_ix1_out = rob_ixs[rs1_in];
   rob_ix2_out = rob_ixs[rs2_in];
   rob1_valid_out = rob_valid[rs1_in];

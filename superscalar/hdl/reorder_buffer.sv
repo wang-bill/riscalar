@@ -6,18 +6,26 @@
 module rob#(parameter SIZE=8)(
     input wire clk_in,
     input wire rst_in,
-    input wire valid_in,
+    //Decode Inputs - used to check for value of operand in ROB but not in RF yet
+    input wire [2:0] decode_rob1_ix_in,
+    input wire [2:0] decode_rob2_ix_in,
     //Issue Inputs
+    input wire valid_in,
     input wire [3:0] iType_in,
     input wire signed [31:0] value_in,
     input wire signed [31:0] dest_in,
-    //Issue Output
-    output logic [PTR_SIZE-1:0] inst_rob_ix_out,
     //CDB Inputs
     input wire [PTR_SIZE-1:0] cdb_rob_ix_in,
     input wire signed [31:0] cdb_value_in,
     input wire signed [31:0] cdb_dest_in,
     input wire cdb_valid_in,
+    //Decode Outputs:
+    output logic signed [31:0] decode_value1_out,
+    output logic decode_ready1_out,
+    output logic signed [31:0] decode_value2_out,
+    output logic decode_ready2_out,
+    //Issue Output
+    output logic [PTR_SIZE-1:0] inst_rob_ix_out,
     //Commit Outputs
     output logic [3:0] iType_out,
     output logic signed [31:0] value_out,
@@ -91,6 +99,10 @@ module rob#(parameter SIZE=8)(
     value_out = value_buffer[head[2:0]];
     dest_out = destination_buffer[head[2:0]];
     inst_rob_ix_out = tail[2:0];
+    decode_value1_out = value_buffer[decode_rob1_ix_in];
+    decode_ready1_out = inst_ready_buffer[decode_rob1_ix_in];
+    decode_value2_out = value_buffer[decode_rob2_ix_in];
+    decode_ready2_out = inst_ready_buffer[decode_rob2_ix_in];
     value_buffer0 = value_buffer[0];
     value_buffer1 = value_buffer[1];
     value_buffer2 = value_buffer[2];

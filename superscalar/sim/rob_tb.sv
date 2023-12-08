@@ -9,13 +9,21 @@ module rob_tb();
     logic [3:0] iType_in;
     logic signed [31:0] value_in;
     logic signed [31:0] dest_in;
-    //Issue Output
-    logic [2:0] inst_rob_ix_out;
+    //Decode Inputs
+    logic [2:0] decode_rob1_ix_in;
+    logic [2:0] decode_rob2_ix_in;
     //CDB Inputs
     logic [2:0] cdb_rob_ix_in;
     logic signed [31:0] cdb_value_in;
     logic signed [31:0] cdb_dest_in;
     logic cdb_valid_in;
+    //Issue Output
+    logic [2:0] inst_rob_ix_out;
+    //Decode Outputs
+    logic signed [31:0] decode_value1_out;
+    logic decode_ready1_out;
+    logic signed [31:0] decode_value2_out;
+    logic decode_ready2_out;
     //Commit Outputs
     logic [3:0] iType_out;
     logic signed [31:0] value_out;
@@ -32,12 +40,21 @@ module rob_tb();
         .iType_in(iType_in),
         .value_in(value_in),
         .dest_in(dest_in),
-        .inst_rob_ix_out(inst_rob_ix_out),
+        //Decode Inputs
+        .decode_rob1_ix_in(decode_rob1_ix_in),
+        .decode_rob2_ix_in(decode_rob2_ix_in),
         //CDB Inputs
         .cdb_rob_ix_in(cdb_rob_ix_in),
         .cdb_value_in(cdb_value_in),
         .cdb_dest_in(cdb_value_in),
         .cdb_valid_in(cdb_valid_in),
+        //Issue Outputs
+        .inst_rob_ix_out(inst_rob_ix_out),
+        //Decode Outputs
+        .decode_value1_out(decode_value1_out),
+        .decode_ready1_out(decode_ready1_out),
+        .decode_value2_out(decode_value2_out),
+        .decode_ready2_out(decode_ready2_out),
         //Commit Outputs
         .iType_out(iType_out),
         .value_out(value_out),
