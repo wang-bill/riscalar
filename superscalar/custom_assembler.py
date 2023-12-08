@@ -11,6 +11,31 @@ inst_names = ["add", "sub", "xor", "or", "and", "sll", "srl", "sra", "slt", "slt
               "ecall", "ebreak", # 2, I
               "mul", "mulh", "mulsu", "mulu", "div", "divu", "rem", "remu"] # 8, R 
 
+bin_to_hex = {
+  "0000": "0",
+  "0001": "1",
+  "0010": "2",
+  "0011": "3",
+  "0100": "4",
+  "0101": "5",
+  "0110": "6",
+  "0111": "7",
+  "1000": "8",
+  "1001": "9",
+  "1010": "A",
+  "1011": "B",
+  "1100": "C",
+  "1101": "D",
+  "1110": "E",
+  "1111": "F"
+}
+
+def convert_to_hex(n):
+  result = ""
+  for i in range(0, 32, 4):
+    result += bin_to_hex[n[i:i+4]]
+  return result
+
 def dtb_register(n):
     '''
     decimal to binary converter
@@ -151,8 +176,10 @@ def find_type(inst_name):
         return "I"
       if i < 37:
         return "U"
-      if i < 49:
+      if i < 39:
         return "I"
+      if i < 47:
+        return "R"
   return "Something, not sure what, is wrong with the assembly instructions"
 
 def find_funct7(inst_name): 
@@ -484,5 +511,5 @@ for inst in inst_arr:
 
 
   
-  f.write(final_inst + "\n")
+  f.write(convert_to_hex(final_inst) + "\n")
 f.close() 

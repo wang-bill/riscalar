@@ -30,10 +30,21 @@ module register_file
   logic [31:0] registers [31:0]; // right number -> number of registers; left number -> size of registers
   logic [2:0] rob_ixs [31:0];
   logic [31:0] rob_valid; // 1 = the rob is valid so the data is currently being processed; 0 = register's value is currently not being processed on
+
+  logic [31:0] a1, a2;
+  assign a1 = registers[11];
+  assign a2 = registers[12];
   always_ff @(posedge clk_in) begin
     if (rst_in) begin
       for(integer i=0; i<31; i=i+1) begin
-        registers[i] <= 0;
+        if (i == 11) begin
+          registers[i] <= 8;
+        end else if (i == 12) begin
+          registers[i] <= 4;
+        end else begin
+          registers[i] <= 0;
+        end
+
         rob_ixs[i] <= 0;
         rob_valid[i] <= 0;
       end

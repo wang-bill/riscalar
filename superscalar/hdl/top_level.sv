@@ -116,14 +116,15 @@ module top_level(
 
   // Issue instruction
   // Check if RS and ROB is ready
-  logic rob_ready, issue_rob_ix;
+  logic rob_ready;
+  logic [2:0] issue_rob_ix;
   logic rob_commit;
   logic [3:0] rob_commit_iType;
   logic signed [31:0] rob_commit_value;
   logic signed [31:0] rob_commit_dest;
   logic rs_alu_ready, rs_brAlu_ready, rs_mul_ready, rs_div_ready, rs_mem_ready;
   logic rs_alu_valid_in, rs_brAlu_valid_in, rs_mul_valid_in, rs_div_valid_in, rs_mem_valid_in;
-
+    
   // CDB Inputs  
   logic [2:0] cdb_rob_ix_in;
   logic [31:0] cdb_value_in, cdb_dest_in;
@@ -200,6 +201,12 @@ module top_level(
     .i_ready_in(i_ready), // decode
     .j_ready_in(j_ready), // decode
 
+    .cdb_rob_ix_in(cdb_rob_ix_in),
+    .cdb_value_in(cdb_value_in),
+    .cdb_dest_in(cdb_dest_in),
+    .cdb_valid_in(cdb_valid_in),
+
+
     .rval1_out(fu_alu_rval1),
     .rval2_out(fu_alu_rval2),
     .opcode_out(fu_alu_opcode),
@@ -247,6 +254,11 @@ module top_level(
     .i_ready_in(i_ready), // decode
     .j_ready_in(j_ready), // decode
 
+    .cdb_rob_ix_in(cdb_rob_ix_in),
+    .cdb_value_in(cdb_value_in),
+    .cdb_dest_in(cdb_dest_in),
+    .cdb_valid_in(cdb_valid_in),
+
     .rval1_out(fu_mul_rval1),
     .rval2_out(fu_mul_rval2),
     .opcode_out(fu_mul_opcode),
@@ -275,8 +287,6 @@ module top_level(
     .valid_out(fu_mul_output_valid) // stays high after output computed until output read
   );
 
-  assign led = fu_alu_result;
-
   //Commit Stage
   assign wd = rob_commit_value;
   assign wa = rob_commit_dest;
@@ -302,6 +312,9 @@ module top_level(
       fu_mul_read_in <= 0;
     end
   end
+
+
+  assign led = fu_mul_result;
 
 endmodule
 

@@ -1,0 +1,4 @@
+rm foo.out
+iverilog -g2012 -o foo.out hdl/* sim/iq_to_cdb_tb.sv
+sleep 0.1
+vvp foo.out
