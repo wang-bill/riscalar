@@ -52,3 +52,7 @@ Issues Detected:
 11/29 TA Discussion:
 - genvar for loop with "break" condition
 - how to create write-first bram memory
+
+12/7 Fixes to Debug Superscalar:
+- RS: Figure out why inst are issueing even when operands are not ready
+- ROB: Check ROB for operand value when issueing
