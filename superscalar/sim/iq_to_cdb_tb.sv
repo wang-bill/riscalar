@@ -49,17 +49,10 @@ module iq_to_cdb_tb();
 
     for (int i = 0; i < 2*10**2; i=i+1) begin
       #10;
-      if (i == 10) begin
+      if (i > 10 && i < 18) begin
         iq_valid = 1;
         instruction = 32'h00168693; // addi a3, a3, 1
-      end else if (i == 11) begin
-        iq_valid = 1;
-        instruction = 32'h02C585B3; // mul a1, a1, a2
-      end else if (i == 25) begin
-        iq_valid = 1;
-        instruction = 32'h02C585B3; // mul a1, a1, a2
-      end
-      else begin
+      end else begin
         iq_valid = 0;
       end
       $display("%d", led_out);

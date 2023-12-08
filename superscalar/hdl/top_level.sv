@@ -78,7 +78,7 @@ module top_level(
   logic we;
 
   // Decode Stage Register Read Wires
-  logic signed [31:0] rf_rval1, rf_rval2;
+  logic signed [31:0] rf_val1, rf_val2;
   logic [2:0] rob_ix1_out, rob_ix2_out;
   logic rob1_valid_out, rob2_valid_out;
 
@@ -106,8 +106,8 @@ module top_level(
     .flush_in(flush),
     .flush_addrs_in(flush_addrs),
 
-    .rval1_out(rf_rval1), //available 1 clock cycle later
-    .rval2_out(rf_rval2),
+    .rval1_out(rf_val1), //available 1 clock cycle later
+    .rval2_out(rf_val2),
     .rob_ix1_out(rob_ix1_out),
     .rob_ix2_out(rob_ix2_out),
     .rob1_valid_out(rob1_valid_out),
@@ -212,7 +212,7 @@ module top_level(
         i_ready = 1'b0;
       end
     end else begin
-      rs_valuei = rf_rval1;
+      rs_valuei = rf_val1;
       i_ready = 1'b1;
     end
 
@@ -229,7 +229,7 @@ module top_level(
           j_ready = 1'b0;
         end
       end else begin
-        rs_valuej = rf_rval2;
+        rs_valuej = rf_val2;
         j_ready = 1'b1;
       end
     end
