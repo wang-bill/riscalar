@@ -23,11 +23,17 @@ module reservation_station_tb();
     logic rs_free_for_input_out; // tells whether reservation station is ready for another input
     logic rs_output_valid_out; // output from RS is valid
 
+    logic [2:0] cdb_rob_ix_in;
+    logic [31:0] cdb_value_in;
+    logic [31:0] cdb_dest_in;
+    logic cdb_valid_in;
+
   reservation_station uut( 
       .clk_in(clk_in),
       .rst_in(rst_in),
       .valid_input_in(valid_input_in),
       .fu_busy_in(fu_busy_in),
+
       .Q_i_in(Q_i_in),
       .Q_j_in(Q_j_in),
       .V_i_in(V_i_in),
@@ -36,6 +42,11 @@ module reservation_station_tb();
       .opcode_in(opcode_in),
       .i_ready_in(i_ready_in),
       .j_ready_in(j_ready_in),
+
+      .cdb_rob_ix_in(cdb_rob_ix_in),
+      .cdb_value_in(cdb_value_in),
+      .cdb_dest_in(cdb_dest_in),
+      .cdb_valid_in(cdb_valid_in),
 
       .rval1_out(rval1_out),
       .rval2_out(rval2_out),
@@ -62,15 +73,15 @@ module reservation_station_tb();
   rst_in = 0;
   #10;
 
-  fu_busy_in = 1;
+  fu_busy_in = 0;
   #10;
 
-  i_ready_in = 1;
-  j_ready_in = 1;
+  i_ready_in = 0;
+  j_ready_in = 0;
   valid_input_in = 1;
 
   V_i_in = 3;
-  V_j_in = 3;  
+  V_j_in = 6;  
 
   #10;
   valid_input_in = 0;
@@ -78,23 +89,17 @@ module reservation_station_tb();
   for (int i = 0; i <10; i=i+1) begin
     #10;
   end
-
-  i_ready_in = 1;
-  j_ready_in = 1;
+  
   valid_input_in = 1;
-  V_i_in = 5;
-  V_j_in = 5;
+  i_ready_in = 0;
+  j_ready_in = 0;
+  
+  V_i_in = 4;
+  V_j_in = 8;
 
   #10;
   valid_input_in = 0;
 
-  for (int i = 0; i <10; i=i+1) begin
-    #10;
-  end
-  fu_busy_in = 0;
-  #10;
-  fu_busy_in = 1;
-  
   for (int i = 0; i <10; i=i+1) begin
     #10;
   end
