@@ -380,22 +380,28 @@ module top_level(
   
   // Write to CDB
   always_ff @(posedge clk_100mhz) begin
-    if (fu_alu_output_valid) begin
-      cdb_rob_ix_in <= fu_alu_rob_ix_out;
-      cdb_value_in <= fu_alu_result;
-      cdb_dest_in <= 32'h0000; // destination address is not needed
-      cdb_valid_in <= 1;
-      fu_alu_read_in <= 1;
-    end else if (fu_mul_output_valid) begin
-      cdb_rob_ix_in <= fu_mul_rob_ix_out;
-      cdb_value_in <= fu_mul_result;
-      cdb_dest_in <= 32'h0000;
-      cdb_valid_in <= 1;
-      fu_mul_read_in <= 1;
-    end else begin
+    if (sys_rst) begin
       cdb_valid_in <= 0;
       fu_alu_read_in <= 0;
       fu_mul_read_in <= 0;
+    end else begin
+      if (fu_alu_output_valid) begin
+        cdb_rob_ix_in <= fu_alu_rob_ix_out;
+        cdb_value_in <= fu_alu_result;
+        cdb_dest_in <= 32'h0000; // destination address is not needed
+        cdb_valid_in <= 1;
+        fu_alu_read_in <= 1;
+      end else if (fu_mul_output_valid) begin
+        cdb_rob_ix_in <= fu_mul_rob_ix_out;
+        cdb_value_in <= fu_mul_result;
+        cdb_dest_in <= 32'h0000;
+        cdb_valid_in <= 1;
+        fu_mul_read_in <= 1;
+      end else begin
+        cdb_valid_in <= 0;
+        fu_alu_read_in <= 0;
+        fu_mul_read_in <= 0;
+      end
     end
   end
 

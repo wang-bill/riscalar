@@ -53,17 +53,23 @@ module iq_to_cdb_tb();
         iq_valid = 1;
         instruction = 32'h00158593;
       end else if (i == 11) begin
-        instruction = 32'h00260613;
+        instruction = 32'h00158593;
       end else if (i == 12) begin
-        instruction = 32'h00368693;
+        instruction = 32'h00158593;
       end else if (i == 13) begin
-        instruction = 32'h00470713;
+        instruction = 32'h00158593;
       end else if (i == 14) begin
-        instruction = 32'h00578793;
+        instruction = 32'h00158593;
       end else if (i == 15) begin
-        instruction = 32'h00680813;
+        instruction = 32'h00158593;
       end else if (i == 16) begin
-        instruction = 32'h00788893;
+        instruction = 32'h031807B3;
+      end else if (i == 17) begin
+        instruction = 32'h031807B3;
+      end else if (i == 18) begin
+        instruction = 32'h031807B3;
+      end else if (i == 19) begin
+        instruction = 32'h031807B3;
       end else begin
         iq_valid = 0;
       end
