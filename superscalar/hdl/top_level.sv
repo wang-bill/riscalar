@@ -342,9 +342,6 @@ module top_level(
   // Write to CDB
   always_ff @(posedge clk_100mhz) begin
     if (sys_rst) begin
-      cdb_rob_ix_in <= 0;
-      cdb_value_in <= 0;
-      cdb_dest_in <= 32'h0000;
       cdb_valid_in <= 0;
       fu_alu_read_in <= 0;
       fu_mul_read_in <= 0;
