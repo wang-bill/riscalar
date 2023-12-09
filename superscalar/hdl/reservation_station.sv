@@ -34,7 +34,7 @@ module reservation_station(
     output logic rs_output_valid_out // output from RS is valid
 );
 
-  localparam RS_DEPTH = 3;
+  localparam RS_DEPTH = 5;
 
   logic [2:0] Q_i_row [RS_DEPTH-1:0];
   logic [2:0] Q_j_row [RS_DEPTH-1:0];
@@ -48,21 +48,21 @@ module reservation_station(
   logic [$clog2(RS_DEPTH):0] open_row;
   logic [$clog2(RS_DEPTH):0] occupied_row;
 
-  logic [2:0] i_ready_row;
-  logic [2:0] j_ready_row;
+  logic [RS_DEPTH-1:0] i_ready_row;
+  logic [RS_DEPTH-1:0] j_ready_row;
 
   logic one_cycle_after_sending;
 
   logic row_ready; // whether any entry in the RS is ready to be sent to FU
   logic [2:0] Q_0_row, Q_1_row, Q_2_row;
   logic [31:0] V_0_row, V_1_row, V_2_row;
-  assign Q_0_row = Q_i_row[0];
-  assign Q_1_row = Q_i_row[1];
-  assign Q_2_row = Q_i_row[2];
+  // assign Q_0_row = Q_i_row[0];
+  // assign Q_1_row = Q_i_row[1];
+  // assign Q_2_row = Q_i_row[2];
   
-  assign V_0_row = V_i_row[0];
-  assign V_1_row = V_i_row[1];
-  assign V_2_row = V_i_row[2];
+  // assign V_0_row = V_i_row[0];
+  // assign V_1_row = V_i_row[1];
+  // assign V_2_row = V_i_row[2];
   always_ff @(posedge clk_in) begin
     if (rst_in) begin
       busy_row <= 0;
@@ -121,13 +121,17 @@ module reservation_station(
   always_comb begin
     open_row = RS_DEPTH;
     for (int i = RS_DEPTH - 1; i >= 0; i = i-1) begin // iterating through backwards to maintain order
-      open_row = !busy_row[i] ? i : open_row;
+      if (!busy_row[i]) begin
+        open_row = i;
+      end
     end
     rs_free_for_input_out = !(open_row == RS_DEPTH);
 
     occupied_row = RS_DEPTH;
     for (int i = 0; i < RS_DEPTH; i = i + 1) begin
-      occupied_row = (i_ready_row[i] && j_ready_row[i] && busy_row[i]) ? i : occupied_row;
+      if (i_ready_row[i] && j_ready_row[i] && busy_row[i]) begin
+        occupied_row = i;
+      end
     end
     row_ready = !(occupied_row == RS_DEPTH);
   end
