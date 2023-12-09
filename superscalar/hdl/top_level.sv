@@ -3,17 +3,15 @@
 `include "hdl/types.svh"
 
 `ifdef SYNTHESIS
-`define FPATH(X) `"data/X`"
-`else /* ! SYNTHESIS */
 `define FPATH(X) `"X`"
+`else /* ! SYNTHESIS */
+`define FPATH(X) `"data/X`"
 `endif  /* ! SYNTHESIS */
 
 module top_level(
   input wire clk_100mhz,
   input wire [15:0] sw,
   input wire [3:0] btn,
-  input wire [31:0] instruction,
-  input wire iq_valid,
 
   output logic [15:0] led,
   output logic [2:0] rgb0, //rgb led
@@ -22,6 +20,9 @@ module top_level(
   output logic [31:0] addr_out,
   output logic [31:0] nextPc_out
 );
+  localparam INST_DEPTH = 64;
+  localparam DATA_DEPTH = 64;
+
   // assign led = sw; //for debugging
   //shut up those rgb LEDs (active high):
   assign rgb1 = 0;
@@ -31,7 +32,7 @@ module top_level(
   assign sys_rst = btn[0];
   //Instruction Fetch
   logic correct_branch;
-  logic signed [31:0] pc_bram, pc, nextPc;
+  logic signed [31:0] pc_bram, pc;
   logic first, second, third;
   logic first_two_or_branch;
 
@@ -41,8 +42,6 @@ module top_level(
       pc <= 32'h0000_0000;
       first <= 1;
       first_two_or_branch <= 1;
-      nextPc <= 32'hFFFF_FFFF;
-      instruction <= 0;
     end else begin
       if (iq_ready) begin
         if (first_two_or_branch) begin
@@ -60,20 +59,57 @@ module top_level(
             first_two_or_branch <= 0;
             first <= 1;
           end
+        end else begin
+          pc <= iq_valid ? (inst_fetch_is_branch && branch_taken) ? pc + inst_fetch_imm : pc + 4 : pc;
+          pc_bram <= iq_valid ? pc + 8 + 4: pc_bram;
+          first_two_or_branch <= inst_fetch_is_branch && branch_taken;
         end
-      end else begin
-        pc <= nextPc;
-        pc_bram <= pc + 8 + 4;
-        first_two_or_branch <= !correct_branch;
       end
     end
   end
 
-  assign instruction_fetched = instruction;
+  assign iq_valid = !(first_two_or_branch || instruction_fetched == 32'h0000_0000);
+
+  logic inst_fetch_is_branch;
+  logic signed [31:0] inst_fetch_imm;
   
-  logic signed [31:0] pc;
+  bp_decode bp_decoder(
+    .instruction_in(instruction_fetched),
+    .is_branch_out(inst_fetch_is_branch),
+    .imm_out(inst_fetch_imm)
+  );
+
+  logic branch_taken;
+  branch_predict branch_predictor(
+    .clk_in(clk_100mhz),
+    .rst_in(sys_rst),
+    .pc_in(pc),
+    .branch_taken_out(branch_taken)
+  );
+
+  logic [$clog2(INST_DEPTH)-1:0] effective_pc;
+  assign effective_pc = pc_bram[($clog2(INST_DEPTH)-1)+2:2]; // different than pc for indexing into the BRAM
+
+  xilinx_single_port_ram_write_first #(
+    .RAM_WIDTH(32),                       // Specify RAM data width
+    .RAM_DEPTH(64),                     // Specify RAM depth (number of entries)
+    .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
+    .INIT_FILE(`FPATH(inst.mem))           // Specify name/location of RAM initialization file if using one (leave blank if not)
+  ) inst_mem (
+    .addra(effective_pc),     // Address bus, width determined from RAM_DEPTH
+    .dina(0),       // RAM input data, width determined from RAM_WIDTH
+    .clka(clk_100mhz),       // Clock
+    .wea(1'b0),         // Write enable
+    .ena(1'b1),         // RAM Enable, for additional power savings, disable port when not in use
+    .rsta(sys_rst),       // Output reset (does not affect memory contents)
+    .regcea(1'b1),   // Output register enable
+    .douta(instruction_fetched)      // RAM output data, width determined from RAM_WIDTH
+  );
+
+  // assign instruction_fetched = instruction;
+  
   logic signed [31:0] instruction_fetched, iq_instruction_out;
-  // logic iq_valid;
+  logic iq_valid;
   logic iq_output_read;
   logic iq_ready, iq_inst_available;
 
