@@ -29,6 +29,45 @@ module top_level(
 
   logic sys_rst;
   assign sys_rst = btn[0];
+  //Instruction Fetch
+  logic correct_branch;
+  logic signed [31:0] pc_bram, pc, nextPc;
+  logic first, second, third;
+  logic first_two_or_branch;
+
+  assign correct_branch = 1;
+  always_ff @(posedge clk_100mhz) begin
+    if (sys_rst) begin
+      pc <= 32'h0000_0000;
+      first <= 1;
+      first_two_or_branch <= 1;
+      nextPc <= 32'hFFFF_FFFF;
+      instruction <= 0;
+    end else begin
+      if (iq_ready) begin
+        if (first_two_or_branch) begin
+          if (first) begin
+            pc_bram <= pc;
+            first <= 0;
+            second <= 1;
+          end else if (second) begin
+            pc_bram <= pc + 4;
+            second <= 0;
+            third <= 1;
+          end else if (third) begin
+            pc_bram <= pc + 8;
+            third <= 0;
+            first_two_or_branch <= 0;
+            first <= 1;
+          end
+        end
+      end else begin
+        pc <= nextPc;
+        pc_bram <= pc + 8 + 4;
+        first_two_or_branch <= !correct_branch;
+      end
+    end
+  end
 
   assign instruction_fetched = instruction;
   
