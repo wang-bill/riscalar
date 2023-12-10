@@ -40,7 +40,7 @@ module load_buffer(
       occupied_row <= 0;
     end else begin
       
-      if (can_load != 0) begin
+      if (can_load != 0 && !read_in) begin
         valid_out <= 1;
       end else begin
         valid_out <= 0;
