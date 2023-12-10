@@ -417,15 +417,6 @@ module top_level(
   );
 
 
-  logic signed [31:0] load_unknown_rval1, load_unknown_rval2;
-  logic [2:0] rob_idx_load_unknown;
-
-  logic [31:0] dest_address_load_unknown;
-  
-  assign dest_address_load_unknown = rval1_load_unknown + rval2_load_unknown;
-
-
-
   logic [31:0] lb_rval1, lb_rval2;
   logic [2:0] lb_rob_ix_in;
   logic output_valid_load;
@@ -434,7 +425,7 @@ module top_level(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
     .valid_input_in(rs_load_valid_in), // get from decode
-    .fu_busy_in(!lb_ready), // get from load buffer
+    .fu_busy_in(!lb_ready_out), // get from load buffer
     .Q_i_in(rob_ix1_out), // get from decode
     .Q_j_in(rob_ix2_out), // get from decode
     .V_i_in(rs_valuei), // get from decode
@@ -453,12 +444,30 @@ module top_level(
     .rval2_out(lb_rval2),
     // .opcode_out(fu_mul_opcode),
     .rob_ix_out(lb_rob_ix_in),
-    .rs_free_for_input_out(rs_load_ready),
+    .rs_free_for_input_out(lb_ready_out),
     .rs_output_valid_out(output_valid_load)
   );
 
-  //Load Buffer
-  logic lb_ready;
+  // Address calculation
+  assign dest_load_in = lb_rval1 + lb_rval2;
+
+
+  // Load Buffer
+  logic lb_ready_out, lb_valid_out;
+  logic signed [31:0] lb_dest_addr_in, lb_dest_addr_out;
+
+  load_buffer load_buffer(
+    .clk_in(clk_in),
+    .rst_in(sys_rst),
+    .valid_input_in(output_valid_load),
+
+    .dest_in(lb_dest_addr_in),
+    .rob_ix_in(lb_rob_ix_in),
+
+    .data_out(lb_dest_addr_out),
+    .ready_out(lb_ready_out),
+    .valid_out(lb_valid_out)
+  )
 
   //Commit Stage
   assign wd = rob_commit_value;

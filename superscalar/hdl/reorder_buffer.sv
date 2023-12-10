@@ -19,6 +19,14 @@ module rob#(parameter SIZE=8)(
     input wire signed [31:0] cdb_value_in,
     input wire signed [31:0] cdb_dest_in,
     input wire cdb_valid_in,
+
+    // Load Inputs
+    input wire [2:0] lb_rob_ix_in [2:0],
+    input wire signed [31:0] lb_dest_in,
+
+    // Load Outputs
+    output logic [2:0] can_load;
+
     //Decode Outputs:
     output logic signed [31:0] decode_value1_out,
     output logic decode_ready1_out,
@@ -121,6 +129,18 @@ module rob#(parameter SIZE=8)(
     iType_buffer5 = iType_buffer[5];
     iType_buffer6 = iType_buffer[6];
     iType_buffer7 = iType_buffer[7];
+  end
+
+  logic [2:0] can_load;
+  always_comb begin // Check from head to see if there are conflicts
+    for (int i = 0; i < 3; i=i+1) begin
+      can_load_i = 1;
+      for (int j = head; j[2:0] != rob_ix_in[i]; j = j+1) begin
+        can_load_i &= !(iType_buffer[j[2:0]] == STORE && destination_buffer[j[2:0]] == lb_dest_in);
+        can_load_i &= !(iType[j[2:0]] == STORE && !inst_ready_buffer[j[2:0]]);  
+      end
+      can_load[i] = can_load_i;
+    end
   end
 endmodule //rob
 
