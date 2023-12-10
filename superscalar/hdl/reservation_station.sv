@@ -56,13 +56,13 @@ module reservation_station(
   logic row_ready; // whether any entry in the RS is ready to be sent to FU
   logic [2:0] Q_0_row, Q_1_row, Q_2_row;
   logic [31:0] V_0_row, V_1_row, V_2_row;
-  // assign Q_0_row = Q_i_row[0];
-  // assign Q_1_row = Q_i_row[1];
-  // assign Q_2_row = Q_i_row[2];
+  assign Q_0_row = Q_i_row[0];
+  assign Q_1_row = Q_i_row[1];
+  assign Q_2_row = Q_i_row[2];
   
-  // assign V_0_row = V_i_row[0];
-  // assign V_1_row = V_i_row[1];
-  // assign V_2_row = V_i_row[2];
+  assign V_0_row = V_i_row[0];
+  assign V_1_row = V_i_row[1];
+  assign V_2_row = V_i_row[2];
   always_ff @(posedge clk_in) begin
     if (rst_in) begin
       busy_row <= 0;

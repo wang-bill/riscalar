@@ -512,5 +512,7 @@ for inst in inst_arr:
 
   
   f.write(convert_to_hex(final_inst) + "\n")
+f.write("00000000" + "\n")
+f.write("00000000" + "\n")
 f.write("00000000")
 f.close() 

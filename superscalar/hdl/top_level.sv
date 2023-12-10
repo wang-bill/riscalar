@@ -43,7 +43,7 @@ module top_level(
       first <= 1;
       first_two_or_branch <= 1;
     end else begin
-      if (iq_ready) begin
+      if (iq_ready && !(instruction_fetched == 0 && pc > 0)) begin
         if (first_two_or_branch) begin
           if (first) begin
             pc_bram <= pc;
@@ -442,7 +442,7 @@ module top_level(
   end
 
 
-  assign led = fu_mul_result;
+  assign led = fu_alu_result;
 
 endmodule
 
