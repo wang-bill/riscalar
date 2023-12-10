@@ -416,6 +416,16 @@ module top_level(
     .valid_out(fu_mul_output_valid) // stays high after output computed until output read
   );
 
+
+  logic signed [31:0] load_unknown_rval1, load_unknown_rval2;
+  logic [2:0] rob_idx_load_unknown;
+
+  logic [31:0] dest_address_load_unknown;
+  
+  assign dest_address_load_unknown = rval1_load_unknown + rval2_load_unknown;
+
+
+
   logic [31:0] lb_rval1, lb_rval2;
   logic [2:0] lb_rob_ix_in;
   logic output_valid_load;
