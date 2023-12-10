@@ -271,7 +271,7 @@ module top_level(
       end
     end
     iq_output_read = (rs_alu_valid_in || rs_brAlu_valid_in || rs_mul_valid_in || 
-                      rs_div_valid_in || rs_load_valid_in || iType == NOP);
+                      rs_div_valid_in || rs_load_valid_in || rs_store_valid_in || iType == NOP);
   end
 
   // Reservation Station inputs are the reg file outputs
@@ -450,6 +450,40 @@ module top_level(
   //Load Buffer
   logic lb_ready;
 
+  // Store Reservation Station
+  logic [31:0] rs_store_rval1, rs_store_rval2;
+  logic [3:0] rs_store_opcode;
+  logic [2:0] rs_store_rob_ix;
+  logic output_valid_store;
+  logic cdb_busy;
+
+  reservation_station rs_store(
+    .clk_in(clk_100mhz),
+    .rst_in(sys_rst),
+    .valid_input_in(rs_store_valid_in), // get from decode
+    .fu_busy_in(cdb_busy), // get from cdb
+    .Q_i_in(rob_ix1_out), // get from decode
+    .Q_j_in(rob_ix2_out), // get from decode
+    .V_i_in(rs_valuei), // get from decode
+    .V_j_in(rs_valuej), // get from decode
+    .rob_ix_in(issue_rob_ix), // from decode
+    .opcode_in(aluFunc), // decode
+    .i_ready_in(i_ready), // decode
+    .j_ready_in(j_ready), // decode
+
+    .cdb_rob_ix_in(cdb_rob_ix_in),
+    .cdb_value_in(cdb_value_in),
+    .cdb_dest_in(cdb_dest_in),
+    .cdb_valid_in(cdb_valid_in),
+
+    .rval1_out(rs_store_rval1),
+    .rval2_out(rs_store_rval2),
+    .opcode_out(rs_store_opcode),
+    .rob_ix_out(rs_store_rob_ix),
+    .rs_free_for_input_out(rs_store_ready),
+    .rs_output_valid_out(output_valid_store)
+  );
+
   //Commit Stage
   assign wd = rob_commit_value;
   assign wa = rob_commit_dest;
@@ -469,16 +503,29 @@ module top_level(
         cdb_dest_in <= 32'h0000; // destination address is not needed
         cdb_valid_in <= 1;
         fu_alu_read_in <= 1;
+        fu_mul_read_in <= 0;
+        cdb_busy <= 1;
       end else if (fu_mul_output_valid) begin
         cdb_rob_ix_in <= fu_mul_rob_ix_out;
         cdb_value_in <= fu_mul_result;
         cdb_dest_in <= 32'h0000;
         cdb_valid_in <= 1;
+        fu_alu_read_in <= 0;
         fu_mul_read_in <= 1;
+        cdb_busy <= 1;
+      end else if (output_valid_store) begin
+        cdb_rob_ix_in <= rs_store_rob_ix;
+        cdb_value_in <= 32'h0000;
+        cdb_dest_in <= rs_store_rval1 + rs_store_rval2;
+        cdb_valid_in <= 1;
+        fu_alu_read_in <= 0;
+        fu_mul_read_in <= 0;
+        cdb_busy <= 1;
       end else begin
         cdb_valid_in <= 0;
         fu_alu_read_in <= 0;
         fu_mul_read_in <= 0;
+        cdb_busy <= 0;
       end
     end
   end
