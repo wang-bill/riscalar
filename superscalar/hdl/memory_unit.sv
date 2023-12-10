@@ -18,7 +18,7 @@ module memory_unit(
   // LOAD Inputs
   input wire [2:0] load_rob_ix_in,
   input wire [31:0] load_mem_addr_in,
-  
+
   // STORE Inputs
   input wire [31:0] store_mem_addr_in,
   input wire signed [31:0] store_data_in,
@@ -29,6 +29,7 @@ module memory_unit(
   output logic ready_out,
   output logic valid_out // high until output is read
 );
+  localparam DATA_DETPH = 16;
   localparam LOAD_PERIOD = 2;
   logic [31:0] mem_addr;
   logic counter;
@@ -66,11 +67,11 @@ module memory_unit(
     end
   end
   // data memory
-  logic[9:0] effective_mem_addr;
+  logic[$clog2(DATA_DETPH)-1:0] effective_mem_addr;
   logic writing;
   logic signed [31:0] memory_output;
 
-  assign effective_mem_addr = mem_addr[11:2];
+  assign effective_mem_addr = mem_addr[($clog2(DATA_DETPH)-1)+2:2];
   assign writing = load_or_store_in == 1 && valid_in == 1;
   xilinx_single_port_ram_write_first #(
     .RAM_WIDTH(32),                       // Specify RAM data width
@@ -88,3 +89,5 @@ module memory_unit(
     .douta(memory_output)      // RAM output data, width determined from RAM_WIDTH
   );
 endmodule
+
+`default_nettype wire

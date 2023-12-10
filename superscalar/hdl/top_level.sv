@@ -494,6 +494,9 @@ module top_level(
     .rs_output_valid_out(output_valid_store)
   );
 
+  // Memory Unit
+  
+
   //Commit Stage
   assign wd = rob_commit_value;
   assign wa = rob_commit_dest;
