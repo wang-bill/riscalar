@@ -12,6 +12,7 @@ module load_buffer(
   input logic wire signed [31:0] dest_in,
   input logic wire signed [31:0] rob_ix_in,
   input logic wire [2:0] can_load,
+  input logic wire read_in,
 
   // Pass this to memory unit
   output logic signed [31:0] data_out, // address calculated out
@@ -32,7 +33,7 @@ module load_buffer(
       occupied_row <= 0;
     end else begin
       
-      if (can_load != 0) begin
+      if (can_load != 0 && !read_in) begin
         valid_out <= 1;
       end else begin
         valid_out <= 0;
