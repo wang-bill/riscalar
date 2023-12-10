@@ -214,6 +214,9 @@ module top_level(
   logic signed [31:0] decode_rob_value2;
   logic decode_rob_ready1;
   logic decode_rob_ready2;
+  logic [2:0] rob_can_load;
+  logic [2:0] lb_rob_arr_ix [2:0];
+  logic signed [31:0] lb_dest [2:0];
 
   rob #(.SIZE(8)) reorder_buffer( 
     .clk_in(clk_100mhz),
@@ -233,6 +236,12 @@ module top_level(
     .cdb_value_in(cdb_value_in),
     .cdb_dest_in(cdb_dest_in),
     .cdb_valid_in(cdb_valid_in),
+    //Load Inputs
+    .lb_rob_arr_ix_in(lb_rob_arr_ix),
+    .lb_dest_in(lb_dest),
+
+    // Load Outputs
+    .can_load_out(rob_can_load),
     .decode_value1_out(decode_rob_value1),
     .decode_ready1_out(decode_rob_ready1),
     .decode_value2_out(decode_rob_value2),
@@ -463,11 +472,15 @@ module top_level(
 
     .dest_in(lb_dest_addr_in),
     .rob_ix_in(lb_rob_ix_in),
+    .can_load_in(rob_can_load),
+
+    .lb_dest_out(lb_dest),
+    .lb_rob_arr_ix_out(lb_rob_arr_ix),
 
     .data_out(lb_dest_addr_out),
     .ready_out(lb_ready_out),
     .valid_out(lb_valid_out)
-  )
+  );
 
   // Store Reservation Station
   logic [31:0] rs_store_rval1, rs_store_rval2;

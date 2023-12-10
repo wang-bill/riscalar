@@ -11,12 +11,17 @@ module load_buffer(
   // Inputs
   input logic wire signed [31:0] dest_in,
   input logic wire signed [31:0] rob_ix_in,
-  input logic wire [2:0] can_load,
+  input logic wire [2:0] can_load_in,
+
+  // Pass to ROB
+  output logic signed [31:0] lb_dest_out [2:0];
+  output logic [2:0] lb_rob_arr_ix_out [2:0];
 
   // Pass this to memory unit
   output logic signed [31:0] data_out, // address calculated out
   output logic ready_out, // ready for another input
   output logic valid_out // output is valid
+
 );
 
   localparam LOAD_BUFFER_DEPTH = 3; // if this is changed, the reorder buffer can_load value needs to change too
@@ -24,6 +29,9 @@ module load_buffer(
   logic signed [31:0] dest_row [LOAD_BUFFER_DEPTH-1:0];
   logic [2:0] rob_ix_row [LOAD_BUFFER_DEPTH-1:0];
   logic [LOAD_BUFFER_DEPTH-1] occupied_row;
+
+  assign lb_dest_out = dest_row;
+  assign lb_rob_arr_ix_out = rob_ix_row;
 
   always_ff @posedge(clk_in) begin
     if (rst_in) begin
@@ -70,6 +78,7 @@ module load_buffer(
       end
     end
   end
+
 
 endmodule // reservation station
 
