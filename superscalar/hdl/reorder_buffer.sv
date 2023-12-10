@@ -27,6 +27,7 @@ module rob#(parameter SIZE=8)(
     //Issue Output
     output logic [PTR_SIZE-1:0] inst_rob_ix_out,
     //Commit Outputs
+    output logic [2:0] ix_out, 
     output logic [3:0] iType_out,
     output logic signed [31:0] value_out,
     output logic signed [31:0] dest_out,
@@ -95,6 +96,7 @@ module rob#(parameter SIZE=8)(
   always_comb begin
     ready_out = (tail - head) < SIZE;
     commit_out = ((tail - head) > 0) && inst_ready_buffer[head[2:0]];
+    ix_out = head[2:0];
     iType_out = iType_buffer[head[2:0]];
     value_out = value_buffer[head[2:0]];
     dest_out = destination_buffer[head[2:0]];

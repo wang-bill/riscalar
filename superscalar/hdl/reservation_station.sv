@@ -34,7 +34,7 @@ module reservation_station(
     output logic rs_output_valid_out // output from RS is valid
 );
 
-  localparam RS_DEPTH = 5;
+  localparam RS_DEPTH = 3;
 
   logic [2:0] Q_i_row [RS_DEPTH-1:0];
   logic [2:0] Q_j_row [RS_DEPTH-1:0];

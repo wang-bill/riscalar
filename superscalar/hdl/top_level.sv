@@ -151,6 +151,7 @@ module top_level(
   logic signed [31:0] wd;
   logic [4:0] wa;
   logic we;
+  logic [2:0] wrob_ix;
 
   // Decode Stage Register Read Wires
   logic signed [31:0] rf_val1, rf_val2;
@@ -171,6 +172,7 @@ module top_level(
     .wa_in(wa),
     .we_in(we),
     .wd_in(wd),
+    .wrob_ix_in(wrob_ix),
     
     .issue_in(iq_output_read && (iType == OP || iType == OPIMM || iType == LUI 
                                 || iType == JAL || iType == JALR || iType == STORE 
@@ -197,8 +199,9 @@ module top_level(
   logic [3:0] rob_commit_iType;
   logic signed [31:0] rob_commit_value;
   logic signed [31:0] rob_commit_dest;
-  logic rs_alu_ready, rs_brAlu_ready, rs_mul_ready, rs_div_ready, rs_mem_ready;
-  logic rs_alu_valid_in, rs_brAlu_valid_in, rs_mul_valid_in, rs_div_valid_in, rs_mem_valid_in;
+  logic [2:0] rob_commit_ix;
+  logic rs_alu_ready, rs_brAlu_ready, rs_mul_ready, rs_div_ready, rs_load_ready, rs_store_ready;
+  logic rs_alu_valid_in, rs_brAlu_valid_in, rs_mul_valid_in, rs_div_valid_in, rs_load_valid_in, rs_store_valid_in;
     
   // CDB Inputs  
   logic [2:0] cdb_rob_ix_in;
@@ -238,6 +241,7 @@ module top_level(
     .iType_out(rob_commit_iType),
     .value_out(rob_commit_value),
     .dest_out(rob_commit_dest),
+    .ix_out(rob_commit_ix),
 
     .ready_out(rob_ready),
     .commit_out(commit_out)
@@ -248,10 +252,13 @@ module top_level(
     rs_brAlu_valid_in = 1'b0;
     rs_mul_valid_in = 1'b0;
     rs_div_valid_in = 1'b0;
-    rs_mem_valid_in = 1'b0;
+    rs_load_valid_in = 1'b0;
+    rs_store_valid_in = 1'b0;
     if (iq_inst_available && rob_ready) begin
-      if ((iType == LOAD || iType == STORE) && rs_mem_ready) begin
-        rs_mem_valid_in = 1'b1;
+      if ((iType == LOAD) && rs_load_ready) begin
+        rs_load_valid_in = 1'b1;
+      end else if ((iType == STORE) && rs_store_ready) begin
+        rs_store_valid_in = 1'b1;
       end else if ((iType == BRANCH || iType == JAL || iType == JALR) && rs_brAlu_ready) begin
         rs_brAlu_valid_in = 1'b1;
       end else if ((iType == MUL) && rs_mul_ready) begin
@@ -264,7 +271,7 @@ module top_level(
       end
     end
     iq_output_read = (rs_alu_valid_in || rs_brAlu_valid_in || rs_mul_valid_in || 
-                      rs_div_valid_in || rs_mem_valid_in || iType == NOP);
+                      rs_div_valid_in || rs_load_valid_in || iType == NOP);
   end
 
   // Reservation Station inputs are the reg file outputs
@@ -419,11 +426,45 @@ module top_level(
 
 
 
+  logic [31:0] lb_rval1, lb_rval2;
+  logic [2:0] lb_rob_ix_in;
+  logic output_valid_load;
+
+  reservation_station rs_load(
+    .clk_in(clk_100mhz),
+    .rst_in(sys_rst),
+    .valid_input_in(rs_load_valid_in), // get from decode
+    .fu_busy_in(!lb_ready), // get from load buffer
+    .Q_i_in(rob_ix1_out), // get from decode
+    .Q_j_in(rob_ix2_out), // get from decode
+    .V_i_in(rs_valuei), // get from decode
+    .V_j_in(rs_valuej), // get from decode
+    .rob_ix_in(issue_rob_ix), // from decode
+    .opcode_in(aluFunc), // decode
+    .i_ready_in(i_ready), // decode
+    .j_ready_in(j_ready), // decode
+
+    .cdb_rob_ix_in(cdb_rob_ix_in),
+    .cdb_value_in(cdb_value_in),
+    .cdb_dest_in(cdb_dest_in),
+    .cdb_valid_in(cdb_valid_in),
+
+    .rval1_out(lb_rval1),
+    .rval2_out(lb_rval2),
+    // .opcode_out(fu_mul_opcode),
+    .rob_ix_out(lb_rob_ix_in),
+    .rs_free_for_input_out(rs_load_ready),
+    .rs_output_valid_out(output_valid_load)
+  );
+
+  //Load Buffer
+  logic lb_ready;
 
   //Commit Stage
   assign wd = rob_commit_value;
   assign wa = rob_commit_dest;
   assign we = commit_out;
+  assign wrob_ix = rob_commit_ix;
   
   // Write to CDB
   always_ff @(posedge clk_100mhz) begin

@@ -10,6 +10,7 @@ module register_file
     input wire [4:0] wa_in, // write address
     input wire we_in, // write enable, high for one clock cycle during write
     input wire [31:0] wd_in, // write data
+    input wire [2:0] wrob_ix_in, //rob_ix of instruction whose result is potentially written back to regfile
     
     // Issue inputs
     input wire issue_in, // goes high when we issue an instruction and NEED to set the rob_ix of rd (for instructions that don't write to reg file, it will not go high)
@@ -57,9 +58,11 @@ module register_file
     end else begin
       if (we_in) begin
         //writing to register
-        registers[wa_in] <= wd_in;
-        rob_ixs[wa_in] <= 0;
-        rob_valid[wa_in] <= 0;
+        if (wrob_ix_in == rob_ixs[wa_in]) begin
+          registers[wa_in] <= wd_in;
+          rob_ixs[wa_in] <= 0;
+          rob_valid[wa_in] <= 0;
+        end
       end
       if (issue_in) begin
         // issuing new instruction
