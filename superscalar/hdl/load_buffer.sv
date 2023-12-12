@@ -9,19 +9,19 @@ module load_buffer(
   input wire valid_input_in,
 
   // Inputs
-  input logic wire signed [31:0] dest_in,
-  input logic wire signed [31:0] rob_ix_in,
-  input logic wire [2:0] can_load_in,
+  input wire signed [31:0] dest_in,
+  input wire signed [31:0] rob_ix_in,
+  input wire [2:0] can_load_in,
+  input wire read_in,
 
   // Pass to ROB
-  output logic signed [31:0] lb_dest_out [2:0];
-  output logic [2:0] lb_rob_arr_ix_out [2:0];
+  output logic signed [31:0] lb_dest_out [2:0],
+  output logic [2:0] lb_rob_arr_ix_out [2:0],
 
   // Pass this to memory unit
   output logic signed [31:0] data_out, // address calculated out
   output logic ready_out, // ready for another input
   output logic valid_out // output is valid
-
 );
 
   localparam LOAD_BUFFER_DEPTH = 3; // if this is changed, the reorder buffer can_load value needs to change too
@@ -33,18 +33,13 @@ module load_buffer(
   assign lb_dest_out = dest_row;
   assign lb_rob_arr_ix_out = rob_ix_row;
 
-  always_ff @posedge(clk_in) begin
+  always_ff @(posedge clk_in) begin
     if (rst_in) begin
       valid_out <= 0;
       ready_out <= 1;
       occupied_row <= 0;
     end else begin
-      
-      if (can_load != 0 && !read_in) begin
-        valid_out <= 1;
-      end else begin
-        valid_out <= 0;
-      end
+      valid_out <= (can_load_in != 0 && !read_in);
 
       if (valid_input_in) begin
         if (open_row != LOAD_BUFFER_DEPTH) begin // there is a row open
@@ -73,7 +68,7 @@ module load_buffer(
   always_comb begin
     for (int i = 0; i < LOAD_BUFFER_DEPTH; i=i+1) begin
       // check the rob stuff to see if we can send out
-      if (can_load[i]) begin
+      if (can_load_in[i]) begin
         data_out = dest_in;
       end
     end

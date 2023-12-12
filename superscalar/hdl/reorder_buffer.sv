@@ -25,7 +25,7 @@ module rob#(parameter SIZE=8)(
     input wire signed [31:0] lb_dest_in [2:0],
 
     // Load Outputs
-    output logic [2:0] can_load_out;
+    output logic [2:0] can_load_out,
 
     //Decode Outputs:
     output logic signed [31:0] decode_value1_out,
@@ -69,7 +69,7 @@ module rob#(parameter SIZE=8)(
   logic [31:0] tail;
   logic [31:0] head;
   logic [31:0] instruction_queue [SIZE-1:0];
-  //TODO: Is it safe to assume that we never will write from the CDB to the ROB in the same clk cycle?s
+  //TODO: Is it safe to assume that we never will write from the CDB to the ROB in the same clk cycle?
   always_ff @(posedge clk_in) begin
     if (rst_in) begin
       tail <= 0;
@@ -97,6 +97,7 @@ module rob#(parameter SIZE=8)(
           inst_ready_buffer[cdb_rob_ix_in] <= 1'b1;
         end else begin
           //handle store instructions separately 
+          
         end 
       end
     end
@@ -136,7 +137,7 @@ module rob#(parameter SIZE=8)(
     for (int i = 0; i < 3; i=i+1) begin
       can_load_i = 1;
       for (int j = head; j[2:0] != rob_ix_in[i]; j = j+1) begin
-        can_load_i &= !(iType_buffer[j[2:0]] == STORE && destination_buffer[i][j[2:0]] == lb_dest_in);
+        can_load_i &= !(iType_buffer[j[2:0]] == STORE && destination_buffer[i][j[2:0]] == lb_dest_in[i]);
         can_load_i &= !(iType_buffer[j[2:0]] == STORE && !inst_ready_buffer[j[2:0]]);  
       end
       can_load_out[i] = can_load_i;

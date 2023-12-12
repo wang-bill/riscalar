@@ -458,8 +458,7 @@ module top_level(
   );
 
   // Address calculation
-  assign dest_load_in = lb_rval1 + lb_rval2;
-
+  assign lb_dest_addr_in = lb_rval1 + lb_rval2;
 
   // Load Buffer
   logic lb_ready_out, lb_valid_out;
@@ -473,6 +472,7 @@ module top_level(
     .dest_in(lb_dest_addr_in),
     .rob_ix_in(lb_rob_ix_in),
     .can_load_in(rob_can_load),
+    .read_in(),
 
     .lb_dest_out(lb_dest),
     .lb_rob_arr_ix_out(lb_rob_arr_ix),
@@ -515,9 +515,32 @@ module top_level(
     .rs_free_for_input_out(rs_store_ready),
     .rs_output_valid_out(output_valid_store)
   );
-
-  // Memory Unit
   
+  // Memory Unit
+  logic memory_unit_load_output_valid, memory_unit_load_read;
+  
+
+  memory_unit data_mem(
+  .clk_in(clk_100mhz),
+  .rst_in(sys_rst),
+  .valid_in(lb_valid_out), // high for 1 clock cycle
+  .read_in(),
+  .load_or_store_in(), //either LOAD = 0 or STORE = 1
+  
+  // LOAD Inputs
+  .load_rob_ix_in(),
+  .load_mem_addr_in(),
+
+  // STORE Inputs
+  .store_mem_addr_in(),
+  .store_data_in(),
+
+  // LOAD Outputs
+  .load_rob_ix_out(),
+  .load_data_out(),
+  .ready_out(),
+  .valid_out(memory_unit_load_output_valid) // high until output is read
+  );
 
   //Commit Stage
   assign wd = rob_commit_value;
@@ -531,6 +554,8 @@ module top_level(
       cdb_valid_in <= 0;
       fu_alu_read_in <= 0;
       fu_mul_read_in <= 0;
+      cdb_busy <= 0;
+      memory_unit_load_read <= 0;
     end else begin
       if (fu_alu_output_valid) begin
         cdb_rob_ix_in <= fu_alu_rob_ix_out;
@@ -540,6 +565,7 @@ module top_level(
         fu_alu_read_in <= 1;
         fu_mul_read_in <= 0;
         cdb_busy <= 1;
+        memory_unit_load_read <= 0;
       end else if (fu_mul_output_valid) begin
         cdb_rob_ix_in <= fu_mul_rob_ix_out;
         cdb_value_in <= fu_mul_result;
@@ -548,6 +574,13 @@ module top_level(
         fu_alu_read_in <= 0;
         fu_mul_read_in <= 1;
         cdb_busy <= 1;
+        memory_unit_load_read <= 0;
+      end else if (memory_unit_load_output_valid) begin
+        fu_alu_read_in <= 0;
+        fu_mul_read_in <= 0;
+        cdb_busy <= 0;
+        memory_unit_load_read <= 1;
+        //Connect data memory to CDB
       end else if (output_valid_store) begin
         cdb_rob_ix_in <= rs_store_rob_ix;
         cdb_value_in <= 32'h0000;
