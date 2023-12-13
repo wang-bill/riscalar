@@ -140,10 +140,12 @@ module rob#(parameter SIZE=8)(
   always_comb begin // Check from head to see if there are conflicts
     for (int i = 0; i < 3; i=i+1) begin
       can_load_i = 1;
-      for (int j = head; j[2:0] != lb_rob_arr_ix_in[i]; j = j+1) begin
-        can_load_i &= !(iType_buffer[j[2:0]] == STORE && 
-                      (destination_buffer[i][j[2:0]] == lb_rob_arr_dest_in[i]));
-        can_load_i &= !(iType_buffer[j[2:0]] == STORE && !inst_ready_buffer[j[2:0]]);  
+      for (int j = 0; j < SIZE; j = j+1) begin
+        if (j >= head && j[2:0] <= lb_rob_arr_ix_in[i]) begin
+          can_load_i &= !(iType_buffer[j[2:0]] == STORE && 
+                        (destination_buffer[i][j[2:0]] == lb_rob_arr_dest_in[i]));
+          can_load_i &= !(iType_buffer[j[2:0]] == STORE && !inst_ready_buffer[j[2:0]]);
+        end
       end
       can_load_out[i] = can_load_i;
     end
