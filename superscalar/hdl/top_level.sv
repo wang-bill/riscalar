@@ -64,7 +64,7 @@ module top_level(
     end
   end
 
-  assign iq_valid = !(first_two_or_branch || instruction_fetched == 32'h0000_0000);
+  assign iq_valid = !(first_two_or_branch || (instruction_fetched == 32'h0000_0000 && pc_bram < 8));
 
   logic inst_fetch_is_branch;
   logic signed [31:0] inst_fetch_imm;
@@ -246,7 +246,8 @@ module top_level(
     .lb_rob_arr_dest1_in(lb_rob_dest1),
     .lb_rob_arr_dest2_in(lb_rob_dest2),
     // .lb_rob_arr_dest_in(lb_rob_dest),
-    .store_read_in(store_read && ~old_store_read),
+    // .store_read_in(store_read && ~old_store_read),
+    .store_read_in(store_read),
     // Load Outputs
     .can_load_out(rob_can_load),
     .decode_value1_out(decode_rob_value1),
@@ -482,7 +483,8 @@ module top_level(
     .dest_in(lb_dest_addr_in),
     .rob_ix_in(lb_rob_ix_in),
     .can_load_in(rob_can_load),
-    .read_in(lb_output_read && ~old_lb_output_read),
+    // .read_in(lb_output_read && ~old_lb_output_read),
+    .read_in(lb_output_read),
 
     // .lb_dest_out(lb_rob_dest),
     .lb_dest0_out(lb_rob_dest0),
@@ -562,21 +564,23 @@ module top_level(
   end
 
   always_comb begin
-    if (memory_unit_ready) begin
-      if (store_valid_out) begin
-        store_read = 1;
-        lb_output_read = 0;
-      end else if (lb_valid_out) begin
-        store_read = 0;
-        lb_output_read = 1;
-      end else begin
-        store_read = 0;
-        lb_output_read = 0;
-      end 
-    end else begin
-      store_read = 0;
-      lb_output_read = 0;
-    end
+    store_read = memory_unit_ready && store_valid_out;
+    lb_output_read = memory_unit_ready && lb_valid_out && !store_read;
+    // if (memory_unit_ready) begin
+    //   if (store_valid_out) begin
+    //     store_read = 1;
+    //     lb_output_read = 0;
+    //   end else if (lb_valid_out) begin
+    //     store_read = 0;
+    //     lb_output_read = 1;
+    //   end else begin
+    //     store_read = 0;
+    //     lb_output_read = 0;
+    //   end 
+    // end else begin
+    //   store_read = 0;
+    //   lb_output_read = 0;
+    // end
 
     if (store_valid_out) begin
       load_or_store = 1;
