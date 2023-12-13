@@ -21,9 +21,14 @@ module rob#(parameter SIZE=8)(
     input wire cdb_valid_in,
 
     // Load Inputs
-    input wire [2:0] lb_rob_arr_ix_in [2:0],
-    input wire signed [31:0] lb_rob_arr_dest_in [2:0],
-
+    // input wire [2:0] lb_rob_arr_ix_in [2:0],
+    input wire [2:0] lb_rob_arr_ix0_in,
+    input wire [2:0] lb_rob_arr_ix1_in,
+    input wire [2:0] lb_rob_arr_ix2_in,
+    // input wire signed [31:0] lb_rob_arr_dest_in [2:0],
+    input wire signed [31:0] lb_rob_arr_dest0_in,
+    input wire signed [31:0] lb_rob_arr_dest1_in,
+    input wire signed [31:0] lb_rob_arr_dest2_in,
     // Store Input
     input wire store_read_in, // Goes high for one clock cycle once store content has been written to memory unit
 
@@ -51,6 +56,8 @@ module rob#(parameter SIZE=8)(
   logic [3:0] iType_buffer [SIZE-1:0];
   logic signed [31:0] value_buffer [SIZE-1:0];
   logic signed [31:0] destination_buffer [SIZE-1:0];
+  logic signed [31:0] destination_buffer0;
+  logic signed [31:0] destination_buffer1;
   logic [SIZE-1:0] inst_ready_buffer;
   logic [31:0] value_buffer0;
   logic [31:0] value_buffer1;
@@ -70,6 +77,16 @@ module rob#(parameter SIZE=8)(
   logic [3:0] iType_buffer6;
   logic [3:0] iType_buffer7;
 
+  logic signed [31:0] lb_rob_arr_dest_in [2:0];
+  assign lb_rob_arr_dest_in[0] = lb_rob_arr_dest0_in;
+  assign lb_rob_arr_dest_in[1] = lb_rob_arr_dest1_in;
+  assign lb_rob_arr_dest_in[2] = lb_rob_arr_dest2_in;
+
+  logic [2:0] lb_rob_arr_ix_in [2:0];
+  assign lb_rob_arr_ix_in[0] = lb_rob_arr_ix0_in;
+  assign lb_rob_arr_ix_in[1] = lb_rob_arr_ix1_in;
+  assign lb_rob_arr_ix_in[2] = lb_rob_arr_ix2_in;
+
   logic [31:0] tail;
   logic [31:0] head;
   logic [31:0] instruction_queue [SIZE-1:0];
@@ -78,7 +95,7 @@ module rob#(parameter SIZE=8)(
     if (rst_in) begin
       tail <= 0;
       head <= 0;
-      for (int i = 0; i < PTR_SIZE; i = i+1) begin
+      for (int i = 0; i < SIZE; i = i+1) begin
         inst_ready_buffer[i] <= 1'b0;
       end
     end else begin
@@ -134,6 +151,8 @@ module rob#(parameter SIZE=8)(
     iType_buffer5 = iType_buffer[5];
     iType_buffer6 = iType_buffer[6];
     iType_buffer7 = iType_buffer[7];
+    destination_buffer0 = destination_buffer[0];
+    destination_buffer1 = destination_buffer[1];
   end
 
   logic can_load_i;
@@ -143,7 +162,7 @@ module rob#(parameter SIZE=8)(
       for (int j = 0; j < SIZE; j = j+1) begin
         if (j >= head[2:0] && j <= lb_rob_arr_ix_in[i]) begin
           can_load_i &= !(iType_buffer[j] == STORE && 
-                        (destination_buffer[i][j] == lb_rob_arr_dest_in[i]));
+                        (destination_buffer[j] == lb_rob_arr_dest_in[i]));
           can_load_i &= !(iType_buffer[j] == STORE && !inst_ready_buffer[j]);
         end
       end

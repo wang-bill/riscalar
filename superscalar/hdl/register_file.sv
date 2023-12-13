@@ -60,8 +60,10 @@ module register_file
       end
       if (issue_in) begin
         // issuing new instruction
-        rob_ixs[rd_in] <= rob_ix_in;
-        rob_valid[rd_in] <= 1;
+        if (rd_in != 0) begin
+          rob_ixs[rd_in] <= rob_ix_in;
+          rob_valid[rd_in] <= 1;
+        end
       end
     end
   end

@@ -36,11 +36,11 @@ module memory_unit(
   always_ff @(posedge clk_in) begin
     if (rst_in) begin
       load_rob_ix_out <= 0;
-      mem_addr <= 0;
+      // mem_addr <= 0;
       counter <= 0;
     end else begin
       if (valid_in && ready_out) begin
-        mem_addr <= (load_or_store_in) ? store_mem_addr_in : load_mem_addr_in;
+        // mem_addr <= (load_or_store_in) ? store_mem_addr_in : load_mem_addr_in;
         load_rob_ix_out <= load_rob_ix_in;
         if (!load_or_store_in) begin
           counter <= 1;
@@ -73,6 +73,7 @@ module memory_unit(
   logic writing;
   logic signed [31:0] memory_output;
 
+  assign mem_addr = (load_or_store_in) ? store_mem_addr_in : load_mem_addr_in;
   assign effective_mem_addr = mem_addr[($clog2(DATA_DEPTH)-1)+2:2];
   assign writing = load_or_store_in == 1 && valid_in == 1;
   xilinx_single_port_ram_write_first #(

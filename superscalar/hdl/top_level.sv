@@ -213,8 +213,10 @@ module top_level(
   logic decode_rob_ready1;
   logic decode_rob_ready2;
   logic [2:0] rob_can_load;
-  logic [2:0] lb_rob_arr_ix [2:0];
-  logic signed [31:0] lb_rob_dest [2:0];
+  // logic [2:0] lb_rob_arr_ix [2:0];
+  logic [2:0] lb_rob_arr_ix0, lb_rob_arr_ix1, lb_rob_arr_ix2; 
+  // logic signed [31:0] lb_rob_dest [2:0];
+  logic signed [31:0] lb_rob_dest0, lb_rob_dest1, lb_rob_dest2;
   logic store_read;
 
   rob #(.SIZE(8)) reorder_buffer( 
@@ -236,8 +238,14 @@ module top_level(
     .cdb_dest_in(cdb_dest),
     .cdb_valid_in(cdb_valid),
     //Load Inputs
-    .lb_rob_arr_ix_in(lb_rob_arr_ix),
-    .lb_rob_arr_dest_in(lb_rob_dest),
+    // .lb_rob_arr_ix_in(lb_rob_arr_ix),
+    .lb_rob_arr_ix0_in(lb_rob_arr_ix0),
+    .lb_rob_arr_ix1_in(lb_rob_arr_ix1),
+    .lb_rob_arr_ix2_in(lb_rob_arr_ix2),
+    .lb_rob_arr_dest0_in(lb_rob_dest0),
+    .lb_rob_arr_dest1_in(lb_rob_dest1),
+    .lb_rob_arr_dest2_in(lb_rob_dest2),
+    // .lb_rob_arr_dest_in(lb_rob_dest),
     .store_read_in(store_read && ~old_store_read),
     // Load Outputs
     .can_load_out(rob_can_load),
@@ -476,14 +484,26 @@ module top_level(
     .can_load_in(rob_can_load),
     .read_in(lb_output_read && ~old_lb_output_read),
 
-    .lb_dest_out(lb_rob_dest),
-    .lb_rob_arr_ix_out(lb_rob_arr_ix),
+    // .lb_dest_out(lb_rob_dest),
+    .lb_dest0_out(lb_rob_dest0),
+    .lb_dest1_out(lb_rob_dest1),
+    .lb_dest2_out(lb_rob_dest2),
+    // .lb_rob_arr_ix_out(lb_rob_arr_ix),
+    .lb_rob_arr_ix0_out(lb_rob_arr_ix0),
+    .lb_rob_arr_ix1_out(lb_rob_arr_ix1),
+    .lb_rob_arr_ix2_out(lb_rob_arr_ix2),
 
-    .data_out(lb_dest_addr_out),
+    .dest_out(lb_dest_addr_out),
     .ready_out(lb_ready_out),
     .valid_out(lb_valid_out),
     .rob_ix_out(lb_rob_ix_out)
   );
+
+  /* This doesn't work
+  assign lb_rob_dest0 = lb_rob_dest[0];
+  assign lb_rob_dest1 = lb_rob_dest[1];
+  assign lb_rob_dest2 = lb_rob_dest[2];
+  */
 
   // Store Reservation Station
   logic [31:0] rs_store_rval1, rs_store_rval2;
