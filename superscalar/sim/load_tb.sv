@@ -17,17 +17,11 @@ module load_tb();
 
   top_level uut
           ( .clk_100mhz(clk_in),
-           // .sw(sw),
             .btn(btn_in),
-            // .instruction(instruction),
-            // .iq_valid(iq_valid),
 
             .led(led_out),
             .rgb0(rgb0_out),
             .rgb1(rgb1_out)
-           // .data_out(data_out),
-           // .addr_out(addr_out),
-           // .nextPc_out(nextPc_out)
           );
 
   always begin
@@ -47,10 +41,11 @@ module load_tb();
     btn_in = 0;
 
 
-    for (int i = 0; i < 50; i=i+1) begin
+    for (int i = 0; i < 10; i=i+1) begin
       #10;
       $display("%d", led_out);
     end
+    $display("%d", led_out);
     $finish;
   end
 endmodule
