@@ -37,7 +37,7 @@ module load_buffer(
   always_ff @(posedge clk_in) begin
     if (rst_in) begin
       // valid_out <= 0;
-      ready_out <= 1;
+      // ready_out <= 1;
       occupied_row <= 0;
     end else begin
       // valid_out <= (can_load_in & occupied_row) != 0;
