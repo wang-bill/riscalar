@@ -4,7 +4,7 @@
 module load_tb();
 
   logic clk_in;
-  logic [15:0] sw;
+//  logic [15:0] sw;
   logic [3:0] btn_in;
   // logic [31:0] instruction;
   // logic iq_valid;
@@ -17,17 +17,17 @@ module load_tb();
 
   top_level uut
           ( .clk_100mhz(clk_in),
-            .sw(sw),
+           // .sw(sw),
             .btn(btn_in),
             // .instruction(instruction),
             // .iq_valid(iq_valid),
 
             .led(led_out),
             .rgb0(rgb0_out),
-            .rgb1(rgb1_out),
-            .data_out(data_out),
-            .addr_out(addr_out),
-            .nextPc_out(nextPc_out)
+            .rgb1(rgb1_out)
+           // .data_out(data_out),
+           // .addr_out(addr_out),
+           // .nextPc_out(nextPc_out)
           );
 
   always begin

@@ -218,6 +218,7 @@ module top_level(
   logic signed [31:0] lb_rob_dest [2:0];
   logic store_read;
 
+  logic store_read_rob;
   rob #(.SIZE(8)) reorder_buffer( 
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),

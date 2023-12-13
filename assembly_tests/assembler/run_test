@@ -1,6 +1,0 @@
-python3 handmade_assembler.py assembler_test.s
-
-python3 assembler.py assembler_test.s
-
-python3 assembler_test.py
-rm output.txt

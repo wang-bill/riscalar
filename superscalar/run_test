@@ -1,6 +1,4 @@
 rm foo.out
-if iverilog -g2012 -o foo.out hdl/* sim/load_tb.sv &2| grep -q 'sorry'; then
-	echo 'FJKDLSAFKJLDSJKDSFJKLDA'
-fi
+iverilog -g2012 -o foo.out hdl/* sim/load_tb.sv 
 sleep 0.1
 vvp foo.out
