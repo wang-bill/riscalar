@@ -66,7 +66,6 @@ module reservation_station(
   always_ff @(posedge clk_in) begin
     if (rst_in) begin
       busy_row <= 0;
-      rs_free_for_input_out <= 1;
       one_cycle_after_sending <= 0;
       i_ready_row <= 0;
       j_ready_row <= 0;
