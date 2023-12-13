@@ -29,25 +29,26 @@ module memory_unit(
   output logic ready_out,
   output logic valid_out // high until output is read
 );
-  localparam DATA_DETPH = 16;
-  localparam LOAD_PERIOD = 2;
+  localparam DATA_DEPTH = 16;
+  localparam LOAD_PERIOD = 3;
   logic [31:0] mem_addr;
-  logic counter;
+  logic [1:0] counter;
   always_ff @(posedge clk_in) begin
     if (rst_in) begin
       load_rob_ix_out <= 0;
       mem_addr <= 0;
       counter <= 0;
     end else begin
-      if (valid_in) begin
+      if (valid_in && ready_out) begin
         mem_addr <= (load_or_store_in) ? store_mem_addr_in : load_mem_addr_in;
         load_rob_ix_out <= load_rob_ix_in;
-        counter <= 1;
+        if (!load_or_store_in) begin
+          counter <= 1;
+        end
       end
-      if (counter > 0 && counter < LOAD_PERIOD-1) begin
+      if (counter > 0 && counter < LOAD_PERIOD) begin
         counter <= counter + 1;
       end else if (counter == LOAD_PERIOD) begin
-        load_data_out <= memory_output;
       end
       if (read_in) begin
         counter <= 0;
@@ -59,23 +60,24 @@ module memory_unit(
     if (load_or_store_in == 0) begin
       //Load
       ready_out = (counter == 0);
-      valid_out = (counter == LOAD_PERIOD);
+      valid_out = (counter == LOAD_PERIOD) && !read_in;
     end else begin
       //Store
       ready_out = 1;
       valid_out = 0;
     end
+    load_data_out = memory_output;
   end
   // data memory
-  logic[$clog2(DATA_DETPH)-1:0] effective_mem_addr;
+  logic[$clog2(DATA_DEPTH)-1:0] effective_mem_addr;
   logic writing;
   logic signed [31:0] memory_output;
 
-  assign effective_mem_addr = mem_addr[($clog2(DATA_DETPH)-1)+2:2];
+  assign effective_mem_addr = mem_addr[($clog2(DATA_DEPTH)-1)+2:2];
   assign writing = load_or_store_in == 1 && valid_in == 1;
   xilinx_single_port_ram_write_first #(
     .RAM_WIDTH(32),                       // Specify RAM data width
-    .RAM_DEPTH(1024),                     // Specify RAM depth (number of entries)
+    .RAM_DEPTH(DATA_DEPTH),                     // Specify RAM depth (number of entries)
     .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
     .INIT_FILE(`FPATH(data.mem))          // Specify name/location of RAM initialization file if using one (leave blank if not)
   ) data_mem (

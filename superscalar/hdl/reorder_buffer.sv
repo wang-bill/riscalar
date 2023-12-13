@@ -22,7 +22,10 @@ module rob#(parameter SIZE=8)(
 
     // Load Inputs
     input wire [2:0] lb_rob_arr_ix_in [2:0],
-    input wire signed [31:0] lb_dest_in [2:0],
+    input wire signed [31:0] lb_rob_arr_dest_in [2:0],
+
+    // Store Input
+    input wire store_read_in, // Goes high for one clock cycle once store content has been written to memory unit
 
     // Load Outputs
     output logic [2:0] can_load_out,
@@ -41,7 +44,8 @@ module rob#(parameter SIZE=8)(
     output logic signed [31:0] dest_out,
 
     output logic ready_out, //tells the input (CDB) that the ROB has space for more inputs
-    output logic commit_out //signal that goes high when the ROB's head can be committed to the Register File
+    output logic commit_out, //signal that goes high when the ROB's head can be committed to the Register File
+    output logic store_valid_out //signal that goes high when store outputs are valid
 );
   localparam PTR_SIZE = $clog2(SIZE);
   logic [3:0] iType_buffer [SIZE-1:0];
@@ -85,26 +89,26 @@ module rob#(parameter SIZE=8)(
         inst_ready_buffer[tail[2:0]] <= 1'b0;
         tail <= tail + 1;
       end
-      if (commit_out) begin
-        head <= head + 1;
-      end
       if (cdb_valid_in) begin
         value_buffer[cdb_rob_ix_in] <= cdb_value_in;
         if (iType_buffer[cdb_rob_ix_in] == STORE) begin
-            destination_buffer[cdb_rob_ix_in] <= cdb_dest_in;
+          destination_buffer[cdb_rob_ix_in] <= destination_buffer[cdb_rob_ix_in]  + cdb_dest_in;
         end
-        if (iType_buffer[cdb_rob_ix_in] != STORE) begin
-          inst_ready_buffer[cdb_rob_ix_in] <= 1'b1;
-        end else begin
-          //handle store instructions separately 
-          
-        end 
+        inst_ready_buffer[cdb_rob_ix_in] <= 1'b1;
+      end
+      if (commit_out) begin
+        head <= head + 1;
+      end
+      if (store_valid_out && store_read_in) begin
+        head <= head + 1;
       end
     end
   end
   always_comb begin
     ready_out = (tail - head) < SIZE;
-    commit_out = ((tail - head) > 0) && inst_ready_buffer[head[2:0]];
+    commit_out = ((tail - head) > 0) && inst_ready_buffer[head[2:0]] && iType_buffer[head[2:0]] != STORE;
+    store_valid_out = ((tail - head) > 0) && inst_ready_buffer[head[2:0]] && iType_buffer[head[2:0]] == STORE;
+
     ix_out = head[2:0];
     iType_out = iType_buffer[head[2:0]];
     value_out = value_buffer[head[2:0]];
@@ -136,8 +140,9 @@ module rob#(parameter SIZE=8)(
   always_comb begin // Check from head to see if there are conflicts
     for (int i = 0; i < 3; i=i+1) begin
       can_load_i = 1;
-      for (int j = head; j[2:0] != rob_ix_in[i]; j = j+1) begin
-        can_load_i &= !(iType_buffer[j[2:0]] == STORE && destination_buffer[i][j[2:0]] == lb_dest_in[i]);
+      for (int j = head; j[2:0] != lb_rob_arr_ix_in[i]; j = j+1) begin
+        can_load_i &= !(iType_buffer[j[2:0]] == STORE && 
+                      (destination_buffer[i][j[2:0]] == lb_rob_arr_dest_in[i]));
         can_load_i &= !(iType_buffer[j[2:0]] == STORE && !inst_ready_buffer[j[2:0]]);  
       end
       can_load_out[i] = can_load_i;

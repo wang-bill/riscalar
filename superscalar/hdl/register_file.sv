@@ -33,6 +33,7 @@ module register_file
   logic [31:0] rob_valid; // 1 = the rob is valid so the data is currently being processed; 0 = register's value is currently not being processed on
 
   logic [31:0] a1, a2;
+  logic [2:0] a2_robix;
   assign a1 = registers[11];
   assign a2 = registers[12];
   always_ff @(posedge clk_in) begin
@@ -79,6 +80,7 @@ always_comb begin
   rob_ix2_out = rob_ixs[rs2_in];
   rob1_valid_out = rob_valid[rs1_in];
   rob2_valid_out = rob_valid[rs2_in];
+  a2_robix = rob_ixs[12];
 end
 
 

@@ -51,7 +51,6 @@ module load_tb();
       #10;
       $display("%d", led_out);
     end
-    
     $finish;
   end
 endmodule

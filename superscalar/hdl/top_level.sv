@@ -175,7 +175,7 @@ module top_level(
     .wrob_ix_in(wrob_ix),
     
     .issue_in(iq_output_read && (iType == OP || iType == OPIMM || iType == LUI 
-                                || iType == JAL || iType == JALR || iType == STORE 
+                                || iType == JAL || iType == JALR || iType == STORE || iType == LOAD 
                                 || iType == LUI || iType == MUL || iType == DIV)),
     .rob_ix_in(issue_rob_ix),
     .rd_in(rd),
@@ -204,10 +204,12 @@ module top_level(
   logic rs_alu_valid_in, rs_brAlu_valid_in, rs_mul_valid_in, rs_div_valid_in, rs_load_valid_in, rs_store_valid_in;
     
   // CDB Inputs  
-  logic [2:0] cdb_rob_ix_in;
-  logic [31:0] cdb_value_in, cdb_dest_in;
-  logic cdb_valid_in;
-  logic commit_out;
+  logic [2:0] cdb_rob_ix;
+  logic [31:0] cdb_value, cdb_dest;
+  logic cdb_valid;
+
+  // ROB Outputs to Reg File and Data Mem
+  logic commit_out, store_valid_out;
 
   // ROB Decode Outputs - To deal with the case where we read our operands from the ROB rather than from the RF
   logic signed [31:0] decode_rob_value1;
@@ -216,7 +218,8 @@ module top_level(
   logic decode_rob_ready2;
   logic [2:0] rob_can_load;
   logic [2:0] lb_rob_arr_ix [2:0];
-  logic signed [31:0] lb_dest [2:0];
+  logic signed [31:0] lb_rob_dest [2:0];
+  logic store_read;
 
   rob #(.SIZE(8)) reorder_buffer( 
     .clk_in(clk_100mhz),
@@ -225,21 +228,21 @@ module top_level(
     .valid_in(iq_output_read && iType != NOP),
     .iType_in(iType),
     .value_in(32'hFFFF_FFFF), //might be an uneccesary input since we never know the actual value yet initially
-    .dest_in(rd),
+    .dest_in((iType == STORE) ? imm : rd), //temporarily store immediate in the destination if iType is STORE, else store register dest index
     //Issue Output
     .inst_rob_ix_out(issue_rob_ix),
     //Decode Inputs
     .decode_rob1_ix_in(rob_ix1_out),
     .decode_rob2_ix_in(rob_ix2_out),
     //CDB Inputs
-    .cdb_rob_ix_in(cdb_rob_ix_in),
-    .cdb_value_in(cdb_value_in),
-    .cdb_dest_in(cdb_dest_in),
-    .cdb_valid_in(cdb_valid_in),
+    .cdb_rob_ix_in(cdb_rob_ix),
+    .cdb_value_in(cdb_value),
+    .cdb_dest_in(cdb_dest),
+    .cdb_valid_in(cdb_valid),
     //Load Inputs
     .lb_rob_arr_ix_in(lb_rob_arr_ix),
-    .lb_dest_in(lb_dest),
-
+    .lb_rob_arr_dest_in(lb_rob_dest),
+    .store_read_in(store_read && ~old_store_read),
     // Load Outputs
     .can_load_out(rob_can_load),
     .decode_value1_out(decode_rob_value1),
@@ -253,7 +256,8 @@ module top_level(
     .ix_out(rob_commit_ix),
 
     .ready_out(rob_ready),
-    .commit_out(commit_out)
+    .commit_out(commit_out),
+    .store_valid_out(store_valid_out)
   );
 
   always_comb begin
@@ -307,7 +311,7 @@ module top_level(
       i_ready = 1'b1;
     end
 
-    if (iType == OPIMM) begin
+    if (iType == OPIMM || iType == LOAD) begin
       rs_valuej = imm;
       j_ready = 1'b1;
     end else begin
@@ -339,10 +343,10 @@ module top_level(
     .i_ready_in(i_ready), // decode
     .j_ready_in(j_ready), // decode
 
-    .cdb_rob_ix_in(cdb_rob_ix_in),
-    .cdb_value_in(cdb_value_in),
-    .cdb_dest_in(cdb_dest_in),
-    .cdb_valid_in(cdb_valid_in),
+    .cdb_rob_ix_in(cdb_rob_ix),
+    .cdb_value_in(cdb_value),
+    .cdb_dest_in(cdb_dest),
+    .cdb_valid_in(cdb_valid),
 
 
     .rval1_out(fu_alu_rval1),
@@ -392,10 +396,10 @@ module top_level(
     .i_ready_in(i_ready), // decode
     .j_ready_in(j_ready), // decode
 
-    .cdb_rob_ix_in(cdb_rob_ix_in),
-    .cdb_value_in(cdb_value_in),
-    .cdb_dest_in(cdb_dest_in),
-    .cdb_valid_in(cdb_valid_in),
+    .cdb_rob_ix_in(cdb_rob_ix),
+    .cdb_value_in(cdb_value),
+    .cdb_dest_in(cdb_dest),
+    .cdb_valid_in(cdb_valid),
 
     .rval1_out(fu_mul_rval1),
     .rval2_out(fu_mul_rval2),
@@ -444,16 +448,16 @@ module top_level(
     .i_ready_in(i_ready), // decode
     .j_ready_in(j_ready), // decode
 
-    .cdb_rob_ix_in(cdb_rob_ix_in),
-    .cdb_value_in(cdb_value_in),
-    .cdb_dest_in(cdb_dest_in),
-    .cdb_valid_in(cdb_valid_in),
+    .cdb_rob_ix_in(cdb_rob_ix),
+    .cdb_value_in(cdb_value),
+    .cdb_dest_in(cdb_dest),
+    .cdb_valid_in(cdb_valid),
 
     .rval1_out(lb_rval1),
     .rval2_out(lb_rval2),
     // .opcode_out(fu_mul_opcode),
     .rob_ix_out(lb_rob_ix_in),
-    .rs_free_for_input_out(lb_ready_out),
+    .rs_free_for_input_out(rs_load_ready),
     .rs_output_valid_out(output_valid_load)
   );
 
@@ -463,23 +467,26 @@ module top_level(
   // Load Buffer
   logic lb_ready_out, lb_valid_out;
   logic signed [31:0] lb_dest_addr_in, lb_dest_addr_out;
+  logic lb_output_read;
+  logic [2:0] lb_rob_ix_out;
 
   load_buffer load_buffer(
-    .clk_in(clk_in),
+    .clk_in(clk_100mhz),
     .rst_in(sys_rst),
     .valid_input_in(output_valid_load),
 
     .dest_in(lb_dest_addr_in),
     .rob_ix_in(lb_rob_ix_in),
     .can_load_in(rob_can_load),
-    .read_in(),
+    .read_in(lb_output_read && ~old_lb_output_read),
 
-    .lb_dest_out(lb_dest),
+    .lb_dest_out(lb_rob_dest),
     .lb_rob_arr_ix_out(lb_rob_arr_ix),
 
     .data_out(lb_dest_addr_out),
     .ready_out(lb_ready_out),
-    .valid_out(lb_valid_out)
+    .valid_out(lb_valid_out),
+    .rob_ix_out(lb_rob_ix_out)
   );
 
   // Store Reservation Station
@@ -503,10 +510,10 @@ module top_level(
     .i_ready_in(i_ready), // decode
     .j_ready_in(j_ready), // decode
 
-    .cdb_rob_ix_in(cdb_rob_ix_in),
-    .cdb_value_in(cdb_value_in),
-    .cdb_dest_in(cdb_dest_in),
-    .cdb_valid_in(cdb_valid_in),
+    .cdb_rob_ix_in(cdb_rob_ix),
+    .cdb_value_in(cdb_value),
+    .cdb_dest_in(cdb_dest),
+    .cdb_valid_in(cdb_valid),
 
     .rval1_out(rs_store_rval1),
     .rval2_out(rs_store_rval2),
@@ -518,27 +525,67 @@ module top_level(
   
   // Memory Unit
   logic memory_unit_load_output_valid, memory_unit_load_read;
-  
+  logic memory_unit_ready;
+
+  logic [2:0] memory_unit_load_rob_ix_out;
+  logic signed [31:0] memory_unit_load_result;
+  logic load_or_store;
+
+
+  // Choose between load or store to Data Memory
+  logic old_store_read;
+  logic old_lb_output_read;
+  always_ff @(posedge clk_100mhz) begin
+    if (sys_rst) begin
+      old_lb_output_read <= 0;
+      old_store_read <= 0;
+    end else begin
+      old_lb_output_read <= lb_output_read;
+      old_store_read <= store_read;
+    end
+  end
+
+  always_comb begin
+    if (memory_unit_ready) begin
+      if (store_valid_out) begin
+        load_or_store = 1;
+        store_read = 1;
+        lb_output_read = 0;
+      end else if (lb_valid_out) begin
+        load_or_store = 0;
+        store_read = 0;
+        lb_output_read = 1;
+      end else begin
+        load_or_store = 0;
+        store_read = 0;
+        lb_output_read = 0;
+      end
+    end else begin
+      load_or_store = 0;
+      store_read = 0;
+      lb_output_read = 0;
+    end
+  end
 
   memory_unit data_mem(
   .clk_in(clk_100mhz),
   .rst_in(sys_rst),
-  .valid_in(lb_valid_out), // high for 1 clock cycle
-  .read_in(),
-  .load_or_store_in(), //either LOAD = 0 or STORE = 1
+  .valid_in(memory_unit_ready && (lb_valid_out || store_valid_out)), // high for 1 clock cycle
+  .read_in(memory_unit_load_read),
+  .load_or_store_in(load_or_store), //either LOAD = 0 or STORE = 1
   
   // LOAD Inputs
-  .load_rob_ix_in(),
-  .load_mem_addr_in(),
+  .load_rob_ix_in(lb_rob_ix_out),
+  .load_mem_addr_in(lb_dest_addr_out),
 
   // STORE Inputs
-  .store_mem_addr_in(),
-  .store_data_in(),
+  .store_mem_addr_in(rob_commit_dest),
+  .store_data_in(rob_commit_value),
 
   // LOAD Outputs
-  .load_rob_ix_out(),
-  .load_data_out(),
-  .ready_out(),
+  .load_rob_ix_out(memory_unit_load_rob_ix_out),
+  .load_data_out(memory_unit_load_result),
+  .ready_out(memory_unit_ready),
   .valid_out(memory_unit_load_output_valid) // high until output is read
   );
 
@@ -551,49 +598,58 @@ module top_level(
   // Write to CDB
   always_ff @(posedge clk_100mhz) begin
     if (sys_rst) begin
-      cdb_valid_in <= 0;
+      cdb_valid <= 0;
       fu_alu_read_in <= 0;
       fu_mul_read_in <= 0;
       cdb_busy <= 0;
       memory_unit_load_read <= 0;
     end else begin
       if (fu_alu_output_valid) begin
-        cdb_rob_ix_in <= fu_alu_rob_ix_out;
-        cdb_value_in <= fu_alu_result;
-        cdb_dest_in <= 32'h0000; // destination address is not needed
-        cdb_valid_in <= 1;
+        cdb_rob_ix <= fu_alu_rob_ix_out;
+        cdb_value <= fu_alu_result;
+        cdb_dest <= 32'h0000; // destination address is not needed
+        cdb_valid <= 1;
         fu_alu_read_in <= 1;
         fu_mul_read_in <= 0;
         cdb_busy <= 1;
         memory_unit_load_read <= 0;
       end else if (fu_mul_output_valid) begin
-        cdb_rob_ix_in <= fu_mul_rob_ix_out;
-        cdb_value_in <= fu_mul_result;
-        cdb_dest_in <= 32'h0000;
-        cdb_valid_in <= 1;
+        cdb_rob_ix <= fu_mul_rob_ix_out;
+        cdb_value <= fu_mul_result;
+        cdb_dest <= 32'h0000;
+        cdb_valid <= 1;
         fu_alu_read_in <= 0;
         fu_mul_read_in <= 1;
         cdb_busy <= 1;
         memory_unit_load_read <= 0;
       end else if (memory_unit_load_output_valid) begin
+        cdb_rob_ix <= memory_unit_load_rob_ix_out;
+        cdb_value <= memory_unit_load_result;
+        cdb_dest <= 32'h0000;
+        cdb_valid <= 1;
         fu_alu_read_in <= 0;
         fu_mul_read_in <= 0;
         cdb_busy <= 0;
         memory_unit_load_read <= 1;
         //Connect data memory to CDB
       end else if (output_valid_store) begin
-        cdb_rob_ix_in <= rs_store_rob_ix;
-        cdb_value_in <= 32'h0000;
-        cdb_dest_in <= rs_store_rval1 + rs_store_rval2;
-        cdb_valid_in <= 1;
+        cdb_rob_ix <= rs_store_rob_ix;
+        cdb_value <= rs_store_rval2;
+        cdb_dest <= rs_store_rval1;
+        cdb_valid <= 1;
         fu_alu_read_in <= 0;
         fu_mul_read_in <= 0;
         cdb_busy <= 1;
+        memory_unit_load_read <= 0;
       end else begin
-        cdb_valid_in <= 0;
+        cdb_rob_ix <= 0;
+        cdb_value <= 0;
+        cdb_dest <= 0;
+        cdb_valid <= 0;
         fu_alu_read_in <= 0;
         fu_mul_read_in <= 0;
         cdb_busy <= 0;
+        memory_unit_load_read <= 0;
       end
     end
   end
