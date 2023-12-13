@@ -564,22 +564,24 @@ module top_level(
   always_comb begin
     if (memory_unit_ready) begin
       if (store_valid_out) begin
-        load_or_store = 1;
         store_read = 1;
         lb_output_read = 0;
       end else if (lb_valid_out) begin
-        load_or_store = 0;
         store_read = 0;
         lb_output_read = 1;
       end else begin
-        load_or_store = 0;
         store_read = 0;
         lb_output_read = 0;
-      end
+      end 
     end else begin
-      load_or_store = 0;
       store_read = 0;
       lb_output_read = 0;
+    end
+
+    if (store_valid_out) begin
+      load_or_store = 1;
+    end else begin
+      load_or_store = 0;
     end
   end
 
