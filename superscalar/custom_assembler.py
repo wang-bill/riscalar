@@ -59,14 +59,15 @@ def dtb_imm(n):
       bin_str = "0" + bin_str
     
     if n < 0:
-      result = ''.join(["1" if i == "0" else "0" for i in bin_str])
+      result = ["1" if i == "0" else "0" for i in bin_str]
       for i in range(len(result)-1, -1, -1):
         if result[i] == "0":
           result[i] = "1"
           break
         if i == 0:
           result = 32 * "0"
-      bin_str = result
+      bin_str = ''.join(result)
+
 
     return bin_str
 
