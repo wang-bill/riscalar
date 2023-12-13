@@ -10,15 +10,12 @@
 
 module top_level(
   input wire clk_100mhz,
-  input wire [15:0] sw,
+  // input wire [15:0] sw,
   input wire [3:0] btn,
 
   output logic [15:0] led,
   output logic [2:0] rgb0, //rgb led
-  output logic [2:0] rgb1, //rgb led
-  output logic signed [31:0] data_out,
-  output logic [31:0] addr_out,
-  output logic [31:0] nextPc_out
+  output logic [2:0] rgb1 //rgb led
 );
   localparam INST_DEPTH = 64;
   localparam DATA_DEPTH = 64;
