@@ -13,7 +13,7 @@ module rob#(parameter SIZE=8)(
     input wire valid_in,
     input wire [3:0] iType_in,
     input wire signed [31:0] value_in,
-    input wire signed [31:0] dest_in,
+    input wire signed [31:0] dest_in, // Will be the register index unless working with store
     //CDB Inputs
     input wire [PTR_SIZE-1:0] cdb_rob_ix_in,
     input wire signed [31:0] cdb_value_in,
