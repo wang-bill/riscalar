@@ -1,0 +1,91 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2023.1 (win64) Build 3865809 Sun May  7 15:05:29 MDT 2023
+| Date         : Tue Dec 12 22:13:04 2023
+| Host         : 4SXLN73 running 64-bit major release  (build 9200)
+| Command      : report_timing -file obj/post_synth_timing.rpt
+| Design       : top_level
+| Device       : 7s50-csga324
+| Speed File   : -1  PRODUCTION 1.23 2018-06-13
+| Design State : Synthesized
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Timing Report
+
+Slack (VIOLATED) :        -0.540ns  (required time - arrival time)
+  Source:                 inst_queue/read_counter_reg[0]/C
+                            (rising edge-triggered cell FDRE clocked by gclk  {rise@0.000ns fall@4.000ns period=10.000ns})
+  Destination:            reorder_buffer/value_buffer_reg[0][0]/S
+                            (rising edge-triggered cell FDSE clocked by gclk  {rise@0.000ns fall@4.000ns period=10.000ns})
+  Path Group:             gclk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            10.000ns  (gclk rise@10.000ns - gclk rise@0.000ns)
+  Data Path Delay:        9.927ns  (logic 2.142ns (21.578%)  route 7.785ns (78.422%))
+  Logic Levels:           10  (LDPE=1 LUT2=1 LUT4=3 LUT6=4 RAMD32=1)
+  Clock Path Skew:        -0.145ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    2.660ns = ( 12.660 - 10.000 ) 
+    Source Clock Delay      (SCD):    2.920ns
+    Clock Pessimism Removal (CPR):    0.115ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock gclk rise edge)       0.000     0.000 r  
+    N15                                               0.000     0.000 r  clk_100mhz (IN)
+                         net (fo=0)                   0.000     0.000    clk_100mhz
+    N15                  IBUF (Prop_ibuf_I_O)         1.440     1.440 r  clk_100mhz_IBUF_inst/O
+                         net (fo=1, unplaced)         0.800     2.240    clk_100mhz_IBUF
+                         BUFG (Prop_bufg_I_O)         0.096     2.336 r  clk_100mhz_IBUF_BUFG_inst/O
+                         net (fo=3200, unplaced)      0.584     2.920    inst_queue/clk_100mhz_IBUF_BUFG
+                         FDRE                                         r  inst_queue/read_counter_reg[0]/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.456     3.376 r  inst_queue/read_counter_reg[0]/Q
+                         net (fo=34, unplaced)        1.038     4.414    inst_queue/instruction_queue_reg_0_3_24_29/ADDRB0
+                         RAMD32 (Prop_ramd32_RADR0_O)
+                                                      0.295     4.709 f  inst_queue/instruction_queue_reg_0_3_24_29/RAMB_D1/O
+                         net (fo=7, unplaced)         1.146     5.855    inst_queue/iq_instruction_out[27]
+                         LUT6 (Prop_lut6_I1_O)        0.124     5.979 r  inst_queue/aluFunc_out_reg[0]_i_8/O
+                         net (fo=2, unplaced)         0.460     6.439    inst_queue/aluFunc_out_reg[0]_i_8_n_0
+                         LUT2 (Prop_lut2_I0_O)        0.124     6.563 r  inst_queue/iType_out_reg[3]_i_3/O
+                         net (fo=5, unplaced)         0.477     7.040    inst_queue/iType_out_reg[3]_i_3_n_0
+                         LUT6 (Prop_lut6_I1_O)        0.124     7.164 r  inst_queue/iType_out_reg[0]_i_3/O
+                         net (fo=1, unplaced)         0.449     7.613    inst_queue/iType_out_reg[0]_i_3_n_0
+                         LUT4 (Prop_lut4_I3_O)        0.124     7.737 r  inst_queue/iType_out_reg[0]_i_1/O
+                         net (fo=1, unplaced)         0.000     7.737    decoder/D[0]
+                         LDPE (DToQ_ldpe_D_Q)         0.373     8.110 r  decoder/iType_out_reg[0]/Q
+                         net (fo=26, unplaced)        0.968     9.078    decoder/Q[0]
+                         LUT4 (Prop_lut4_I1_O)        0.150     9.228 f  decoder/rob_ix_row_reg_0_3_0_2_i_6/O
+                         net (fo=7, unplaced)         0.937    10.165    rs_store/Q_j_row_reg[2][0]_1
+                         LUT6 (Prop_lut6_I5_O)        0.124    10.289 f  rs_store/read_counter[0]_i_10/O
+                         net (fo=7, unplaced)         0.937    11.226    reorder_buffer/tail_reg[0]_1
+                         LUT4 (Prop_lut4_I1_O)        0.124    11.350 f  reorder_buffer/iType_buffer[7][3]_i_2/O
+                         net (fo=41, unplaced)        0.526    11.876    reorder_buffer/iType_buffer[7][3]_i_2_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.124    12.000 r  reorder_buffer/value_buffer[0][31]_i_1/O
+                         net (fo=32, unplaced)        0.847    12.847    reorder_buffer/value_buffer[0][31]_i_1_n_0
+                         FDSE                                         r  reorder_buffer/value_buffer_reg[0][0]/S
+  -------------------------------------------------------------------    -------------------
+
+                         (clock gclk rise edge)      10.000    10.000 r  
+    N15                                               0.000    10.000 r  clk_100mhz (IN)
+                         net (fo=0)                   0.000    10.000    clk_100mhz
+    N15                  IBUF (Prop_ibuf_I_O)         1.370    11.370 r  clk_100mhz_IBUF_inst/O
+                         net (fo=1, unplaced)         0.760    12.130    clk_100mhz_IBUF
+                         BUFG (Prop_bufg_I_O)         0.091    12.221 r  clk_100mhz_IBUF_BUFG_inst/O
+                         net (fo=3200, unplaced)      0.439    12.660    reorder_buffer/clk_100mhz_IBUF_BUFG
+                         FDSE                                         r  reorder_buffer/value_buffer_reg[0][0]/C
+                         clock pessimism              0.115    12.775    
+                         clock uncertainty           -0.035    12.740    
+                         FDSE (Setup_fdse_C_S)       -0.433    12.307    reorder_buffer/value_buffer_reg[0][0]
+  -------------------------------------------------------------------
+                         required time                         12.307    
+                         arrival time                         -12.847    
+  -------------------------------------------------------------------
+                         slack                                 -0.540    
+
+
+
+

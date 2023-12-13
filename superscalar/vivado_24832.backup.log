@@ -1,0 +1,275 @@
+#-----------------------------------------------------------
+# Vivado v2023.1 (64-bit)
+# SW Build 3865809 on Sun May  7 15:05:29 MDT 2023
+# IP Build 3864474 on Sun May  7 20:36:21 MDT 2023
+# SharedData Build 3865790 on Sun May 07 13:33:03 MDT 2023
+# Start of session at: Tue Dec 12 21:06:47 2023
+# Process ID: 24832
+# Current directory: C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar
+# Command line: vivado.exe -mode batch -source build.tcl
+# Log file: C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/vivado.log
+# Journal file: C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar\vivado.jou
+# Running On: 4SXLN73, OS: Windows, CPU Frequency: 2304 MHz, CPU Physical cores: 4, Host memory: 16831 MB
+#-----------------------------------------------------------
+source build.tcl
+# set partNum xc7s50csga324-1
+# set outputDir obj
+# file mkdir $outputDir
+# set files [glob -nocomplain "$outputDir/*"]
+# if {[llength $files] != 0} {
+#     # clear folder contents
+#     puts "deleting contents of $outputDir"
+#     file delete -force {*}[glob -directory $outputDir *];
+# } else {
+#     puts "$outputDir is empty"
+# }
+deleting contents of obj
+# read_verilog -sv [ glob ./hdl/*.sv ]
+read_verilog: Time (s): cpu = 00:00:16 ; elapsed = 00:00:17 . Memory (MB): peak = 486.625 ; gain = 197.586
+# read_verilog  [ glob ./hdl/*.v ]
+# read_xdc ./xdc/top_level.xdc
+# set_part $partNum
+INFO: [Coretcl 2-1500] The part has been set to 'xc7s50csga324-1' for the current project only. Run set_part -help for more details. To evaluate different speed grades in the current design, use the set_speed_grade command, or use the open_checkpoint -part command to change the part used by an existing checkpoint design.
+# read_ip ./ip/mult_gen_0/mult_gen_0.xci
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1704] No user IP repositories specified
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository 'C:/Xilinx/Vivado/2023.1/data/ip'.
+WARNING: [Vivado 12-13650] The IP file 'C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/ip/mult_gen_0/mult_gen_0.xci' has been moved from its original location, as a result the outputs for this IP will now be generated in 'c:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/ip/mult_gen_0/ip/mult_gen_0'. Alternatively a copy of the IP can be imported into the project using one of the 'import_ip' or 'import_files' commands.
+# read_ip ./ip/mult_gen_1/mult_gen_1.xci
+WARNING: [Vivado 12-13650] The IP file 'C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/ip/mult_gen_1/mult_gen_1.xci' has been moved from its original location, as a result the outputs for this IP will now be generated in 'c:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/ip/mult_gen_1/ip/mult_gen_1'. Alternatively a copy of the IP can be imported into the project using one of the 'import_ip' or 'import_files' commands.
+# synth_design -top top_level -part $partNum -verbose
+Command: synth_design -top top_level -part xc7s50csga324-1 -verbose
+Starting synth_design
+Attempting to get a license for feature 'Synthesis' and/or device 'xc7s50'
+INFO: [Common 17-349] Got license for feature 'Synthesis' and/or device 'xc7s50'
+INFO: [Device 21-403] Loading part xc7s50csga324-1
+INFO: [Synth 8-7079] Multithreading enabled for synth_design using a maximum of 2 processes.
+INFO: [Synth 8-7078] Launching helper process for spawning children vivado processes
+INFO: [Synth 8-7075] Helper process launched with PID 25920
+WARNING: [Synth 8-6901] identifier 'open_row' is used before its declaration [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/load_buffer.sv:45]
+WARNING: [Synth 8-6901] identifier 'open_row' is used before its declaration [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/load_buffer.sv:46]
+WARNING: [Synth 8-6901] identifier 'open_row' is used before its declaration [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/load_buffer.sv:47]
+WARNING: [Synth 8-6901] identifier 'open_row' is used before its declaration [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/load_buffer.sv:48]
+WARNING: [Synth 8-6901] identifier 'issued_row' is used before its declaration [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/load_buffer.sv:56]
+WARNING: [Synth 8-6901] identifier 'memory_output' is used before its declaration [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/memory_unit.sv:69]
+WARNING: [Synth 8-6901] identifier 'PTR_SIZE' is used before its declaration [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/reorder_buffer.sv:18]
+WARNING: [Synth 8-6901] identifier 'PTR_SIZE' is used before its declaration [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/reorder_buffer.sv:39]
+WARNING: [Synth 8-6901] identifier 'iq_ready' is used before its declaration [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:43]
+WARNING: [Synth 8-6901] identifier 'instruction_fetched' is used before its declaration [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:43]
+WARNING: [Synth 8-6901] identifier 'iq_valid' is used before its declaration [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:60]
+WARNING: [Synth 8-6901] identifier 'inst_fetch_is_branch' is used before its declaration [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:60]
+WARNING: [Synth 8-6901] identifier 'branch_taken' is used before its declaration [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:60]
+WARNING: [Synth 8-6901] identifier 'inst_fetch_imm' is used before its declaration [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:60]
+WARNING: [Synth 8-6901] identifier 'iq_valid' is used before its declaration [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:61]
+WARNING: [Synth 8-6901] identifier 'inst_fetch_is_branch' is used before its declaration [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:62]
+WARNING: [Synth 8-6901] identifier 'branch_taken' is used before its declaration [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:62]
+WARNING: [Synth 8-6901] identifier 'iq_valid' is used before its declaration [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:68]
+WARNING: [Synth 8-6901] identifier 'instruction_fetched' is used before its declaration [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:68]
+WARNING: [Synth 8-6901] identifier 'lb_dest_addr_in' is used before its declaration [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:462]
+---------------------------------------------------------------------------------
+Starting RTL Elaboration : Time (s): cpu = 00:00:15 ; elapsed = 00:00:16 . Memory (MB): peak = 1302.539 ; gain = 408.312
+---------------------------------------------------------------------------------
+INFO: [Synth 8-6157] synthesizing module 'top_level' [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:11]
+INFO: [Synth 8-6157] synthesizing module 'bp_decode' [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/bp_decode.sv:4]
+INFO: [Synth 8-6155] done synthesizing module 'bp_decode' (0#1) [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/bp_decode.sv:4]
+INFO: [Synth 8-6157] synthesizing module 'branch_predict' [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/branch_predict.sv:4]
+INFO: [Synth 8-6155] done synthesizing module 'branch_predict' (0#1) [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/branch_predict.sv:4]
+INFO: [Synth 8-6157] synthesizing module 'xilinx_single_port_ram_write_first' [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/xilinx_single_port_ram_write_first.v:9]
+	Parameter RAM_WIDTH bound to: 32 - type: integer 
+	Parameter RAM_DEPTH bound to: 64 - type: integer 
+	Parameter RAM_PERFORMANCE bound to: HIGH_PERFORMANCE - type: string 
+	Parameter INIT_FILE bound to: inst.mem - type: string 
+CRITICAL WARNING: [Synth 8-4445] could not open $readmem data file 'inst.mem'; please make sure the file is added to project and has read permission, ignoring [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/xilinx_single_port_ram_write_first.v:32]
+INFO: [Synth 8-6155] done synthesizing module 'xilinx_single_port_ram_write_first' (0#1) [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/xilinx_single_port_ram_write_first.v:9]
+INFO: [Synth 8-6157] synthesizing module 'instruction_queue' [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/instruction_queue.sv:1]
+	Parameter SIZE bound to: 4 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'instruction_queue' (0#1) [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/instruction_queue.sv:1]
+INFO: [Synth 8-6157] synthesizing module 'decode' [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/decode.sv:4]
+INFO: [Synth 8-6155] done synthesizing module 'decode' (0#1) [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/decode.sv:4]
+INFO: [Synth 8-6157] synthesizing module 'register_file' [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/register_file.sv:4]
+INFO: [Synth 8-6155] done synthesizing module 'register_file' (0#1) [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/register_file.sv:4]
+INFO: [Synth 8-6157] synthesizing module 'rob' [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/reorder_buffer.sv:6]
+	Parameter SIZE bound to: 8 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'rob' (0#1) [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/reorder_buffer.sv:6]
+INFO: [Synth 8-6157] synthesizing module 'reservation_station' [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/reservation_station.sv:6]
+INFO: [Synth 8-6155] done synthesizing module 'reservation_station' (0#1) [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/reservation_station.sv:6]
+INFO: [Synth 8-6157] synthesizing module 'alu' [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/alu.sv:6]
+INFO: [Synth 8-6155] done synthesizing module 'alu' (0#1) [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/alu.sv:6]
+INFO: [Synth 8-6157] synthesizing module 'multiplier' [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/multiplier.sv:4]
+INFO: [Synth 8-6155] done synthesizing module 'multiplier' (0#1) [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/multiplier.sv:4]
+WARNING: [Synth 8-7071] port 'opcode_out' of module 'reservation_station' is unconnected for instance 'rs_load' [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:434]
+WARNING: [Synth 8-7023] instance 'rs_load' of module 'reservation_station' has 22 connections declared, but only 21 given [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:434]
+INFO: [Synth 8-6157] synthesizing module 'load_buffer' [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/load_buffer.sv:6]
+INFO: [Synth 8-6155] done synthesizing module 'load_buffer' (0#1) [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/load_buffer.sv:6]
+INFO: [Synth 8-6157] synthesizing module 'memory_unit' [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/memory_unit.sv:11]
+INFO: [Synth 8-6157] synthesizing module 'xilinx_single_port_ram_write_first__parameterized0' [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/xilinx_single_port_ram_write_first.v:9]
+	Parameter RAM_WIDTH bound to: 32 - type: integer 
+	Parameter RAM_DEPTH bound to: 16 - type: integer 
+	Parameter RAM_PERFORMANCE bound to: HIGH_PERFORMANCE - type: string 
+	Parameter INIT_FILE bound to: data.mem - type: string 
+CRITICAL WARNING: [Synth 8-4445] could not open $readmem data file 'data.mem'; please make sure the file is added to project and has read permission, ignoring [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/xilinx_single_port_ram_write_first.v:32]
+INFO: [Synth 8-6155] done synthesizing module 'xilinx_single_port_ram_write_first__parameterized0' (0#1) [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/xilinx_single_port_ram_write_first.v:9]
+INFO: [Synth 8-6155] done synthesizing module 'memory_unit' (0#1) [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/memory_unit.sv:11]
+INFO: [Synth 8-6155] done synthesizing module 'top_level' (0#1) [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:11]
+WARNING: [Synth 8-87] always_comb on 'iType_out_reg' did not result in combinational logic [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/decode.sv:116]
+WARNING: [Synth 8-87] always_comb on 'aluFunc_out_reg' did not result in combinational logic [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/decode.sv:117]
+WARNING: [Synth 8-87] always_comb on 'data_out_reg' did not result in combinational logic [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/load_buffer.sv:78]
+WARNING: [Synth 8-87] always_comb on 'rob_ix_out_reg' did not result in combinational logic [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/load_buffer.sv:79]
+WARNING: [Synth 8-3848] Net rs_div_ready in module/entity top_level does not have driver. [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:200]
+WARNING: [Synth 8-3848] Net rs_brAlu_ready in module/entity top_level does not have driver. [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:200]
+WARNING: [Synth 8-3848] Net flush in module/entity top_level does not have driver. [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:159]
+WARNING: [Synth 8-3848] Net flush_addrs[7] in module/entity top_level does not have driver. [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:161]
+WARNING: [Synth 8-3848] Net flush_addrs[6] in module/entity top_level does not have driver. [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:161]
+WARNING: [Synth 8-3848] Net flush_addrs[5] in module/entity top_level does not have driver. [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:161]
+WARNING: [Synth 8-3848] Net flush_addrs[4] in module/entity top_level does not have driver. [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:161]
+WARNING: [Synth 8-3848] Net flush_addrs[3] in module/entity top_level does not have driver. [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:161]
+WARNING: [Synth 8-3848] Net flush_addrs[2] in module/entity top_level does not have driver. [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:161]
+WARNING: [Synth 8-3848] Net flush_addrs[1] in module/entity top_level does not have driver. [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:161]
+WARNING: [Synth 8-3848] Net flush_addrs[0] in module/entity top_level does not have driver. [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/top_level.sv:161]
+WARNING: [Synth 8-3917] design top_level has port rgb0[2] driven by constant 0
+WARNING: [Synth 8-3917] design top_level has port rgb0[1] driven by constant 0
+WARNING: [Synth 8-3917] design top_level has port rgb0[0] driven by constant 0
+WARNING: [Synth 8-3917] design top_level has port rgb1[2] driven by constant 0
+WARNING: [Synth 8-3917] design top_level has port rgb1[1] driven by constant 0
+WARNING: [Synth 8-3917] design top_level has port rgb1[0] driven by constant 0
+WARNING: [Synth 8-7129] Port cdb_dest_in[31] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[30] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[29] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[28] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[27] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[26] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[25] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[24] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[23] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[22] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[21] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[20] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[19] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[18] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[17] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[16] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[15] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[14] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[13] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[12] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[11] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[10] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[9] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[8] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[7] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[6] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[5] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[4] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[3] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[2] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[1] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port cdb_dest_in[0] in module reservation_station is either unconnected or has no load
+WARNING: [Synth 8-7129] Port clk_in in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rst_in in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[31] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[30] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[29] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[28] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[27] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[26] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[25] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[24] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[23] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[22] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[21] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[20] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[19] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[18] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[17] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[16] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[15] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[14] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[13] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[12] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[11] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[10] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[9] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[8] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[7] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[6] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[5] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[4] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[3] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[2] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[1] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port pc_in[0] in module branch_predict is either unconnected or has no load
+WARNING: [Synth 8-7129] Port instruction_in[19] in module bp_decode is either unconnected or has no load
+WARNING: [Synth 8-7129] Port instruction_in[18] in module bp_decode is either unconnected or has no load
+WARNING: [Synth 8-7129] Port instruction_in[17] in module bp_decode is either unconnected or has no load
+WARNING: [Synth 8-7129] Port instruction_in[16] in module bp_decode is either unconnected or has no load
+WARNING: [Synth 8-7129] Port instruction_in[15] in module bp_decode is either unconnected or has no load
+WARNING: [Synth 8-7129] Port instruction_in[14] in module bp_decode is either unconnected or has no load
+WARNING: [Synth 8-7129] Port instruction_in[13] in module bp_decode is either unconnected or has no load
+WARNING: [Synth 8-7129] Port instruction_in[12] in module bp_decode is either unconnected or has no load
+WARNING: [Synth 8-7129] Port instruction_in[11] in module bp_decode is either unconnected or has no load
+WARNING: [Synth 8-7129] Port instruction_in[10] in module bp_decode is either unconnected or has no load
+WARNING: [Synth 8-7129] Port instruction_in[9] in module bp_decode is either unconnected or has no load
+WARNING: [Synth 8-7129] Port instruction_in[8] in module bp_decode is either unconnected or has no load
+WARNING: [Synth 8-7129] Port instruction_in[7] in module bp_decode is either unconnected or has no load
+WARNING: [Synth 8-7129] Port sw[15] in module top_level is either unconnected or has no load
+WARNING: [Synth 8-7129] Port sw[14] in module top_level is either unconnected or has no load
+WARNING: [Synth 8-7129] Port sw[13] in module top_level is either unconnected or has no load
+WARNING: [Synth 8-7129] Port sw[12] in module top_level is either unconnected or has no load
+WARNING: [Synth 8-7129] Port sw[11] in module top_level is either unconnected or has no load
+WARNING: [Synth 8-7129] Port sw[10] in module top_level is either unconnected or has no load
+WARNING: [Synth 8-7129] Port sw[9] in module top_level is either unconnected or has no load
+WARNING: [Synth 8-7129] Port sw[8] in module top_level is either unconnected or has no load
+WARNING: [Synth 8-7129] Port sw[7] in module top_level is either unconnected or has no load
+WARNING: [Synth 8-7129] Port sw[6] in module top_level is either unconnected or has no load
+WARNING: [Synth 8-7129] Port sw[5] in module top_level is either unconnected or has no load
+WARNING: [Synth 8-7129] Port sw[4] in module top_level is either unconnected or has no load
+WARNING: [Synth 8-7129] Port sw[3] in module top_level is either unconnected or has no load
+WARNING: [Synth 8-7129] Port sw[2] in module top_level is either unconnected or has no load
+WARNING: [Synth 8-7129] Port sw[1] in module top_level is either unconnected or has no load
+WARNING: [Synth 8-7129] Port sw[0] in module top_level is either unconnected or has no load
+WARNING: [Synth 8-7129] Port btn[3] in module top_level is either unconnected or has no load
+WARNING: [Synth 8-7129] Port btn[2] in module top_level is either unconnected or has no load
+WARNING: [Synth 8-7129] Port btn[1] in module top_level is either unconnected or has no load
+---------------------------------------------------------------------------------
+Finished RTL Elaboration : Time (s): cpu = 00:00:23 ; elapsed = 00:00:26 . Memory (MB): peak = 1428.148 ; gain = 533.922
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Handling Custom Attributes
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:24 ; elapsed = 00:00:27 . Memory (MB): peak = 1428.148 ; gain = 533.922
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:24 ; elapsed = 00:00:27 . Memory (MB): peak = 1428.148 ; gain = 533.922
+---------------------------------------------------------------------------------
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.327 . Memory (MB): peak = 1428.148 ; gain = 0.000
+INFO: [Project 1-570] Preparing netlist for logic optimization
+
+Processing XDC Constraints
+Initializing timing engine
+Parsing XDC File [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/xdc/top_level.xdc]
+WARNING: [Vivado 12-584] No ports matched 'uart_rxd'. [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/xdc/top_level.xdc:59]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/xdc/top_level.xdc:59]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'uart_txd'. [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/xdc/top_level.xdc:60]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/xdc/top_level.xdc:60]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'uart*'. [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/xdc/top_level.xdc:61]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/xdc/top_level.xdc:61]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+Finished Parsing XDC File [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/xdc/top_level.xdc]
+INFO: [Project 1-236] Implementation specific constraints were found while reading constraint file [C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/xdc/top_level.xdc]. These constraints will be ignored for synthesis but will be used in implementation. Impacted constraints are listed in the file [.Xil/top_level_propImpl.xdc].
+Resolution: To avoid this warning, move constraints listed in [.Xil/top_level_propImpl.xdc] to another XDC file and exclude this new file from synthesis with the used_in_synthesis property (File Properties dialog in GUI) and re-run elaboration/synthesis.
+Completed Processing XDC Constraints
+
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.003 . Memory (MB): peak = 1535.926 ; gain = 0.000
+INFO: [Project 1-111] Unisim Transformation Summary:
+No Unisim elements were transformed.
+
+Constraint Validation Runtime : Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.064 . Memory (MB): peak = 1535.926 ; gain = 0.000
+INFO: [Common 17-41] Interrupt caught. Command should exit soon.
+INFO: [Common 17-83] Releasing license: Synthesis
+38 Infos, 144 Warnings, 5 Critical Warnings and 1 Errors encountered.
+synth_design failed
+INFO: [Common 17-344] 'source' was cancelled
+INFO: [Common 17-206] Exiting Vivado at Tue Dec 12 21:08:01 2023...

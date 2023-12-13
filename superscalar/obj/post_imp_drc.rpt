@@ -1,0 +1,62 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2023.1 (win64) Build 3865809 Sun May  7 15:05:29 MDT 2023
+| Date         : Tue Dec 12 22:15:58 2023
+| Host         : 4SXLN73 running 64-bit major release  (build 9200)
+| Command      : report_drc -file obj/post_imp_drc.rpt
+| Design       : top_level
+| Device       : xc7s50csga324-1
+| Speed File   : -1
+| Design State : Fully Routed
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Report DRC
+
+Table of Contents
+-----------------
+1. REPORT SUMMARY
+2. REPORT DETAILS
+
+1. REPORT SUMMARY
+-----------------
+            Netlist: top_level
+          Floorplan: design_1
+      Design limits: <entire design considered>
+           Ruledeck: default
+             Max violations: <unlimited>
+             Violations found: 5
++----------+------------------+--------------------------+------------+
+| Rule     | Severity         | Description              | Violations |
++----------+------------------+--------------------------+------------+
+| LUTLP-1  | Critical Warning | Combinatorial Loop Alert | 1          |
+| PDRC-153 | Warning          | Gated clock check        | 4          |
++----------+------------------+--------------------------+------------+
+
+2. REPORT DETAILS
+-----------------
+LUTLP-1#1 Critical Warning
+Combinatorial Loop Alert  
+1 LUT cells form a combinatorial loop. This can create a race condition. Timing analysis may not be accurate. The preferred resolution is to modify the design to remove combinatorial logic loops. If the loop is known and understood, this DRC can be bypassed by acknowledging the condition and setting the following XDC constraint on any one of the nets in the loop: 'set_property ALLOW_COMBINATORIAL_LOOPS TRUE [get_nets <myHier/myNet>]'. One net in the loop is reorder_buffer/p_53_in. Please evaluate your design. The cells in the loop are: reorder_buffer/old_store_read_i_1.
+Related violations: <none>
+
+PDRC-153#1 Warning
+Gated clock check  
+Net inst_queue/BRAM_reg[0] is a gated clock net sourced by a combinational pin inst_queue/aluFunc_out_reg[0]_i_2/O, cell inst_queue/aluFunc_out_reg[0]_i_2. This is not good design practice and will likely impact performance. For SLICE registers, for example, use the CE pin to control the loading of data.
+Related violations: <none>
+
+PDRC-153#2 Warning
+Gated clock check  
+Net inst_queue/BRAM_reg[1] is a gated clock net sourced by a combinational pin inst_queue/aluFunc_out_reg[2]_i_2/O, cell inst_queue/aluFunc_out_reg[2]_i_2. This is not good design practice and will likely impact performance. For SLICE registers, for example, use the CE pin to control the loading of data.
+Related violations: <none>
+
+PDRC-153#3 Warning
+Gated clock check  
+Net inst_queue/BRAM_reg[2] is a gated clock net sourced by a combinational pin inst_queue/aluFunc_out_reg[3]_i_2/O, cell inst_queue/aluFunc_out_reg[3]_i_2. This is not good design practice and will likely impact performance. For SLICE registers, for example, use the CE pin to control the loading of data.
+Related violations: <none>
+
+PDRC-153#4 Warning
+Gated clock check  
+Net reorder_buffer/data_out_reg[5]_i_5_0[0] is a gated clock net sourced by a combinational pin reorder_buffer/data_out_reg[5]_i_2/O, cell reorder_buffer/data_out_reg[5]_i_2. This is not good design practice and will likely impact performance. For SLICE registers, for example, use the CE pin to control the loading of data.
+Related violations: <none>
+
+

@@ -1,0 +1,4 @@
+INFO: [VRFC 10-163] Analyzing VHDL file "C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/ip/mult_gen_1/ip/mult_gen_1/sim/mult_gen_1.vhd" into library xil_defaultlib
+INFO: [VRFC 10-3107] analyzing entity 'mult_gen_1'
+INFO: [VRFC 10-163] Analyzing VHDL file "C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/ip/mult_gen_0/ip/mult_gen_0/sim/mult_gen_0.vhd" into library xil_defaultlib
+INFO: [VRFC 10-3107] analyzing entity 'mult_gen_0'

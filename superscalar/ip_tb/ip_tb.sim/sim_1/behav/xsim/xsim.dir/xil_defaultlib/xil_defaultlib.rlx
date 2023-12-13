@@ -1,0 +1,9 @@
+0.7
+2020.2
+May  7 2023
+15:24:31
+C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/hdl/multiplier.sv,1701974320,systemVerilog,,C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/sim/multiplier_tb.sv,,multiplier,,uvm,../../../../../hdl,,,,,
+C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/ip/mult_gen_0/ip/mult_gen_0/sim/mult_gen_0.vhd,1701894439,vhdl,,,,mult_gen_0,,,,,,,,
+C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/ip/mult_gen_1/ip/mult_gen_1/sim/mult_gen_1.vhd,1701920532,vhdl,,,,mult_gen_1,,,,,,,,
+C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/ip_tb/ip_tb.sim/sim_1/behav/xsim/glbl.v,1683266558,verilog,,,,glbl,,uvm,,,,,,
+C:/Users/Catherine Tang/Desktop/62050/riscalar/superscalar/sim/multiplier_tb.sv,1701978640,systemVerilog,,,,multiplier_tb,,uvm,../../../../../hdl,,,,,
