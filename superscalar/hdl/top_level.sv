@@ -442,7 +442,7 @@ module top_level(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
     .flush_in(flush),
-    .valid_input_in(rs_brAlu_ready), // get from decode
+    .valid_input_in(rs_brAlu_valid_in), // get from decode
     .fu_busy_in(!cdb_brAlu), // get from fu
     .Q_i_in(rob_ix1_out), // get from decode
     .Q_j_in(rob_ix2_out), // get from decode
@@ -813,7 +813,7 @@ module top_level(
         fu_mul_read_in <= 0;
         cdb_store <= 0;
         memory_unit_load_read <= 0;
-        cdb_brAlu <= 0;
+        cdb_brAlu <= 1;
       end else begin
         cdb_rob_ix <= 0;
         cdb_value <= 0;
