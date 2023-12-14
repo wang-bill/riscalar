@@ -746,7 +746,7 @@ module top_level(
   
   // Write to CDB
   always_ff @(posedge clk_100mhz) begin
-    if (sys_rst || flush_in) begin
+    if (sys_rst || flush) begin
       cdb_rob_ix <= 0;
       cdb_value <= 0;
       cdb_dest <= 0;
