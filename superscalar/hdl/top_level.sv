@@ -241,10 +241,10 @@ module top_level(
   logic decode_rob_ready2; 
   logic [LOAD_BUFFER_DEPTH-1:0] rob_can_load;
   // logic [ROB_IX:0] lb_rob_arr_ix [LOAD_BUFFER_DEPTH-1:0];
-  logic [(ROB_IX+1)*LOAD_BUFFER_DEPTH] lb_rob_arr_ix;
+  logic [(ROB_IX+1)*LOAD_BUFFER_DEPTH-1:0] lb_rob_arr_ix;
   // logic [2:0] lb_rob_arr_ix0, lb_rob_arr_ix1, lb_rob_arr_ix2; 
   // logic signed [31:0] lb_rob_dest [LOAD_BUFFER_DEPTH-1:0];
-  logic signed [32*LOAD_BUFFER_DEPTH] lb_rob_dest;
+  logic signed [32*LOAD_BUFFER_DEPTH-1:0] lb_rob_dest;
   // logic signed [31:0] lb_rob_dest0, lb_rob_dest1, lb_rob_dest2;
   logic store_read;
 
@@ -762,7 +762,7 @@ module top_level(
       memory_unit_load_read <= 0;
       cdb_brAlu <= 0;
     end else begin
-      if (output_valid_alu) begin
+      if (fu_alu_output_valid) begin
         cdb_rob_ix <= fu_alu_rob_ix_out;
         cdb_value <= fu_alu_result;
         cdb_dest <= 32'h0000; // destination address is not needed
