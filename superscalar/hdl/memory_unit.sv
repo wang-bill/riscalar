@@ -11,8 +11,8 @@
 module memory_unit(
   input wire clk_in,
   input wire rst_in,
-  input wire valid_in, // high for 1 clock cycle
-  input wire read_in,
+  input wire valid_in, // high for 1 clock cycle per new input
+  input wire read_in, // high for 1 clock cycle
   input wire load_or_store_in, //either LOAD = 0 or STORE = 1
   
   // LOAD Inputs
@@ -26,52 +26,107 @@ module memory_unit(
   // LOAD Outputs
   output logic [2:0] load_rob_ix_out,
   output logic signed [31:0] load_data_out,
-  output logic ready_out,
-  output logic valid_out // high until output is read
+  output logic ready_out, // ready for another input
+  output logic valid_out // high until load output is read
 );
-  localparam DATA_DEPTH = 16;
   localparam LOAD_PERIOD = 3;
-  logic [31:0] mem_addr;
-  logic [1:0] counter;
+  localparam DATA_DEPTH = 16;
+  
+  logic process_input;
+  logic stall1, stall2;
   always_ff @(posedge clk_in) begin
     if (rst_in) begin
-      load_rob_ix_out <= 0;
-      // mem_addr <= 0;
-      counter <= 0;
+      ready_out <= 1;
+      valid_out <= 0;
+      process_input <= 0;
+      stall1 <= 1;
     end else begin
-      if (valid_in && ready_out) begin
-        // mem_addr <= (load_or_store_in) ? store_mem_addr_in : load_mem_addr_in;
-        load_rob_ix_out <= load_rob_ix_in;
-        if (!load_or_store_in) begin
-          counter <= 1;
+      if (valid_in || process_input) begin
+        process_input <= 1;
+        if (load_or_store_in == 1) begin // STORE
+          valid_out <= 0;
+          ready_out <= 1;
+          load_data_out <= 0;
+          load_rob_ix_out <= 0;
+          process_input <= 0;
+        end else begin // LOAD
+          if (stall1) begin
+            load_rob_ix_out <= load_rob_ix_in;
+            ready_out <= 0;
+          
+            stall2 <= 1;
+            stall1 <= 0;
+          end else if (stall2) begin
+            stall2 <= 0;
+          end else begin
+            valid_out <= 1;
+            load_data_out <= memory_output;
+            if (read_in) begin
+              valid_out <= 0;
+              process_input <= 0;
+              ready_out <= 1;
+              stall1 <= 1;
+            end
+          end
+          
         end
-      end
-      if (counter > 0 && counter < LOAD_PERIOD) begin
-        counter <= counter + 1;
-      end else if (counter == LOAD_PERIOD) begin
-      end
-      if (read_in) begin
-        counter <= 0;
       end
     end
   end
 
-  always_comb begin
-    if (load_or_store_in == 0) begin
-      //Load
-      ready_out = (counter == 0);
-      valid_out = (counter == LOAD_PERIOD) && !read_in;
-    end else begin
-      //Store
-      ready_out = 1;
-      valid_out = 0;
-    end
-    load_data_out = memory_output;
-  end
+
+
+
+
+
+
+
+  // localparam DATA_DEPTH = 16;
+  // localparam LOAD_PERIOD = 3;
+  // logic [31:0] mem_addr;
+  // logic [1:0] counter;
+  // always_ff @(posedge clk_in) begin
+  //   if (rst_in) begin
+  //     load_rob_ix_out <= 0;
+  //     // mem_addr <= 0;
+  //     counter <= 0;
+  //   end else begin
+  //     if (valid_in && ready_out) begin
+  //       // mem_addr <= (load_or_store_in) ? store_mem_addr_in : load_mem_addr_in;
+  //       load_rob_ix_out <= load_rob_ix_in;
+  //       if (!load_or_store_in) begin
+  //         counter <= 1;
+  //       end
+  //     end
+  //     if (counter > 0 && counter < LOAD_PERIOD) begin
+  //       counter <= counter + 1;
+  //     end 
+  //     // else if (counter == LOAD_PERIOD) begin
+  //     // end
+  //     if (read_in) begin
+  //       counter <= 0;
+  //     end
+  //   end
+  // end
+
+  // always_comb begin
+  //   if (load_or_store_in == 0) begin
+  //     //Load
+  //     ready_out = (counter == 0);
+  //     valid_out = (counter == LOAD_PERIOD) && !read_in;
+  //   end else begin
+  //     //Store
+  //     ready_out = 1;
+  //     valid_out = 0;
+  //   end
+  //   load_data_out = memory_output;
+  // end
   // data memory
+
   logic[$clog2(DATA_DEPTH)-1:0] effective_mem_addr;
   logic writing;
   logic signed [31:0] memory_output;
+  logic [31:0] mem_addr;
 
   assign mem_addr = (load_or_store_in) ? store_mem_addr_in : load_mem_addr_in;
   assign effective_mem_addr = mem_addr[($clog2(DATA_DEPTH)-1)+2:2];
