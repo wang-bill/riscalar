@@ -43,7 +43,7 @@ module load_buffer #(parameter LOAD_BUFFER_DEPTH=3, parameter ROB_IX=2)(
     end
     
     for (int i = 0; i< LOAD_BUFFER_DEPTH; i=i+1) begin
-      for (int j = 0; j <= ROB_IX; j=j+1) begin
+      for (int j = 0; j < ROB_IX + 1; j=j+1) begin
         lb_rob_arr_ix_out[i*(ROB_IX+1)+j] = rob_ix_row[i][j];
       end
       // lb_rob_arr_ix_out[(i+1)*(ROB_IX+1):i*(ROB_IX+1)] = rob_ix_row[i];

@@ -189,7 +189,7 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
           for (int k = 0; k < 32; k=k+1) begin
             can_load_i &= !(iType_buffer[j] == STORE &&
                           destination_buffer[j][k] ==
-                          lb_rob_arr_dest_in[i*ROB_SIZE+k]);
+                          lb_rob_arr_dest_in[i*ROB_SIZE+j+k]);
           end
           
           // can_load_i &= !(iType_buffer[j] == STORE && 

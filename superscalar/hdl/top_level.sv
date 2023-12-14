@@ -19,10 +19,10 @@ module top_level(
   localparam INST_DEPTH = 64;
   localparam DATA_DEPTH = 64;
 
-  localparam ROB_SIZE = 100;
-  localparam RS_DEPTH = 100;
-  localparam IQ_SIZE = 100;
-  localparam LOAD_BUFFER_DEPTH = 100;
+  localparam ROB_SIZE = 8;
+  localparam RS_DEPTH = 8;
+  localparam IQ_SIZE = 8;
+  localparam LOAD_BUFFER_DEPTH = 8;
 
   localparam ROB_IX = $clog2(ROB_SIZE)-1;
   // assign led = sw; //for debugging
