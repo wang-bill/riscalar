@@ -33,12 +33,12 @@ module top_level(
   assign sys_rst = btn[0];
   //Instruction Fetch
   logic correct_branch;
-  logic signed [31:0] pc_bram, pc;
+  logic signed [31:0] pc_bram, pc, nextPc;
   logic first, second, third;
   logic first_two_or_branch;
   logic pc_backtrack;
 
-  assign correct_branch = 1;
+  assign correct_branch = !flush;
   
   always_ff @(posedge clk_100mhz) begin
     if (sys_rst) begin
@@ -67,7 +67,7 @@ module top_level(
         end else begin
           pc <= iq_valid ? (inst_fetch_is_branch && branch_taken) ? pc + inst_fetch_imm : pc + 4 : pc;
           pc_bram <= iq_valid ? pc + 8 + 4: pc_bram;
-          first_two_or_branch <= inst_fetch_is_branch && branch_taken;
+          first_two_or_branch <= (inst_fetch_is_branch && branch_taken || !correct_branch);
         end
       end else begin
         if (!iq_ready && !pc_backtrack) begin
@@ -236,6 +236,23 @@ module top_level(
   // logic signed [31:0] lb_rob_dest0, lb_rob_dest1, lb_rob_dest2;
   logic store_read;
 
+  logic signed [31:0] issue_dest;
+  always_comb begin
+    if (iType == BRANCH) begin
+      // For branches, we always store the "back up" PC, the PC we would go to instead if we made the wrong prediction
+      if (iq_instruction_branch_taken) begin
+        issue_dest = pc + 4;
+      end else begin
+        issue_dest = pc + imm;
+      end
+    //temporarily store immediate in the destination if iType is STORE, else store register dest index
+    end else if (iType == STORE) begin
+      issue_dest = imm;
+    end else begin
+      issue_dest = rd;
+    end
+  end
+
   rob #(.SIZE(ROB_SIZE)) reorder_buffer( 
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
@@ -243,7 +260,7 @@ module top_level(
     .valid_in(iq_output_read && iType != NOP),
     .iType_in(iType),
     .value_in((iType == BRANCH) ? iq_instruction_branch_taken : 32'hFFFF_FFFF), //might be an uneccesary input since we never know the actual value yet initially
-    .dest_in((iType == STORE) ? imm : rd), //temporarily store immediate in the destination if iType is STORE, else store register dest index
+    .dest_in(issue_dest), 
     //Issue Output
     .inst_rob_ix_out(issue_rob_ix),
     //Decode Inputs
@@ -285,6 +302,7 @@ module top_level(
 
     .flush_out(flush),
     .flush_addrs_out(flush_addrs)
+    .nextPc_out(nextPc)
   );
 
   always_comb begin
@@ -805,7 +823,7 @@ module top_level(
       end
     end
   end
-  
+
   assign led = fu_alu_result;
 
 endmodule
