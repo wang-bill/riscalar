@@ -56,7 +56,8 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
 
     output logic flush_out,
     output logic [4:0] flush_addrs_out [ROB_SIZE-1:0],
-    output logic signed [31:0] nextPc_out
+    output logic signed [31:0] nextPc_out,
+    output logic valid_branch_out
 );
   localparam ROB_IX = $clog2(ROB_SIZE)-1;
   logic [3:0] iType_buffer [ROB_SIZE-1:0];
@@ -166,8 +167,10 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
     decode_value2_out = value_buffer[decode_rob2_ix_in];
     decode_ready2_out = inst_ready_buffer[decode_rob2_ix_in];
     if (cdb_valid_in && iType_buffer[cdb_rob_ix_in] == BRANCH) begin
+      valid_branch_out = 1;
       correct_branch = (value_buffer[cdb_rob_ix_in][0] == cdb_value_in);
     end else begin
+      valid_branch_out = 0;
       correct_branch = 1;
     end
     nextPc_out = (!correct_branch) ? destination_buffer[cdb_rob_ix_in]: 0;

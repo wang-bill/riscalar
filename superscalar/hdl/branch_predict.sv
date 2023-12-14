@@ -46,6 +46,10 @@ module branch_predict
   logic [$clog2(LHT_DEPTH)-1:0] local_history_table_ix;
   always_comb begin
     local_history_table_ix = pc_in[$clog2(LHT_DEPTH)-1:0];
+  logic local_history_table; 
+
+  always_comb begin
+    branch_taken_out = 0;
   end
 
 endmodule
