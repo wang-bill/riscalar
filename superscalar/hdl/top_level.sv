@@ -66,9 +66,15 @@ module top_level(
             first <= 1;
           end
         end else begin
-          pc <= iq_valid ? (inst_fetch_is_branch && branch_taken) ? pc + inst_fetch_imm : pc + 4 : pc;
-          pc_bram <= iq_valid ? pc + 8 + 4: pc_bram;
-          first_two_or_branch <= (inst_fetch_is_branch && branch_taken || !correct_branch);
+          if (correct_branch) begin
+            pc <= iq_valid ? (inst_fetch_is_branch && branch_taken) ? pc + inst_fetch_imm : pc + 4 : pc;
+            pc_bram <= iq_valid ? pc + 8 + 4: pc_bram;
+            first_two_or_branch <= (inst_fetch_is_branch && branch_taken);
+          end else begin
+            pc <= nextPc;
+            pc_bram <= nextPc;
+            first_two_or_branch <= 1;
+          end
         end
       end else begin
         // if (!iq_ready && !pc_backtrack) begin
