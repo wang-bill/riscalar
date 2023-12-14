@@ -47,7 +47,7 @@ module iq_to_cdb_tb();
     btn_in = 0;
 
 
-    for (int i = 0; i < 2*10**2; i=i+1) begin
+    for (int i = 0; i < 10**3; i=i+1) begin
       #10;
       // if (i == 10) begin
       //   iq_valid = 1;

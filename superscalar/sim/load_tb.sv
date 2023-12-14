@@ -41,7 +41,7 @@ module load_tb();
     btn_in = 0;
 
 
-    for (int i = 0; i<100; i=i+1) begin
+    for (int i = 0; i<1000; i=i+1) begin
       #10;
       $display("%d", led_out);
     end
