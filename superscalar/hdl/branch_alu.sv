@@ -8,7 +8,7 @@
 module branchAlu #(parameter ROB_IX=2)(
     input wire signed [31:0] rval1_in,
     input wire signed [31:0] rval2_in,
-    input wire [ROB_IX:0] brFunc_in,
+    input wire [2:0] brFunc_in,
     output logic bool_out
 );
     logic [31:0] rval1_u, rval2_u;

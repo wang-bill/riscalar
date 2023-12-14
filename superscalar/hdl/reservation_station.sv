@@ -101,6 +101,7 @@ module reservation_station#(parameter RS_DEPTH=3, parameter ROB_IX=2)(
       end
 
       if (!fu_busy_in && row_ready && !one_cycle_after_sending) begin
+      // if (row_ready && !one_cycle_after_sending) begin
         // extracting value from reservation station
         rval1_out <= V_i_row[occupied_row];
         rval2_out <= V_j_row[occupied_row];

@@ -103,8 +103,8 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
           if (iType_buffer[cdb_rob_ix_in] == STORE) begin
             destination_buffer[cdb_rob_ix_in] <= destination_buffer[cdb_rob_ix_in] + cdb_dest_in;
           end
-          inst_ready_buffer[cdb_rob_ix_in] <= 1'b1;
         end
+        inst_ready_buffer[cdb_rob_ix_in] <= 1'b1;
       end
       if (commit_out) begin
         head <= head + 1;
