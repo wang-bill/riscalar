@@ -115,7 +115,7 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
     end else begin
       // Flushing the ROB
       flush_out <= 1;
-      for (int i = 0; i < SIZE; i = i+1) begin
+      for (int i = 0; i < ROB_SIZE; i = i+1) begin
         if (i >= head[2:0] && i < tail) begin
           if (iType_buffer[i] == OPIMM || iType_buffer[i] == OP 
               || iType_buffer[i] == LUI || iType_buffer[i] == JAL
