@@ -25,44 +25,44 @@ module alu #(parameter ROB_IX=2)(
     logic stall_done;
     logic stall_can_start;
 
-    assign ready_out = 1;
-    assign valid_out = valid_in;
-    // always_ff @(posedge clk_in) begin
-    //     if (rst_in || flush_in) begin
-    //         ready_out <= 1;
-    //         valid_out <= 0;
-    //         stall_done <= 0;
-    //         stall_can_start <= 0;
-    //     end else begin
-    //         if (valid_in) begin // should only hit this once
-    //             // start computation (stall)
-    //             stall <= 1;
-    //             stall_done <= 0;
-    //             stall_can_start <= 1;
-    //             ready_out <= 0;
-    //         end
+    // assign ready_out = 1;
+    // assign valid_out = valid_in;
+    always_ff @(posedge clk_in) begin
+        if (rst_in || flush_in) begin
+            ready_out <= 1;
+            valid_out <= 0;
+            stall_done <= 0;
+            stall_can_start <= 0;
+        end else begin
+            if (valid_in) begin // should only hit this once
+                // start computation (stall)
+                stall <= 1;
+                stall_done <= 0;
+                stall_can_start <= 1;
+                ready_out <= 0;
+            end
 
-    //         if (stall_can_start) begin
-    //             if (!stall_done) begin
-    //                 for (int i = 1; i < STALL_DURATION; i=i+1) begin
-    //                     stall[i] <= stall[i-1];
-    //                 end
-    //                 if (stall[STALL_DURATION-1] == 1) begin
-    //                     stall_done <= 1;
-    //                 end
-    //             end else begin
-    //                 if (read_in) begin
-    //                     valid_out <= 0;
-    //                     ready_out <= 1;
-    //                     stall_can_start <= 0;
-    //                 end else begin
-    //                     valid_out <= 1;
-    //                     ready_out <= 0;
-    //                 end
-    //             end
-    //         end
-    //     end
-    // end
+            if (stall_can_start) begin
+                if (!stall_done) begin
+                    for (int i = 1; i < STALL_DURATION; i=i+1) begin
+                        stall[i] <= stall[i-1];
+                    end
+                    if (stall[STALL_DURATION-1] == 1) begin
+                        stall_done <= 1;
+                    end
+                end else begin
+                    if (read_in) begin
+                        valid_out <= 0;
+                        ready_out <= 1;
+                        stall_can_start <= 0;
+                    end else begin
+                        valid_out <= 1;
+                        ready_out <= 0;
+                    end
+                end
+            end
+        end
+    end
 
     logic [31:0] rval1_u, rval2_u;
     assign rval1_u = rval1_in;
@@ -83,8 +83,6 @@ module alu #(parameter ROB_IX=2)(
             default : data_out = 0;
         endcase
     end
-    // assign ready_out = 1'b1;
-    // assign busy_out = 0'b0;
 endmodule //alu
 
 `default_nettype wire

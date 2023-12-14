@@ -17,9 +17,9 @@ module load_buffer #(parameter LOAD_BUFFER_DEPTH=3, parameter ROB_IX=2)(
 
   // Pass to ROB
   // output logic signed [31:0] lb_dest_out [LOAD_BUFFER_DEPTH-1:0],
-  output logic signed [32*LOAD_BUFFER_DEPTH] lb_dest_out,
+  output logic signed [32*LOAD_BUFFER_DEPTH-1:0] lb_dest_out,
   // output logic [ROB_IX:0] lb_rob_arr_ix_out [LOAD_BUFFER_DEPTH-1:0],
-  output logic [(ROB_IX+1)*LOAD_BUFFER_DEPTH] lb_rob_arr_ix_out,
+  output logic [(ROB_IX+1)*LOAD_BUFFER_DEPTH-1:0] lb_rob_arr_ix_out,
 
   // Pass this to memory unit
   output logic signed [31:0] dest_out, // address calculated out

@@ -37,7 +37,6 @@ module branch_predict
         global_prediction_table[i] <= 0;
         choice_prediction_table[i] <= 0;
       end
-      branch_taken_out <= 0;
       path_history <= 0;
     end else begin
       if (update_valid_in) begin

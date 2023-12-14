@@ -23,8 +23,8 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
     // Load Inputs
     // input wire [2:0] lb_rob_arr_ix_in [2:0],
     // input wire [ROB_IX:0] lb_rob_arr_ix_in [LOAD_BUFFER_DEPTH-1:0],
-    input wire [(ROB_IX+1)*(LOAD_BUFFER_DEPTH)] lb_rob_arr_ix_in,
-    input wire signed [32 * LOAD_BUFFER_DEPTH] lb_rob_arr_dest_in,
+    input wire [(ROB_IX+1)*(LOAD_BUFFER_DEPTH)-1:0] lb_rob_arr_ix_in,
+    input wire signed [32 * LOAD_BUFFER_DEPTH-1:0] lb_rob_arr_dest_in,
     // input wire signed [31:0] lb_rob_arr_dest_in [LOAD_BUFFER_DEPTH-1:0],
     // Store Input
     input wire store_read_in, // Goes high for one clock cycle once store content has taken in ROB outputs
