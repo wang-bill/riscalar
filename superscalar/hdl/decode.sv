@@ -67,21 +67,21 @@ module decode
      rs1 = instruction_in[19:15];
      rs2 = 0;
      rd = instruction_in[11:7];
-     imm = {20'b0, instruction_in[31:20]};
+     imm = instruction_in[31] ? {20'h11111, instruction_in[31:20]} : {20'h00000, instruction_in[31:20]};
     end else if (inst_type == S) begin
      funct3 = instruction_in[14:12];
      funct7 = 0;
      rs1 = instruction_in[19:15];
      rs2 = instruction_in[24:20];
      rd = 0;
-     imm = {20'b0, instruction_in[31:25], instruction_in[11:7]};
+     imm = instruction_in[31] ? {20'h11111, instruction_in[31:25], instruction_in[11:7]} : {20'h00000, instruction_in[31:25], instruction_in[11:7]};
     end else if (inst_type == B) begin
      funct3 = instruction_in[14:12];
      funct7 = 0;
      rs1 = instruction_in[19:15];
      rs2 = instruction_in[24:20];
      rd = 0;
-     imm = {19'b0, instruction_in[31], instruction_in[30:25], instruction_in[7], instruction_in[11:8], 1'b0};
+     imm = instruction_in[31] ? {19'b1111111111111111111, instruction_in[31], instruction_in[30:25], instruction_in[7], instruction_in[11:8], 1'b0} : {19'b0, instruction_in[31], instruction_in[30:25], instruction_in[7], instruction_in[11:8], 1'b0};
     end else if (inst_type == U) begin
      funct3 = 0;
      funct7 = 0;
@@ -95,7 +95,7 @@ module decode
      rs1 = 0;
      rs2 = 0;
      rd = instruction_in[11:7];
-     imm = {11'b0, instruction_in[31], instruction_in[21:12], instruction_in[22], instruction_in[30:23], 1'b0};
+     imm = instruction_in[31] ? {11'b11111111111, instruction_in[31], instruction_in[21:12], instruction_in[22], instruction_in[30:23], 1'b0} : {11'b0, instruction_in[31], instruction_in[21:12], instruction_in[22], instruction_in[30:23], 1'b0};;
     end else begin //N type (no valid op)
       funct3 = 0;
       funct7 = 0;
