@@ -762,7 +762,7 @@ module top_level(
       memory_unit_load_read <= 0;
       cdb_brAlu <= 0;
     end else begin
-      if (fu_alu_output_valid) begin
+      if (output_valid_alu) begin
         cdb_rob_ix <= fu_alu_rob_ix_out;
         cdb_value <= fu_alu_result;
         cdb_dest <= 32'h0000; // destination address is not needed

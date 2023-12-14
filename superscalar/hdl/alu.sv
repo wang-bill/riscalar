@@ -26,7 +26,7 @@ module alu #(parameter ROB_IX=2)(
     logic stall_can_start;
 
     assign ready_out = 1;
-    assign valid_out = 1;
+    assign valid_out = valid_in;
     // always_ff @(posedge clk_in) begin
     //     if (rst_in || flush_in) begin
     //         ready_out <= 1;
