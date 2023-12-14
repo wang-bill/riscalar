@@ -52,8 +52,8 @@ module register_file
     end else begin
       if (we_in) begin
         //writing to register
+        registers[wa_in] <= wd_in;
         if (wrob_ix_in == rob_ixs[wa_in]) begin
-          registers[wa_in] <= wd_in;
           rob_ixs[wa_in] <= 0;
           rob_valid[wa_in] <= 0;
         end
