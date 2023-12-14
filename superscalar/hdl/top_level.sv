@@ -22,7 +22,7 @@ module top_level(
   localparam ROB_SIZE = 8;
   localparam RS_DEPTH = 3;
   localparam IQ_SIZE = 4;
-  localparam LOAD_BUFFER_DEPTH = 4;
+  localparam LOAD_BUFFER_DEPTH = 3;
 
   localparam ROB_IX = $clog2(ROB_SIZE)-1;
   // assign led = sw; //for debugging

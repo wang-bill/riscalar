@@ -55,7 +55,7 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
     output logic store_valid_out, //signal that goes high when store outputs are valid
 
     output logic flush_out,
-    output logic [4:0] flush_addrs_out [SIZE-1:0];
+    output logic [4:0] flush_addrs_out [SIZE-1:0]
 );
   localparam ROB_IX = $clog2(ROB_SIZE)-1;
   logic [3:0] iType_buffer [ROB_SIZE-1:0];
