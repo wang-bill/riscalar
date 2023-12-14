@@ -3,7 +3,7 @@
 `include "hdl/types.svh"
 // We default size of reorder buffer to be size 8
 
-module rob#(parameter SIZE=8)(
+module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
     input wire clk_in,
     input wire rst_in,
     //Decode Inputs - used to check for value of operand in ROB but not in RF yet
@@ -22,7 +22,7 @@ module rob#(parameter SIZE=8)(
 
     // Load Inputs
     // input wire [2:0] lb_rob_arr_ix_in [2:0],
-    input wire [ROB_IX:0] lb_rob_arr_ix_in [ROB_IX:0],
+    input wire [ROB_IX:0] lb_rob_arr_ix_in [LOAD_BUFFER_DEPTH-1:0],
     // input wire [2:0] lb_rob_arr_ix0_in,
     // input wire [2:0] lb_rob_arr_ix1_in,
     // input wire [2:0] lb_rob_arr_ix2_in,
@@ -58,13 +58,13 @@ module rob#(parameter SIZE=8)(
     output logic [4:0] flush_addrs_out [SIZE-1:0],
     output logic signed [31:0] nextPc_out
 );
-  localparam ROB_IX = $clog2(SIZE)-1;
-  logic [3:0] iType_buffer [SIZE-1:0];
-  logic signed [31:0] value_buffer [SIZE-1:0];
-  logic signed [31:0] destination_buffer [SIZE-1:0];
+  localparam ROB_IX = $clog2(ROB_SIZE)-1;
+  logic [3:0] iType_buffer [ROB_SIZE-1:0];
+  logic signed [31:0] value_buffer [ROB_SIZE-1:0];
+  logic signed [31:0] destination_buffer [ROB_SIZE-1:0];
   logic signed [31:0] destination_buffer0;
   logic signed [31:0] destination_buffer1;
-  logic [SIZE-1:0] inst_ready_buffer;
+  logic [ROB_SIZE-1:0] inst_ready_buffer;
   logic correct_branch;
 
   // logic signed [31:0] lb_rob_arr_dest_in [ROB_IX:0];
@@ -79,14 +79,14 @@ module rob#(parameter SIZE=8)(
 
   logic [31:0] tail;
   logic [31:0] head;
-  logic [31:0] instruction_queue [SIZE-1:0];
+  logic [31:0] instruction_queue [ROB_SIZE-1:0];
   //TODO: Is it safe to assume that we never will write from the CDB to the ROB in the same clk cycle?
   always_ff @(posedge clk_in) begin
     if (rst_in) begin
       tail <= 0;
       head <= 0;
       flush_out <= 0;
-      for (int i = 0; i < SIZE; i = i+1) begin
+      for (int i = 0; i < ROB_SIZE; i = i+1) begin
         inst_ready_buffer[i] <= 1'b0;
       end
     end else if (correct_branch) begin
@@ -152,7 +152,7 @@ module rob#(parameter SIZE=8)(
   // logic [3:0] iType_buffer7;
 
   always_comb begin
-    ready_out = (tail - head) < SIZE;
+    ready_out = (tail - head) < ROB_SIZE;
     commit_out = ((tail - head) > 0) && inst_ready_buffer[head[ROB_IX:0]] && iType_buffer[head[ROB_IX:0]] != STORE;
     store_valid_out = ((tail - head) > 0) && inst_ready_buffer[head[ROB_IX:0]] && iType_buffer[head[ROB_IX:0]] == STORE;
 
@@ -195,7 +195,7 @@ module rob#(parameter SIZE=8)(
   always_comb begin // Check from head to see if there are conflicts
     for (int i = 0; i <= ROB_IX; i=i+1) begin
       can_load_i = 1;
-      for (int j = 0; j < SIZE; j = j+1) begin
+      for (int j = 0; j < ROB_SIZE; j = j+1) begin
         if (j >= head[ROB_IX:0] && j <= lb_rob_arr_ix_in[i]) begin
           can_load_i &= !(iType_buffer[j] == STORE && 
                         (destination_buffer[j] == lb_rob_arr_dest_in[i]));

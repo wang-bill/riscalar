@@ -3,9 +3,7 @@
 // typedef enum {Add, Sub, And, Or, Xor, Slt, Sltu, Sll, Srl, Sra} AluFunc; //10 AluFuncs
 `include "hdl/types.svh"
 
-module reservation_station
-    #(parameter RS_DEPTH=3, 
-      parameter ROB_IX=2)(
+module reservation_station#(parameter RS_DEPTH=3, parameter ROB_IX=2)(
     input wire clk_in,
     input wire rst_in,
     input wire valid_input_in, // input is valid

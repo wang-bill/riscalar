@@ -1,8 +1,7 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module register_file
-  (
+module register_file #(parameter ROB_IX=2) (
     input wire clk_in,
     input wire rst_in,
     input wire [4:0] rs1_in,
@@ -10,11 +9,11 @@ module register_file
     input wire [4:0] wa_in, // write address
     input wire we_in, // write enable, high for one clock cycle during write
     input wire [31:0] wd_in, // write data
-    input wire [2:0] wrob_ix_in, //rob_ix of instruction whose result is potentially written back to regfile
+    input wire [ROB_IX:0] wrob_ix_in, //rob_ix of instruction whose result is potentially written back to regfile
     
     // Issue inputs
     input wire issue_in, // goes high when we issue an instruction and NEED to set the rob_ix of rd (for instructions that don't write to reg file, it will not go high)
-    input wire [2:0] rob_ix_in,
+    input wire [ROB_IX:0] rob_ix_in,
     input wire [4:0] rd_in,
 
     input wire flush_in, //when flush is high, do something
@@ -22,14 +21,14 @@ module register_file
 
     output logic [31:0] rval1_out,
     output logic [31:0] rval2_out,
-    output logic [2:0] rob_ix1_out,
-    output logic [2:0] rob_ix2_out,
+    output logic [ROB_IX:0] rob_ix1_out,
+    output logic [ROB_IX:0] rob_ix2_out,
     output logic rob1_valid_out,
     output logic rob2_valid_out
   );
 
   logic [31:0] registers [31:0]; // right number -> number of registers; left number -> size of registers
-  logic [2:0] rob_ixs [31:0];
+  logic [ROB_IX:0] rob_ixs [31:0];
   logic [31:0] rob_valid; // 1 = the rob is valid so the data is currently being processed; 0 = register's value is currently not being processed on
 
   logic [31:0] a1, a2;

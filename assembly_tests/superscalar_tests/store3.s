@@ -8,5 +8,4 @@ sw a1, 6(x6)
 sw a1, 7(x7)
 sw a1, 8(x8)
 sw a1, 9(x9)
-sw a1, 10(x10)
 addi a1, a1, 5

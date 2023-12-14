@@ -8,7 +8,7 @@
 `define FPATH(X) `"data/X`"
 `endif  /* ! SYNTHESIS */
 
-module memory_unit(
+module memory_unit #(parameter ROB_IX=2) (
   input wire clk_in,
   input wire rst_in,
   input wire flush_in,
@@ -17,7 +17,7 @@ module memory_unit(
   input wire load_or_store_in, //either LOAD = 0 or STORE = 1
   
   // LOAD Inputs
-  input wire [2:0] load_rob_ix_in,
+  input wire [ROB_IX:0] load_rob_ix_in,
   input wire [31:0] load_mem_addr_in,
 
   // STORE Inputs
@@ -25,7 +25,7 @@ module memory_unit(
   input wire signed [31:0] store_data_in,
 
   // LOAD Outputs
-  output logic [2:0] load_rob_ix_out,
+  output logic [ROB_IX:0] load_rob_ix_out,
   output logic signed [31:0] load_data_out,
   output logic ready_out, // ready for another input
   output logic valid_out // high until load output is read
@@ -74,55 +74,6 @@ module memory_unit(
       end
     end
   end
-
-
-
-
-
-
-
-
-  // localparam DATA_DEPTH = 16;
-  // localparam LOAD_PERIOD = 3;
-  // logic [31:0] mem_addr;
-  // logic [1:0] counter;
-  // always_ff @(posedge clk_in) begin
-  //   if (rst_in) begin
-  //     load_rob_ix_out <= 0;
-  //     // mem_addr <= 0;
-  //     counter <= 0;
-  //   end else begin
-  //     if (valid_in && ready_out) begin
-  //       // mem_addr <= (load_or_store_in) ? store_mem_addr_in : load_mem_addr_in;
-  //       load_rob_ix_out <= load_rob_ix_in;
-  //       if (!load_or_store_in) begin
-  //         counter <= 1;
-  //       end
-  //     end
-  //     if (counter > 0 && counter < LOAD_PERIOD) begin
-  //       counter <= counter + 1;
-  //     end 
-  //     // else if (counter == LOAD_PERIOD) begin
-  //     // end
-  //     if (read_in) begin
-  //       counter <= 0;
-  //     end
-  //   end
-  // end
-
-  // always_comb begin
-  //   if (load_or_store_in == 0) begin
-  //     //Load
-  //     ready_out = (counter == 0);
-  //     valid_out = (counter == LOAD_PERIOD) && !read_in;
-  //   end else begin
-  //     //Store
-  //     ready_out = 1;
-  //     valid_out = 0;
-  //   end
-  //   load_data_out = memory_output;
-  // end
-  // data memory
 
   logic[$clog2(DATA_DEPTH)-1:0] effective_mem_addr;
   logic writing;
