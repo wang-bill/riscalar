@@ -5,6 +5,7 @@ module multiplier #(parameter ROB_IX=2)
 (
   input wire clk_in,
   input wire rst_in,
+  input wire flush_in,
   input wire valid_in, // high for 1 clock cycle
   input wire read_in,
   
@@ -32,7 +33,7 @@ module multiplier #(parameter ROB_IX=2)
   logic signed [31:0] p4;
 
   always_ff @(posedge clk_in) begin
-    if (rst_in) begin
+    if (rst_in || flush_in) begin
       counter <= 0;
       p0 <= 0;
       p1 <= 0;

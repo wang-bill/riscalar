@@ -52,7 +52,10 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
 
     output logic ready_out, //tells the input (CDB) that the ROB has space for more inputs
     output logic commit_out, //signal that goes high when the ROB's head can be committed to the Register File
-    output logic store_valid_out //signal that goes high when store outputs are valid
+    output logic store_valid_out, //signal that goes high when store outputs are valid
+
+    output logic flush_out,
+    output logic [4:0] flush_addrs_out [SIZE-1:0];
 );
   localparam ROB_IX = $clog2(ROB_SIZE)-1;
   logic [3:0] iType_buffer [ROB_SIZE-1:0];
@@ -61,6 +64,7 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
   logic signed [31:0] destination_buffer0;
   logic signed [31:0] destination_buffer1;
   logic [ROB_SIZE-1:0] inst_ready_buffer;
+  logic correct_branch;
 
   // logic signed [31:0] lb_rob_arr_dest_in [ROB_IX:0];
   // assign lb_rob_arr_dest_in[0] = lb_rob_arr_dest0_in;
@@ -80,10 +84,11 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
     if (rst_in) begin
       tail <= 0;
       head <= 0;
+      flush_out <= 0;
       for (int i = 0; i < ROB_SIZE; i = i+1) begin
         inst_ready_buffer[i] <= 1'b0;
       end
-    end else begin
+    end else if (correct_branch) begin
       if (ready_out && valid_in) begin
         iType_buffer[tail[ROB_IX:0]] <= iType_in;
         value_buffer[tail[ROB_IX:0]] <= value_in;
@@ -92,11 +97,13 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
         tail <= tail + 1;
       end
       if (cdb_valid_in) begin
-        value_buffer[cdb_rob_ix_in] <= cdb_value_in;
-        if (iType_buffer[cdb_rob_ix_in] == STORE) begin
-          destination_buffer[cdb_rob_ix_in] <= destination_buffer[cdb_rob_ix_in] + cdb_dest_in;
+        if (iType_buffer[cdb_rob_ix_in] != BRANCH) begin
+          value_buffer[cdb_rob_ix_in] <= cdb_value_in;
+          if (iType_buffer[cdb_rob_ix_in] == STORE) begin
+            destination_buffer[cdb_rob_ix_in] <= destination_buffer[cdb_rob_ix_in] + cdb_dest_in;
+          end
+          inst_ready_buffer[cdb_rob_ix_in] <= 1'b1;
         end
-        inst_ready_buffer[cdb_rob_ix_in] <= 1'b1;
       end
       if (commit_out) begin
         head <= head + 1;
@@ -104,6 +111,17 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
       if (store_valid_out && store_read_in) begin
         head <= head + 1;
       end
+    end else begin
+      // Flushing the ROB
+      flush_out <= 1;
+      for (int i = 0; i < SIZE; i = i+1) begin
+        if (i >= head[2:0] && i < tail) begin
+          flush_addrs_out[i] <= destination_buffer[i];
+        end else begin
+          flush_addrs_out[i] <= 0;
+        end
+      end
+      tail <= cdb_rob_ix_in;
     end
   end
 
@@ -139,6 +157,11 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
     decode_ready1_out = inst_ready_buffer[decode_rob1_ix_in];
     decode_value2_out = value_buffer[decode_rob2_ix_in];
     decode_ready2_out = inst_ready_buffer[decode_rob2_ix_in];
+    if (cdb_valid_in && iType_buffer[cdb_rob_ix_in] == BRANCH) begin
+      correct_branch = (value_buffer[cdb_rob_ix_in][0] == cdb_value_in);
+    end else begin
+      correct_branch = 1;
+    end
     // value_buffer0 = value_buffer[0];
     // value_buffer1 = value_buffer[1];
     // value_buffer2 = value_buffer[2];

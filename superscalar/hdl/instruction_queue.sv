@@ -1,6 +1,7 @@
 module instruction_queue#(parameter SIZE=4)(
     input wire clk_in,
     input wire rst_in,
+    input wire flush_in,
     input wire valid_in,
     input wire output_read_in,
     input wire [31:0] instruction_in,
@@ -22,7 +23,11 @@ module instruction_queue#(parameter SIZE=4)(
     // logic [31:0] instruction_queue_2;
     // logic [31:0] instruction_queue_3;
     always_ff @(posedge clk_in) begin
-        if (rst_in) begin
+        if (rst_in || flush_in) begin
+            write_counter <= 0;
+            read_counter <= 0;
+            instruction_queue <= 0;
+            branchTaken_queue <= 0;
             write_counter <= 0;
             read_counter <= 0;
         end else begin

@@ -11,6 +11,7 @@
 module memory_unit #(parameter ROB_IX=2) (
   input wire clk_in,
   input wire rst_in,
+  input wire flush_in,
   input wire valid_in, // high for 1 clock cycle per new input
   input wire read_in, // high for 1 clock cycle
   input wire load_or_store_in, //either LOAD = 0 or STORE = 1
@@ -35,7 +36,7 @@ module memory_unit #(parameter ROB_IX=2) (
   logic process_input;
   logic stall1, stall2;
   always_ff @(posedge clk_in) begin
-    if (rst_in) begin
+    if (rst_in || flush_in) begin
       ready_out <= 1;
       valid_out <= 0;
       process_input <= 0;

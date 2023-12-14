@@ -6,6 +6,7 @@
 module load_buffer #(parameter LOAD_BUFFER_DEPTH=3, parameter ROB_IX=2)(
   input wire clk_in,
   input wire rst_in,
+  input wire flush_in,
   input wire valid_input_in,
 
   // Inputs
@@ -47,12 +48,13 @@ module load_buffer #(parameter LOAD_BUFFER_DEPTH=3, parameter ROB_IX=2)(
   // assign lb_rob_arr_ix2_out = rob_ix_row[2];
 
   always_ff @(posedge clk_in) begin
-    if (rst_in) begin
+    if (rst_in || flush_in) begin
       // valid_out <= 0;
       // ready_out <= 1;
       occupied_row <= 0;
       for (int i = 0; i < LOAD_BUFFER_DEPTH; i = i+1) begin
         dest_row[i] <= 0;
+        rob_ix_row[i] <= 0;
       end
     end else begin
       // valid_out <= (can_load_in & occupied_row) != 0;
