@@ -9,8 +9,8 @@ module branch_predict_tb();
   logic btn_in;
   logic [31:0] pc;
   logic correct_branch;
-  logic valid_in;
-
+  logic update_valid_in;
+  // logic [2:0] prediction_pc;
   logic result;
 
   branch_predict uut(
@@ -18,7 +18,7 @@ module branch_predict_tb();
     .rst_in(btn_in),
     .pc_in(pc),
     .correct_branch(correct_branch),
-    .update_valid_in(valid_in),
+    .update_valid_in(update_valid_in),
 
     .branch_taken_out(result)
   
@@ -39,9 +39,13 @@ module branch_predict_tb();
     btn_in = 1;
     #10;
     btn_in = 0;
-    pc = 0;
-    valid_in = 1;
+    #10;
+    pc = 4;
+    #10;
+    update_valid_in = 1;
+    #10;
     correct_branch = 1;
+    #10;
 
     for (int i = 0; i < 10**1; i=i+1) begin
       #10;
@@ -49,6 +53,13 @@ module branch_predict_tb();
     end
     
     pc=4;
+    for (int i = 0; i < 10; i=i+1) begin
+      #10;
+      $display("%d", result);
+    end
+
+    $display("%d", 44);
+    correct_branch = 0;
     for (int i = 0; i < 10; i=i+1) begin
       #10;
       $display("%d", result);
