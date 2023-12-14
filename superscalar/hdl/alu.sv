@@ -6,6 +6,7 @@
 module alu #(parameter ROB_IX=2)(
     input wire clk_in,
     input wire rst_in,
+    input wire flush_in,
     input wire valid_in, // high for 1 clock cycle
     input wire read_in,
     input wire signed [31:0] rval1_in,
@@ -26,7 +27,7 @@ module alu #(parameter ROB_IX=2)(
 
 
     always_ff @(posedge clk_in) begin
-        if (rst_in) begin
+        if (rst_in || flush_in) begin
             ready_out <= 1;
             valid_out <= 0;
             stall_done <= 0;

@@ -6,6 +6,7 @@
 module reservation_station#(parameter RS_DEPTH=3, parameter ROB_IX=2)(
     input wire clk_in,
     input wire rst_in,
+    input wire flush_in,
     input wire valid_input_in, // input is valid
     input wire fu_busy_in, // corresponding functional unit is busy
     
@@ -62,7 +63,7 @@ module reservation_station#(parameter RS_DEPTH=3, parameter ROB_IX=2)(
   // assign V_1_row = V_i_row[1];
   // assign V_2_row = V_i_row[2];
   always_ff @(posedge clk_in) begin
-    if (rst_in) begin
+    if (rst_in || flush_in) begin
       busy_row <= 0;
       one_cycle_after_sending <= 0;
       i_ready_row <= 0;
