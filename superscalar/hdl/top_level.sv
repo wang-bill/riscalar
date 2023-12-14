@@ -81,23 +81,6 @@ module top_level(
 
   assign iq_valid = !(first_two_or_branch || (instruction_fetched == 32'h0000_0000 && pc_bram < 8)) && iq_ready;
 
-  logic inst_fetch_is_branch;
-  logic signed [31:0] inst_fetch_imm;
-  
-  bp_decode bp_decoder(
-    .instruction_in(instruction_fetched),
-    .is_branch_out(inst_fetch_is_branch),
-    .imm_out(inst_fetch_imm)
-  );
-
-  logic branch_taken;
-  branch_predict branch_predictor(
-    .clk_in(clk_100mhz),
-    .rst_in(sys_rst),
-    .pc_in(pc),
-    .branch_taken_out(branch_taken)
-  );
-
   logic [$clog2(INST_DEPTH)-1:0] effective_pc;
   assign effective_pc = pc_bram[($clog2(INST_DEPTH)-1)+2:2]; // different than pc for indexing into the BRAM
 
@@ -117,12 +100,28 @@ module top_level(
     .douta(instruction_fetched)      // RAM output data, width determined from RAM_WIDTH
   );
 
-  // assign instruction_fetched = instruction;
+  logic inst_fetch_is_branch;
+  logic signed [31:0] inst_fetch_imm;
+  
+  bp_decode bp_decoder(
+    .instruction_in(instruction_fetched),
+    .is_branch_out(inst_fetch_is_branch),
+    .imm_out(inst_fetch_imm)
+  );
+
+  logic branch_taken;
+  branch_predict branch_predictor(
+    .clk_in(clk_100mhz),
+    .rst_in(sys_rst),
+    .pc_in(pc),
+    .branch_taken_out(branch_taken)
+  );
   
   logic signed [31:0] instruction_fetched, iq_instruction_out;
   logic iq_valid;
   logic iq_output_read;
   logic iq_ready, iq_inst_available;
+  logic iq_instruction_branch_taken;
 
   instruction_queue #(.SIZE(IQ_SIZE)) inst_queue (
     .clk_in(clk_100mhz),
@@ -130,9 +129,11 @@ module top_level(
     .valid_in(iq_valid),
     .output_read_in(iq_output_read),
     .instruction_in(instruction_fetched),
+    .branch_taken_in(branch_taken),
 
     .inst_available_out(iq_inst_available),
     .instruction_out(iq_instruction_out),
+    .branch_taken_out(iq_instruction_branch_taken),
     .ready_out(iq_ready)
   );
 
@@ -240,7 +241,7 @@ module top_level(
 
     .valid_in(iq_output_read && iType != NOP),
     .iType_in(iType),
-    .value_in(32'hFFFF_FFFF), //might be an uneccesary input since we never know the actual value yet initially
+    .value_in((iType == BRANCH) ? iq_instruction_branch_taken : 32'hFFFF_FFFF), //might be an uneccesary input since we never know the actual value yet initially
     .dest_in((iType == STORE) ? imm : rd), //temporarily store immediate in the destination if iType is STORE, else store register dest index
     //Issue Output
     .inst_rob_ix_out(issue_rob_ix),
@@ -310,13 +311,14 @@ module top_level(
   end
 
   // Reservation Station inputs are the reg file outputs
+  logic signed [31:0] rs_valuei;
+  logic signed [31:0] rs_valuej;
+  logic i_ready, j_ready;
+
   logic [31:0] fu_alu_rval1, fu_alu_rval2;
   logic [3:0] fu_alu_opcode;
   logic [ROB_IX:0] fu_alu_rob_ix_in, fu_alu_rob_ix_out;
   logic output_valid_alu;
-  logic signed [31:0] rs_valuei;
-  logic signed [31:0] rs_valuej;
-  logic i_ready, j_ready;
 
   //Issue values from either ROB or RF
   always_comb begin
@@ -379,7 +381,7 @@ module top_level(
     .rs_output_valid_out(output_valid_alu)
   );
 
-  logic fu_alu_busy, fu_alu_ready, fu_alu_output_valid;
+  logic fu_alu_ready, fu_alu_output_valid;
   logic signed [31:0] fu_alu_result;
   logic fu_alu_read_in;
   
@@ -397,6 +399,51 @@ module top_level(
     .data_out(fu_alu_result), // write to bus somehow
     .ready_out(fu_alu_ready), // ready for another input
     .valid_out(fu_alu_output_valid) // goes high for one clock cycle after output is computed
+  );
+
+  logic [31:0] fu_brAlu_rval1, fu_brAlu_rval2;
+  logic [3:0] fu_brAlu_opcode;
+  logic [2:0] fu_brAlu_rob_ix_in, fu_brAlu_rob_ix_out;
+  logic output_valid_brAlu;
+  
+  logic cdb_brAlu;
+  
+  reservation_station rs_brAlu(
+    .clk_in(clk_100mhz),
+    .rst_in(sys_rst),
+    .valid_input_in(rs_brAlu_ready), // get from decode
+    .fu_busy_in(!cdb_brAlu), // get from fu
+    .Q_i_in(rob_ix1_out), // get from decode
+    .Q_j_in(rob_ix2_out), // get from decode
+    .V_i_in(rs_valuei), // get from decode
+    .V_j_in(rs_valuej), // get from decode
+    .rob_ix_in(issue_rob_ix), // from decode
+    .opcode_in(brFunc), // decode
+    .i_ready_in(i_ready), // decode
+    .j_ready_in(j_ready), // decode
+
+    .cdb_rob_ix_in(cdb_rob_ix),
+    .cdb_value_in(cdb_value),
+    .cdb_dest_in(cdb_dest),
+    .cdb_valid_in(cdb_valid),
+
+
+    .rval1_out(fu_brAlu_rval1),
+    .rval2_out(fu_brAlu_rval2),
+    .opcode_out(fu_brAlu_opcode),
+    .rob_ix_out(fu_brAlu_rob_ix_in),
+    .rs_free_for_input_out(rs_brAlu_ready),
+    .rs_output_valid_out(output_valid_brAlu)
+  );
+
+  logic fu_brAlu_result;
+
+  // Branch ALU Functional Unit
+  branchAlu fu_brAlu(
+    .rval1_in(fu_brAlu_rval1),
+    .rval2_in(fu_brAlu_rval2),
+    .brFunc_in(fu_brAlu_opcode),
+    .bool_out(fu_brAlu_result)
   );
 
   logic [31:0] fu_mul_rval1, fu_mul_rval2;
@@ -532,13 +579,13 @@ module top_level(
   logic [3:0] rs_store_opcode;
   logic [ROB_IX:0] rs_store_rob_ix;
   logic output_valid_store;
-  logic cdb_busy;
+  logic cdb_store;
 
   reservation_station #(.RS_DEPTH(RS_DEPTH), .ROB_IX(ROB_IX)) rs_store(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
     .valid_input_in(rs_store_valid_in), // get from decode
-    .fu_busy_in(cdb_busy), // get from cdb
+    .fu_busy_in(cdb_store), // get from cdb
     .Q_i_in(rob_ix1_out), // get from decode
     .Q_j_in(rob_ix2_out), // get from decode
     .V_i_in(rs_valuei), // get from decode
@@ -669,11 +716,15 @@ module top_level(
   // Write to CDB
   always_ff @(posedge clk_100mhz) begin
     if (sys_rst) begin
+      cdb_rob_ix <= 0;
+      cdb_value <= 0;
+      cdb_dest <= 0;
       cdb_valid <= 0;
       fu_alu_read_in <= 0;
       fu_mul_read_in <= 0;
-      cdb_busy <= 0;
+      cdb_store <= 0;
       memory_unit_load_read <= 0;
+      cdb_brAlu <= 0;
     end else begin
       if (fu_alu_output_valid) begin
         cdb_rob_ix <= fu_alu_rob_ix_out;
@@ -682,8 +733,9 @@ module top_level(
         cdb_valid <= 1;
         fu_alu_read_in <= 1;
         fu_mul_read_in <= 0;
-        cdb_busy <= 1;
+        cdb_store <= 1;
         memory_unit_load_read <= 0;
+        cdb_brAlu <= 0;
       end else if (fu_mul_output_valid) begin
         cdb_rob_ix <= fu_mul_rob_ix_out;
         cdb_value <= fu_mul_result;
@@ -691,8 +743,9 @@ module top_level(
         cdb_valid <= 1;
         fu_alu_read_in <= 0;
         fu_mul_read_in <= 1;
-        cdb_busy <= 1;
+        cdb_store <= 1;
         memory_unit_load_read <= 0;
+        cdb_brAlu <= 0;
       end else if (memory_unit_load_output_valid) begin
         cdb_rob_ix <= memory_unit_load_rob_ix_out;
         cdb_value <= memory_unit_load_result;
@@ -700,8 +753,9 @@ module top_level(
         cdb_valid <= 1;
         fu_alu_read_in <= 0;
         fu_mul_read_in <= 0;
-        cdb_busy <= 0;
+        cdb_store <= 0;
         memory_unit_load_read <= 1;
+        cdb_brAlu <= 0;
         //Connect data memory to CDB
       end else if (output_valid_store) begin
         cdb_rob_ix <= rs_store_rob_ix;
@@ -710,8 +764,19 @@ module top_level(
         cdb_valid <= 1;
         fu_alu_read_in <= 0;
         fu_mul_read_in <= 0;
-        cdb_busy <= 1;
+        cdb_store <= 1;
         memory_unit_load_read <= 0;
+        cdb_brAlu <= 0;
+      end else if (output_valid_brAlu) begin
+        cdb_rob_ix <= fu_brAlu_rob_ix_in;
+        cdb_value <= fu_brAlu_result;
+        cdb_dest <= 32'b0000;
+        cdb_valid <= 1;
+        fu_alu_read_in <= 0;
+        fu_mul_read_in <= 0;
+        cdb_store <= 0;
+        memory_unit_load_read <= 0;
+        cdb_brAlu <= 0;
       end else begin
         cdb_rob_ix <= 0;
         cdb_value <= 0;
@@ -719,8 +784,9 @@ module top_level(
         cdb_valid <= 0;
         fu_alu_read_in <= 0;
         fu_mul_read_in <= 0;
-        cdb_busy <= 0;
+        cdb_store <= 0;
         memory_unit_load_read <= 0;
+        cdb_brAlu <= 0;
       end
     end
   end
