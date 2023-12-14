@@ -89,7 +89,7 @@ module load_buffer(
     issued_row = LOAD_BUFFER_DEPTH;
     for (int i = 0; i < LOAD_BUFFER_DEPTH; i=i+1) begin
       // check the rob stuff to see if we can send out
-      if (can_load_in[i]) begin
+      if (can_load_in[i] && occupied_row[i]) begin
         dest_out = dest_row[i];
         rob_ix_out = rob_ix_row[i]; 
         issued_row = i;
