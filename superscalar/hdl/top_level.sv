@@ -284,7 +284,7 @@ module top_level(
       end else if ((iType == DIV) && rs_div_ready) begin
         rs_div_valid_in = 1'b1;
       end else if (iType == NOP) begin
-      end else if (rs_alu_ready) begin
+      end else if ((iType == OP || iType == OPIMM) && rs_alu_ready) begin
         rs_alu_valid_in = 1'b1;
       end
     end
