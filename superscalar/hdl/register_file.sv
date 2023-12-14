@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module register_file #(parameter ROB_IX=2) (
+module register_file #(parameter ROB_IX=2, parameter ROB_SIZE=8) (
     input wire clk_in,
     input wire rst_in,
     input wire [4:0] rs1_in,
@@ -17,7 +17,7 @@ module register_file #(parameter ROB_IX=2) (
     input wire [4:0] rd_in,
 
     input wire flush_in, //when flush is high, do something
-    input wire [4:0] flush_addrs_in [7:0], // indices in the register file that we are flushing
+    input wire [4:0] flush_addrs_in [ROB_SIZE-1:0], // indices in the register file that we are flushing
 
     output logic [31:0] rval1_out,
     output logic [31:0] rval2_out,

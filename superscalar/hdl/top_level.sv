@@ -19,10 +19,10 @@ module top_level(
   localparam INST_DEPTH = 64;
   localparam DATA_DEPTH = 64;
 
-  localparam ROB_SIZE = 8;
-  localparam RS_DEPTH = 3;
-  localparam IQ_SIZE = 4;
-  localparam LOAD_BUFFER_DEPTH = 8;
+  localparam ROB_SIZE = 100;
+  localparam RS_DEPTH = 100;
+  localparam IQ_SIZE = 100;
+  localparam LOAD_BUFFER_DEPTH = 100;
 
   localparam ROB_IX = $clog2(ROB_SIZE)-1;
   // assign led = sw; //for debugging
@@ -175,10 +175,10 @@ module top_level(
   // Flush ROB Wires
   logic flush;
   // logic [7:0] flush_addrs;
-  logic [4:0] flush_addrs [7:0]; // indices in the register file that we are flushing, if we are clearing fewer than 8 rob entries, we can just fill in with 0s
+  logic [4:0] flush_addrs [ROB_SIZE-1:0]; // indices in the register file that we are flushing, if we are clearing fewer than 8 rob entries, we can just fill in with 0s
 
   // registers (part of decode)
-  register_file #(.ROB_IX(ROB_IX)) registers(
+  register_file #(.ROB_IX(ROB_IX), .ROB_SIZE(ROB_SIZE)) registers(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
     .rs1_in(rs1),
