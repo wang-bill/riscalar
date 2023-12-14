@@ -130,6 +130,7 @@ module top_level(
     .output_read_in(iq_output_read),
     .instruction_in(instruction_fetched),
     .branch_taken_in(branch_taken),
+    .flush_in(flush),
 
     .inst_available_out(iq_inst_available),
     .instruction_out(iq_instruction_out),
@@ -280,7 +281,10 @@ module top_level(
 
     .ready_out(rob_ready),
     .commit_out(commit_out),
-    .store_valid_out(store_valid_out)
+    .store_valid_out(store_valid_out),
+
+    .flush_out(flush),
+    .flush_addrs_out(flush_addrs)
   );
 
   always_comb begin
@@ -356,6 +360,7 @@ module top_level(
   reservation_station #(.RS_DEPTH(RS_DEPTH), .ROB_IX(ROB_IX)) rs_alu(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
+    .flush_in(flush),
     .valid_input_in(rs_alu_valid_in), // get from decode
     .fu_busy_in(!fu_alu_ready), // get from fu
     .Q_i_in(rob_ix1_out), // get from decode
@@ -372,7 +377,6 @@ module top_level(
     .cdb_dest_in(cdb_dest),
     .cdb_valid_in(cdb_valid),
 
-
     .rval1_out(fu_alu_rval1),
     .rval2_out(fu_alu_rval2),
     .opcode_out(fu_alu_opcode),
@@ -388,6 +392,7 @@ module top_level(
   alu fu_alu(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
+    .flush_in(flush),
     .valid_in(output_valid_alu),
     .read_in(fu_alu_read_in),
     .rval1_in(fu_alu_rval1),
@@ -411,6 +416,7 @@ module top_level(
   reservation_station rs_brAlu(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
+    .flush_in(flush),
     .valid_input_in(rs_brAlu_ready), // get from decode
     .fu_busy_in(!cdb_brAlu), // get from fu
     .Q_i_in(rob_ix1_out), // get from decode
@@ -454,6 +460,7 @@ module top_level(
   reservation_station #(.RS_DEPTH(RS_DEPTH), .ROB_IX(ROB_IX)) rs_mul(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
+    .flush_in(flush),
     .valid_input_in(rs_mul_valid_in), // get from decode
     .fu_busy_in(!fu_mul_ready), // get from fu
     .Q_i_in(rob_ix1_out), // get from decode
@@ -486,6 +493,7 @@ module top_level(
   multiplier fu_mul(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
+    .flush_in(flush),
     .valid_in(output_valid_mul),
     .read_in(fu_mul_read_in),
     .rval1_in(fu_mul_rval1),
@@ -506,6 +514,7 @@ module top_level(
   reservation_station #(.RS_DEPTH(RS_DEPTH), .ROB_IX(ROB_IX)) rs_load(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
+    .flush_in(flush),
     .valid_input_in(rs_load_valid_in), // get from decode
     .fu_busy_in(!lb_ready_out), // get from load buffer
     .Q_i_in(rob_ix1_out), // get from decode
@@ -545,6 +554,7 @@ module top_level(
     load_buffer(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
+    .flush_in(flush),
     .valid_input_in(output_valid_load),
 
     .dest_in(lb_dest_addr_in),
@@ -584,6 +594,7 @@ module top_level(
   reservation_station #(.RS_DEPTH(RS_DEPTH), .ROB_IX(ROB_IX)) rs_store(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
+    .flush_in(flush),
     .valid_input_in(rs_store_valid_in), // get from decode
     .fu_busy_in(cdb_store), // get from cdb
     .Q_i_in(rob_ix1_out), // get from decode
@@ -624,6 +635,9 @@ module top_level(
     if (sys_rst) begin
       old_lb_output_read <= 0;
       old_store_read <= 0;
+    end else if (flush) begin
+      old_lb_output_read <= 0;
+      old_store_read <= store_read;
     end else begin
       old_lb_output_read <= lb_output_read;
       old_store_read <= store_read;
@@ -688,6 +702,7 @@ module top_level(
   memory_unit data_mem(
   .clk_in(clk_100mhz),
   .rst_in(sys_rst),
+  .flush_in(flush),
   .valid_in(memory_unit_ready && (lb_valid_out || store_valid_out)), // high for 1 clock cycle
   .read_in(memory_unit_load_read),
   .load_or_store_in(load_or_store), //either LOAD = 0 or STORE = 1
@@ -715,7 +730,7 @@ module top_level(
   
   // Write to CDB
   always_ff @(posedge clk_100mhz) begin
-    if (sys_rst) begin
+    if (sys_rst || flush_in) begin
       cdb_rob_ix <= 0;
       cdb_value <= 0;
       cdb_dest <= 0;
@@ -790,8 +805,7 @@ module top_level(
       end
     end
   end
-
-
+  
   assign led = fu_alu_result;
 
 endmodule
