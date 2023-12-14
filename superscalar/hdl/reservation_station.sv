@@ -3,24 +3,26 @@
 // typedef enum {Add, Sub, And, Or, Xor, Slt, Sltu, Sll, Srl, Sra} AluFunc; //10 AluFuncs
 `include "hdl/types.svh"
 
-module reservation_station(
+module reservation_station
+    #(parameter RS_DEPTH=3, 
+      parameter ROB_IX=2)(
     input wire clk_in,
     input wire rst_in,
     input wire valid_input_in, // input is valid
     input wire fu_busy_in, // corresponding functional unit is busy
     
     // Issue
-    input wire [2:0] Q_i_in, //ROB entry number (ROB has size 8)
-    input wire [2:0] Q_j_in,
+    input wire [ROB_IX:0] Q_i_in, //ROB entry number (ROB has size 8)
+    input wire [ROB_IX:0] Q_j_in,
     input wire signed [31:0] V_i_in,
     input wire signed [31:0] V_j_in,
-    input wire [2:0] rob_ix_in,
+    input wire [ROB_IX:0] rob_ix_in,
     input wire [3:0] opcode_in,
     input wire i_ready_in,
     input wire j_ready_in,
 
     //CDB Inputs
-    input wire [2:0] cdb_rob_ix_in,
+    input wire [ROB_IX:0] cdb_rob_ix_in,
     input wire signed [31:0] cdb_value_in,
     input wire signed [31:0] cdb_dest_in,
     input wire cdb_valid_in,
@@ -29,19 +31,17 @@ module reservation_station(
     output logic signed [31:0] rval1_out,
     output logic signed [31:0] rval2_out,
     output logic [3:0] opcode_out,
-    output logic [2:0] rob_ix_out,
+    output logic [ROB_IX:0] rob_ix_out,
     output logic rs_free_for_input_out, // tells whether reservation station is ready for another input
     output logic rs_output_valid_out // output from RS is valid
 );
 
-  localparam RS_DEPTH = 3;
-
-  logic [2:0] Q_i_row [RS_DEPTH-1:0];
-  logic [2:0] Q_j_row [RS_DEPTH-1:0];
+  logic [ROB_IX:0] Q_i_row [RS_DEPTH-1:0];
+  logic [ROB_IX:0] Q_j_row [RS_DEPTH-1:0];
   logic [31:0] V_i_row [RS_DEPTH-1:0];
   logic [31:0] V_j_row [RS_DEPTH-1:0];
 
-  logic [2:0] rob_ix_row [RS_DEPTH-1:0];
+  logic [ROB_IX:0] rob_ix_row [RS_DEPTH-1:0];
   logic [3:0] opcode_row [RS_DEPTH-1:0];
   logic [RS_DEPTH-1:0] busy_row; // 1: busy, 0: not busy
 

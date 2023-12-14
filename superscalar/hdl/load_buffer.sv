@@ -3,7 +3,9 @@
 // typedef enum {Add, Sub, And, Or, Xor, Slt, Sltu, Sll, Srl, Sra} AluFunc; //10 AluFuncs
 `include "hdl/types.svh"
 
-module load_buffer(
+module load_buffer
+    #(parameter LOAD_BUFFER_DEPTH=3, 
+      parameter ROB_SIZE=2)(
   input wire clk_in,
   input wire rst_in,
   input wire valid_input_in,

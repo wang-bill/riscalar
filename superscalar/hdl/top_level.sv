@@ -18,6 +18,11 @@ module top_level(
 );
   localparam INST_DEPTH = 64;
   localparam DATA_DEPTH = 64;
+  localparam ROB_SIZE = 8;
+  localparam ROB_IX = $clog2(ROB_SIZE);
+  localparam RS_DEPTH = 3;
+  localparam IQ_SIZE = 4;
+  localparam LOAD_BUFFER_DEPTH = 3;
 
   // assign led = sw; //for debugging
   //shut up those rgb LEDs (active high):
@@ -31,15 +36,19 @@ module top_level(
   logic signed [31:0] pc_bram, pc;
   logic first, second, third;
   logic first_two_or_branch;
+  logic pc_backtrack;
 
   assign correct_branch = 1;
+  
   always_ff @(posedge clk_100mhz) begin
     if (sys_rst) begin
       pc <= 32'h0000_0000;
       first <= 1;
       first_two_or_branch <= 1;
+      pc_backtrack <= 0;
     end else begin
       if (iq_ready && !(instruction_fetched == 0 && pc > 0)) begin
+        pc_backtrack <= 0;
         if (first_two_or_branch) begin
           if (first) begin
             pc_bram <= pc;
@@ -60,11 +69,17 @@ module top_level(
           pc_bram <= iq_valid ? pc + 8 + 4: pc_bram;
           first_two_or_branch <= inst_fetch_is_branch && branch_taken;
         end
+      end else begin
+        if (!iq_ready && !pc_backtrack) begin
+          pc <= pc - 4;
+          pc_bram <= pc_bram - 12;
+          pc_backtrack <= 1;  
+        end
       end
     end
   end
 
-  assign iq_valid = !(first_two_or_branch || (instruction_fetched == 32'h0000_0000 && pc_bram < 8));
+  assign iq_valid = !(first_two_or_branch || (instruction_fetched == 32'h0000_0000 && pc_bram < 8)) && iq_ready;
 
   logic inst_fetch_is_branch;
   logic signed [31:0] inst_fetch_imm;
@@ -109,7 +124,7 @@ module top_level(
   logic iq_output_read;
   logic iq_ready, iq_inst_available;
 
-  instruction_queue #(.SIZE(4)) inst_queue (
+  instruction_queue #(.SIZE(IQ_SIZE)) inst_queue (
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
     .valid_in(iq_valid),
@@ -147,11 +162,11 @@ module top_level(
   logic signed [31:0] wd;
   logic [4:0] wa;
   logic we;
-  logic [2:0] wrob_ix;
+  logic [ROB_IX:0] wrob_ix;
 
   // Decode Stage Register Read Wires
   logic signed [31:0] rf_val1, rf_val2;
-  logic [2:0] rob_ix1_out, rob_ix2_out;
+  logic [ROB_IX:0] rob_ix1_out, rob_ix2_out;
   logic rob1_valid_out, rob2_valid_out;
 
   // Flush ROB Wires
@@ -190,17 +205,17 @@ module top_level(
   // Issue instruction
   // Check if RS and ROB is ready
   logic rob_ready;
-  logic [2:0] issue_rob_ix;
+  logic [ROB_IX:0] issue_rob_ix;
   logic rob_commit;
   logic [3:0] rob_commit_iType;
   logic signed [31:0] rob_commit_value;
   logic signed [31:0] rob_commit_dest;
-  logic [2:0] rob_commit_ix;
+  logic [ROB_IX:0] rob_commit_ix;
   logic rs_alu_ready, rs_brAlu_ready, rs_mul_ready, rs_div_ready, rs_load_ready, rs_store_ready;
   logic rs_alu_valid_in, rs_brAlu_valid_in, rs_mul_valid_in, rs_div_valid_in, rs_load_valid_in, rs_store_valid_in;
     
   // CDB Inputs  
-  logic [2:0] cdb_rob_ix;
+  logic [ROB_IX:0] cdb_rob_ix;
   logic [31:0] cdb_value, cdb_dest;
   logic cdb_valid;
 
@@ -211,15 +226,15 @@ module top_level(
   logic signed [31:0] decode_rob_value1;
   logic signed [31:0] decode_rob_value2;
   logic decode_rob_ready1;
-  logic decode_rob_ready2;
-  logic [2:0] rob_can_load;
-  // logic [2:0] lb_rob_arr_ix [2:0];
-  logic [2:0] lb_rob_arr_ix0, lb_rob_arr_ix1, lb_rob_arr_ix2; 
-  // logic signed [31:0] lb_rob_dest [2:0];
-  logic signed [31:0] lb_rob_dest0, lb_rob_dest1, lb_rob_dest2;
+  logic decode_rob_ready2; 
+  logic [ROB_IX:0] rob_can_load;
+  logic [ROB_IX:0] lb_rob_arr_ix [ROB_IX:0];
+  // logic [2:0] lb_rob_arr_ix0, lb_rob_arr_ix1, lb_rob_arr_ix2; 
+  logic signed [31:0] lb_rob_dest [ROB_IX:0];
+  // logic signed [31:0] lb_rob_dest0, lb_rob_dest1, lb_rob_dest2;
   logic store_read;
 
-  rob #(.SIZE(8)) reorder_buffer( 
+  rob #(.SIZE(ROB_SIZE)) reorder_buffer( 
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
 
@@ -238,14 +253,16 @@ module top_level(
     .cdb_dest_in(cdb_dest),
     .cdb_valid_in(cdb_valid),
     //Load Inputs
-    // .lb_rob_arr_ix_in(lb_rob_arr_ix),
-    .lb_rob_arr_ix0_in(lb_rob_arr_ix0),
-    .lb_rob_arr_ix1_in(lb_rob_arr_ix1),
-    .lb_rob_arr_ix2_in(lb_rob_arr_ix2),
-    .lb_rob_arr_dest0_in(lb_rob_dest0),
-    .lb_rob_arr_dest1_in(lb_rob_dest1),
-    .lb_rob_arr_dest2_in(lb_rob_dest2),
-    // .lb_rob_arr_dest_in(lb_rob_dest),
+    .lb_rob_arr_ix_in(lb_rob_arr_ix),
+    // .lb_rob_arr_ix0_in(lb_rob_arr_ix0),
+    // .lb_rob_arr_ix1_in(lb_rob_arr_ix1),
+    // .lb_rob_arr_ix2_in(lb_rob_arr_ix2),
+
+    .lb_rob_arr_dest_in(lb_rob_dest),
+    // .lb_rob_arr_dest0_in(lb_rob_dest0),
+    // .lb_rob_arr_dest1_in(lb_rob_dest1),
+    // .lb_rob_arr_dest2_in(lb_rob_dest2),
+    
     // .store_read_in(store_read && ~old_store_read),
     .store_read_in(store_read),
     // Load Outputs
@@ -295,7 +312,7 @@ module top_level(
   // Reservation Station inputs are the reg file outputs
   logic [31:0] fu_alu_rval1, fu_alu_rval2;
   logic [3:0] fu_alu_opcode;
-  logic [2:0] fu_alu_rob_ix_in, fu_alu_rob_ix_out;
+  logic [ROB_IX:0] fu_alu_rob_ix_in, fu_alu_rob_ix_out;
   logic output_valid_alu;
   logic signed [31:0] rs_valuei;
   logic signed [31:0] rs_valuej;
@@ -334,7 +351,7 @@ module top_level(
       end
     end
   end 
-  reservation_station rs_alu(
+  reservation_station #(.RS_DEPTH(RS_DEPTH), .ROB_IX(ROB_IX)) rs_alu(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
     .valid_input_in(rs_alu_valid_in), // get from decode
@@ -384,10 +401,10 @@ module top_level(
 
   logic [31:0] fu_mul_rval1, fu_mul_rval2;
   logic [3:0] fu_mul_opcode;
-  logic [2:0] fu_mul_rob_ix_in;
+  logic [ROB_IX:0] fu_mul_rob_ix_in;
   logic output_valid_mul;
 
-  reservation_station rs_mul(
+  reservation_station #(.RS_DEPTH(RS_DEPTH), .ROB_IX(ROB_IX)) rs_mul(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
     .valid_input_in(rs_mul_valid_in), // get from decode
@@ -415,7 +432,7 @@ module top_level(
   );
 
   logic fu_mul_busy, fu_mul_ready, fu_mul_output_valid;
-  logic [2:0] fu_mul_rob_ix_out;
+  logic [ROB_IX:0] fu_mul_rob_ix_out;
   logic signed [31:0] fu_mul_result;
   logic fu_mul_read_in;
   
@@ -436,10 +453,10 @@ module top_level(
 
 
   logic [31:0] lb_rval1, lb_rval2;
-  logic [2:0] lb_rob_ix_in;
+  logic [ROB_IX:0] lb_rob_ix_in;
   logic output_valid_load;
 
-  reservation_station rs_load(
+  reservation_station #(.RS_DEPTH(RS_DEPTH), .ROB_IX(ROB_IX)) rs_load(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
     .valid_input_in(rs_load_valid_in), // get from decode
@@ -473,9 +490,12 @@ module top_level(
   logic lb_ready_out, lb_valid_out;
   logic signed [31:0] lb_dest_addr_in, lb_dest_addr_out;
   logic lb_output_read;
-  logic [2:0] lb_rob_ix_out;
+  logic [ROB_IX:0] lb_rob_ix_out;
 
-  load_buffer load_buffer(
+  load_buffer 
+    #(.LOAD_BUFFER_DEPTH(LOAD_BUFFER_DEPTH), .ROB_SIZE(ROB_SIZE)) 
+    
+    load_buffer(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
     .valid_input_in(output_valid_load),
@@ -490,10 +510,10 @@ module top_level(
     .lb_dest0_out(lb_rob_dest0),
     .lb_dest1_out(lb_rob_dest1),
     .lb_dest2_out(lb_rob_dest2),
-    // .lb_rob_arr_ix_out(lb_rob_arr_ix),
-    .lb_rob_arr_ix0_out(lb_rob_arr_ix0),
-    .lb_rob_arr_ix1_out(lb_rob_arr_ix1),
-    .lb_rob_arr_ix2_out(lb_rob_arr_ix2),
+    .lb_rob_arr_ix_out(lb_rob_arr_ix),
+    // .lb_rob_arr_ix0_out(lb_rob_arr_ix0),
+    // .lb_rob_arr_ix1_out(lb_rob_arr_ix1),
+    // .lb_rob_arr_ix2_out(lb_rob_arr_ix2),
 
     .dest_out(lb_dest_addr_out),
     .ready_out(lb_ready_out),
@@ -510,11 +530,11 @@ module top_level(
   // Store Reservation Station
   logic [31:0] rs_store_rval1, rs_store_rval2;
   logic [3:0] rs_store_opcode;
-  logic [2:0] rs_store_rob_ix;
+  logic [ROB_IX:0] rs_store_rob_ix;
   logic output_valid_store;
   logic cdb_busy;
 
-  reservation_station rs_store(
+  reservation_station #(.RS_DEPTH(RS_DEPTH), .ROB_IX(ROB_IX)) rs_store(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
     .valid_input_in(rs_store_valid_in), // get from decode
@@ -545,7 +565,7 @@ module top_level(
   logic memory_unit_load_output_valid, memory_unit_load_read;
   logic memory_unit_ready;
 
-  logic [2:0] memory_unit_load_rob_ix_out;
+  logic [ROB_IX:0] memory_unit_load_rob_ix_out;
   logic signed [31:0] memory_unit_load_result;
   logic load_or_store;
 
