@@ -240,9 +240,11 @@ module top_level(
   logic decode_rob_ready1;
   logic decode_rob_ready2; 
   logic [ROB_IX:0] rob_can_load;
-  logic [ROB_IX:0] lb_rob_arr_ix [LOAD_BUFFER_DEPTH-1:0];
+  // logic [ROB_IX:0] lb_rob_arr_ix [LOAD_BUFFER_DEPTH-1:0];
+  logic [(ROB_IX+1)*LOAD_BUFFER_DEPTH] lb_rob_arr_ix;
   // logic [2:0] lb_rob_arr_ix0, lb_rob_arr_ix1, lb_rob_arr_ix2; 
-  logic signed [31:0] lb_rob_dest [LOAD_BUFFER_DEPTH-1:0];
+  // logic signed [31:0] lb_rob_dest [LOAD_BUFFER_DEPTH-1:0];
+  logic signed [32*LOAD_BUFFER_DEPTH] lb_rob_dest;
   // logic signed [31:0] lb_rob_dest0, lb_rob_dest1, lb_rob_dest2;
   logic store_read;
 
@@ -281,14 +283,7 @@ module top_level(
     .cdb_valid_in(cdb_valid),
     //Load Inputs
     .lb_rob_arr_ix_in(lb_rob_arr_ix),
-    // .lb_rob_arr_ix0_in(lb_rob_arr_ix0),
-    // .lb_rob_arr_ix1_in(lb_rob_arr_ix1),
-    // .lb_rob_arr_ix2_in(lb_rob_arr_ix2),
-
     .lb_rob_arr_dest_in(lb_rob_dest),
-    // .lb_rob_arr_dest0_in(lb_rob_dest0),
-    // .lb_rob_arr_dest1_in(lb_rob_dest1),
-    // .lb_rob_arr_dest2_in(lb_rob_dest2),
     
     // .store_read_in(store_read && ~old_store_read),
     .store_read_in(store_read),

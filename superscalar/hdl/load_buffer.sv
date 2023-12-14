@@ -16,14 +16,10 @@ module load_buffer #(parameter LOAD_BUFFER_DEPTH=3, parameter ROB_IX=2)(
   input wire read_in,
 
   // Pass to ROB
-  output logic signed [31:0] lb_dest_out [LOAD_BUFFER_DEPTH-1:0],
-  // output logic signed [31:0] lb_dest0_out,
-  // output logic signed [31:0] lb_dest1_out,
-  // output logic signed [31:0] lb_dest2_out,
-  output logic [ROB_IX:0] lb_rob_arr_ix_out [LOAD_BUFFER_DEPTH-1:0],
-  // output logic [2:0] lb_rob_arr_ix0_out,
-  // output logic [2:0] lb_rob_arr_ix1_out,
-  // output logic [2:0] lb_rob_arr_ix2_out,
+  // output logic signed [31:0] lb_dest_out [LOAD_BUFFER_DEPTH-1:0],
+  output logic signed [32*LOAD_BUFFER_DEPTH] lb_dest_out,
+  // output logic [ROB_IX:0] lb_rob_arr_ix_out [LOAD_BUFFER_DEPTH-1:0],
+  output logic [(ROB_IX+1)*LOAD_BUFFER_DEPTH] lb_rob_arr_ix_out,
 
   // Pass this to memory unit
   output logic signed [31:0] dest_out, // address calculated out
@@ -38,14 +34,21 @@ module load_buffer #(parameter LOAD_BUFFER_DEPTH=3, parameter ROB_IX=2)(
   logic [ROB_IX:0] rob_ix_row [LOAD_BUFFER_DEPTH-1:0];
   logic [LOAD_BUFFER_DEPTH-1:0] occupied_row;
 
-  assign lb_dest_out = dest_row;
-  // assign lb_dest0_out = dest_row[0];
-  // assign lb_dest1_out = dest_row[1];
-  // assign lb_dest2_out = dest_row[2];
-  assign lb_rob_arr_ix_out = rob_ix_row;
-  // assign lb_rob_arr_ix0_out = rob_ix_row[0];
-  // assign lb_rob_arr_ix1_out = rob_ix_row[1];
-  // assign lb_rob_arr_ix2_out = rob_ix_row[2];
+  always_comb begin
+    for (int i = 0; i < LOAD_BUFFER_DEPTH; i=i+1) begin
+      for (int j = 0; j < 32; j=j+1) begin
+        lb_dest_out[i*32+j] = dest_row[i][j];
+      end
+      // lb_dest_out[(i+1)*32-1:i*32] = dest_row[i];
+    end
+    
+    for (int i = 0; i< LOAD_BUFFER_DEPTH; i=i+1) begin
+      for (int j = 0; j <= ROB_IX; j=j+1) begin
+        lb_rob_arr_ix_out[i*(ROB_IX+1)+j] = rob_ix_row[i][j];
+      end
+      // lb_rob_arr_ix_out[(i+1)*(ROB_IX+1):i*(ROB_IX+1)] = rob_ix_row[i];
+    end
+  end
 
   always_ff @(posedge clk_in) begin
     if (rst_in || flush_in) begin
