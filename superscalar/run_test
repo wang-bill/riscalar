@@ -1,4 +1,4 @@
 rm foo.out
-iverilog -g2012 -o foo.out hdl/* sim/load_tb.sv 
+iverilog -g2012 -o foo.out hdl/branch_predict.sv sim/branch_predict_tb.sv 
 sleep 0.1
 vvp foo.out
