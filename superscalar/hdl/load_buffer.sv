@@ -12,7 +12,7 @@ module load_buffer #(parameter LOAD_BUFFER_DEPTH=3, parameter ROB_IX=2)(
   // Inputs
   input wire signed [31:0] dest_in,
   input wire [ROB_IX:0] rob_ix_in,
-  input wire [ROB_IX:0] can_load_in,
+  input wire [LOAD_BUFFER_DEPTH-1:0] can_load_in,
   input wire read_in,
 
   // Pass to ROB
@@ -43,7 +43,8 @@ module load_buffer #(parameter LOAD_BUFFER_DEPTH=3, parameter ROB_IX=2)(
   // assign lb_dest1_out = dest_row[1];
   // assign lb_dest2_out = dest_row[2];
   assign lb_rob_arr_ix_out = rob_ix_row;
-  // assign lb_rob_arr_ix0_out = rob_ix_row[0];
+  logic [ROB_IX:0] lb_rob_arr_ix0_out;
+  assign lb_rob_arr_ix0_out = rob_ix_row[0];
   // assign lb_rob_arr_ix1_out = rob_ix_row[1];
   // assign lb_rob_arr_ix2_out = rob_ix_row[2];
 
@@ -98,7 +99,9 @@ module load_buffer #(parameter LOAD_BUFFER_DEPTH=3, parameter ROB_IX=2)(
       end
     end
   end
-
+  
+  logic [LOAD_BUFFER_DEPTH-1:0] valid_rows;
+  assign valid_rows = can_load_in & occupied_row;
   assign valid_out = (can_load_in & occupied_row) != 0;
 endmodule // load_buffer
 

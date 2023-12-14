@@ -35,7 +35,7 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
     input wire store_read_in, // Goes high for one clock cycle once store content has taken in ROB outputs
 
     // Load Outputs
-    output logic [ROB_IX:0] can_load_out,
+    output logic [LOAD_BUFFER_DEPTH-1:0] can_load_out,
 
     //Decode Outputs:
     output logic signed [31:0] decode_value1_out,
@@ -74,6 +74,9 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
   // assign lb_rob_arr_dest_in[2] = lb_rob_arr_dest2_in;
 
   // logic [ROB_IX:0] lb_rob_arr_ix_in [ROB_IX:0];
+  logic [ROB_IX:0] lb_rob_arr_ix0_in;
+  
+  assign lb_rob_arr_ix0_in = lb_rob_arr_ix_in[0];
   // assign lb_rob_arr_ix_in[0] = lb_rob_arr_ix0_in;
   // assign lb_rob_arr_ix_in[1] = lb_rob_arr_ix1_in;
   // assign lb_rob_arr_ix_in[2] = lb_rob_arr_ix2_in;
@@ -196,7 +199,7 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
 
   logic can_load_i;
   always_comb begin // Check from head to see if there are conflicts
-    for (int i = 0; i <= ROB_IX; i=i+1) begin
+    for (int i = 0; i <= LOAD_BUFFER_DEPTH; i=i+1) begin
       can_load_i = 1;
       for (int j = 0; j < ROB_SIZE; j = j+1) begin
         if (j >= head[ROB_IX:0] && j <= lb_rob_arr_ix_in[i]) begin
