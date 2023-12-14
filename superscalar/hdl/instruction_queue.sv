@@ -26,7 +26,10 @@ module instruction_queue#(parameter SIZE=4)(
         if (rst_in || flush_in) begin
             write_counter <= 0;
             read_counter <= 0;
-            instruction_queue <= 0;
+            for (int i=0; i < SIZE; i=i+1) begin
+                instruction_queue[i] <= 0;
+            end
+            
             branchTaken_queue <= 0;
             write_counter <= 0;
             read_counter <= 0;
