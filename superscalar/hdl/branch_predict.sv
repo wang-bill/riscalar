@@ -15,10 +15,16 @@ module branch_predict
   localparam GLOBAL_DEPTH = 8;
   localparam CHOICe_DEPTH = 4;
 
-  logic local_history_table 
+  logic local_history_table; 
 
   always_ff @(posedge clk_in) begin
-    if (rst_in)
+    if (rst_in) begin
+    end else begin
+    end
+  end
+
+  always_comb begin
+    branch_taken_out = 0;
   end
 
 endmodule

@@ -117,10 +117,13 @@ module top_level(
   );
 
   logic branch_taken;
+  logic rob_valid_branch_predict;
   branch_predict branch_predictor(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
     .pc_in(pc),
+    .correct_branch(correct_branch),
+    .update_valid_in(rob_valid_branch_predict),
     .branch_taken_out(branch_taken)
   );
   
@@ -309,7 +312,8 @@ module top_level(
 
     .flush_out(flush),
     .flush_addrs_out(flush_addrs),
-    .nextPc_out(nextPc)
+    .nextPc_out(nextPc),
+    .valid_branch_out(rob_valid_branch_predict)
   );
 
   always_comb begin
