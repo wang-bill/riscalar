@@ -22,15 +22,10 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
 
     // Load Inputs
     // input wire [2:0] lb_rob_arr_ix_in [2:0],
-    input wire [ROB_IX:0] lb_rob_arr_ix_in [LOAD_BUFFER_DEPTH-1:0],
-    // input wire [2:0] lb_rob_arr_ix0_in,
-    // input wire [2:0] lb_rob_arr_ix1_in,
-    // input wire [2:0] lb_rob_arr_ix2_in,
-
-    input wire signed [31:0] lb_rob_arr_dest_in [LOAD_BUFFER_DEPTH-1:0],
-    // input wire signed [31:0] lb_rob_arr_dest0_in,
-    // input wire signed [31:0] lb_rob_arr_dest1_in,
-    // input wire signed [31:0] lb_rob_arr_dest2_in,
+    // input wire [ROB_IX:0] lb_rob_arr_ix_in [LOAD_BUFFER_DEPTH-1:0],
+    input wire [(ROB_IX+1)*(LOAD_BUFFER_DEPTH)] lb_rob_arr_ix_in,
+    input wire signed [32 * LOAD_BUFFER_DEPTH] lb_rob_arr_dest_in,
+    // input wire signed [31:0] lb_rob_arr_dest_in [LOAD_BUFFER_DEPTH-1:0],
     // Store Input
     input wire store_read_in, // Goes high for one clock cycle once store content has taken in ROB outputs
 
@@ -68,18 +63,6 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
   logic [ROB_SIZE-1:0] inst_ready_buffer;
   logic correct_branch;
 
-  // logic signed [31:0] lb_rob_arr_dest_in [ROB_IX:0];
-  // assign lb_rob_arr_dest_in[0] = lb_rob_arr_dest0_in;
-  // assign lb_rob_arr_dest_in[1] = lb_rob_arr_dest1_in;
-  // assign lb_rob_arr_dest_in[2] = lb_rob_arr_dest2_in;
-
-  // logic [ROB_IX:0] lb_rob_arr_ix_in [ROB_IX:0];
-  logic [ROB_IX:0] lb_rob_arr_ix0_in;
-  
-  assign lb_rob_arr_ix0_in = lb_rob_arr_ix_in[0];
-  // assign lb_rob_arr_ix_in[0] = lb_rob_arr_ix0_in;
-  // assign lb_rob_arr_ix_in[1] = lb_rob_arr_ix1_in;
-  // assign lb_rob_arr_ix_in[2] = lb_rob_arr_ix2_in;
 
   logic [31:0] tail;
   logic [31:0] head;
@@ -202,9 +185,16 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
     for (int i = 0; i <= LOAD_BUFFER_DEPTH; i=i+1) begin
       can_load_i = 1;
       for (int j = 0; j < ROB_SIZE; j = j+1) begin
-        if (j >= head[ROB_IX:0] && j <= lb_rob_arr_ix_in[i]) begin
-          can_load_i &= !(iType_buffer[j] == STORE && 
-                        (destination_buffer[j] == lb_rob_arr_dest_in[i]));
+        if (j >= head[ROB_IX:0] && j <= lb_rob_arr_ix_in[i*ROB_SIZE+j]) begin
+          for (int k = 0; k < 32; k=k+1) begin
+            can_load_i &= !(iType_buffer[j] == STORE &&
+                          destination_buffer[j][k] ==
+                          lb_rob_arr_dest_in[i*ROB_SIZE+j+k]);
+          end
+          
+          // can_load_i &= !(iType_buffer[j] == STORE && 
+                        // (destination_buffer[j] ==
+                        // lb_rob_arr_dest_in[i*ROB_SIZE+31:i*ROB_SIZE]));
           can_load_i &= !(iType_buffer[j] == STORE && !inst_ready_buffer[j]);
         end
       end
