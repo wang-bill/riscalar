@@ -56,6 +56,7 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
 
     output logic flush_out,
     output logic [4:0] flush_addrs_out [SIZE-1:0]
+    output logic signed [31:0] nextPc_out
 );
   localparam ROB_IX = $clog2(ROB_SIZE)-1;
   logic [3:0] iType_buffer [ROB_SIZE-1:0];
@@ -116,7 +117,14 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
       flush_out <= 1;
       for (int i = 0; i < SIZE; i = i+1) begin
         if (i >= head[2:0] && i < tail) begin
-          flush_addrs_out[i] <= destination_buffer[i];
+          if (iType_buffer[i] == OPIMM || iType_buffer[i] == OP 
+              || iType_buffer[i] == LUI || iType_buffer[i] == JAL
+              || iType_buffer[i] == JALR || iType_buffer[i] == LOAD
+              || iType_buffer[i] == MUL || iType_buffer[i] == DIV) begin
+            flush_addrs_out[i] <= destination_buffer[i];
+              end else begin
+                flush_addrs_out[i] <= 0;
+              end
         end else begin
           flush_addrs_out[i] <= 0;
         end
@@ -162,6 +170,7 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
     end else begin
       correct_branch = 1;
     end
+    nextPc_out = (!correct_branch) ? destination_buffer[cdb_rob_ix_in]: 0;
     // value_buffer0 = value_buffer[0];
     // value_buffer1 = value_buffer[1];
     // value_buffer2 = value_buffer[2];
