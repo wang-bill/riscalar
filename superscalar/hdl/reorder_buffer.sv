@@ -27,7 +27,7 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
     // input wire [2:0] lb_rob_arr_ix1_in,
     // input wire [2:0] lb_rob_arr_ix2_in,
 
-    input wire signed [31:0] lb_rob_arr_dest_in [ROB_IX:0],
+    input wire signed [31:0] lb_rob_arr_dest_in [LOAD_BUFFER_DEPTH-1:0],
     // input wire signed [31:0] lb_rob_arr_dest0_in,
     // input wire signed [31:0] lb_rob_arr_dest1_in,
     // input wire signed [31:0] lb_rob_arr_dest2_in,

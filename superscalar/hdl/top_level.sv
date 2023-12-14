@@ -22,7 +22,7 @@ module top_level(
   localparam ROB_SIZE = 8;
   localparam RS_DEPTH = 3;
   localparam IQ_SIZE = 4;
-  localparam LOAD_BUFFER_DEPTH = 3;
+  localparam LOAD_BUFFER_DEPTH = 8;
 
   localparam ROB_IX = $clog2(ROB_SIZE)-1;
   // assign led = sw; //for debugging
@@ -233,7 +233,7 @@ module top_level(
   logic [ROB_IX:0] rob_can_load;
   logic [ROB_IX:0] lb_rob_arr_ix [LOAD_BUFFER_DEPTH-1:0];
   // logic [2:0] lb_rob_arr_ix0, lb_rob_arr_ix1, lb_rob_arr_ix2; 
-  logic signed [31:0] lb_rob_dest [ROB_IX:0];
+  logic signed [31:0] lb_rob_dest [LOAD_BUFFER_DEPTH-1:0];
   // logic signed [31:0] lb_rob_dest0, lb_rob_dest1, lb_rob_dest2;
   logic store_read;
 
