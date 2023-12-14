@@ -30,7 +30,7 @@ module rob#(parameter SIZE=8)(
     input wire signed [31:0] lb_rob_arr_dest1_in,
     input wire signed [31:0] lb_rob_arr_dest2_in,
     // Store Input
-    input wire store_read_in, // Goes high for one clock cycle once store content has been written to memory unit
+    input wire store_read_in, // Goes high for one clock cycle once store content has taken in ROB outputs
 
     // Load Outputs
     output logic [2:0] can_load_out,

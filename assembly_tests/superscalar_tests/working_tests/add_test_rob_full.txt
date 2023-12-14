@@ -1,0 +1,16 @@
+Expected Output:
+
+
+addi a1, a1, 1 a1: 1
+addi a1, a1, 1 a1: 2
+addi a1, a1, 1 
+addi a1, a1, 1
+addi a1, a1, 1
+addi a1, a1, 1 a1: 6
+addi a2, a2, 2 a2: 2
+mul a5, a1, a2 a5: 12
+mul a5, a1, a2
+mul a5, a1, a2
+mul a5, a1, a2
+slt a1, a1, a2 a1: 0
+slt a2, a1, a5 a2: 1
