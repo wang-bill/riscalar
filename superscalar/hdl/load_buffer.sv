@@ -3,50 +3,48 @@
 // typedef enum {Add, Sub, And, Or, Xor, Slt, Sltu, Sll, Srl, Sra} AluFunc; //10 AluFuncs
 `include "hdl/types.svh"
 
-module load_buffer
-    #(parameter LOAD_BUFFER_DEPTH=3, 
-      parameter ROB_SIZE=2)(
+module load_buffer #(parameter LOAD_BUFFER_DEPTH=3, parameter ROB_IX=2)(
   input wire clk_in,
   input wire rst_in,
   input wire valid_input_in,
 
   // Inputs
   input wire signed [31:0] dest_in,
-  input wire [2:0] rob_ix_in,
-  input wire [2:0] can_load_in,
+  input wire [ROB_IX:0] rob_ix_in,
+  input wire [ROB_IX:0] can_load_in,
   input wire read_in,
 
   // Pass to ROB
-  // output logic signed [31:0] lb_dest_out [2:0],
-  output logic signed [31:0] lb_dest0_out,
-  output logic signed [31:0] lb_dest1_out,
-  output logic signed [31:0] lb_dest2_out,
-  // output logic [2:0] lb_rob_arr_ix_out [2:0],
-  output logic [2:0] lb_rob_arr_ix0_out,
-  output logic [2:0] lb_rob_arr_ix1_out,
-  output logic [2:0] lb_rob_arr_ix2_out,
+  output logic signed [31:0] lb_dest_out [LOAD_BUFFER_DEPTH-1:0],
+  // output logic signed [31:0] lb_dest0_out,
+  // output logic signed [31:0] lb_dest1_out,
+  // output logic signed [31:0] lb_dest2_out,
+  output logic [ROB_IX:0] lb_rob_arr_ix_out [LOAD_BUFFER_DEPTH-1:0],
+  // output logic [2:0] lb_rob_arr_ix0_out,
+  // output logic [2:0] lb_rob_arr_ix1_out,
+  // output logic [2:0] lb_rob_arr_ix2_out,
 
   // Pass this to memory unit
   output logic signed [31:0] dest_out, // address calculated out
   output logic ready_out, // ready for another input
   output logic valid_out, // output is valid
-  output logic [2:0] rob_ix_out
+  output logic [ROB_IX:0] rob_ix_out
 );
 
-  localparam LOAD_BUFFER_DEPTH = 3; // if this is changed, the reorder buffer can_load value needs to change too
+  // localparam LOAD_BUFFER_DEPTH = 3; // if this is changed, the reorder buffer can_load value needs to change too
 
   logic signed [31:0] dest_row [LOAD_BUFFER_DEPTH-1:0];
-  logic [2:0] rob_ix_row [LOAD_BUFFER_DEPTH-1:0];
+  logic [ROB_IX:0] rob_ix_row [LOAD_BUFFER_DEPTH-1:0];
   logic [LOAD_BUFFER_DEPTH-1:0] occupied_row;
 
-  // assign lb_dest_out = dest_row;
-  assign lb_dest0_out = dest_row[0];
-  assign lb_dest1_out = dest_row[1];
-  assign lb_dest2_out = dest_row[2];
-  // assign lb_rob_arr_ix_out = rob_ix_row;
-  assign lb_rob_arr_ix0_out = rob_ix_row[0];
-  assign lb_rob_arr_ix1_out = rob_ix_row[1];
-  assign lb_rob_arr_ix2_out = rob_ix_row[2];
+  assign lb_dest_out = dest_row;
+  // assign lb_dest0_out = dest_row[0];
+  // assign lb_dest1_out = dest_row[1];
+  // assign lb_dest2_out = dest_row[2];
+  assign lb_rob_arr_ix_out = rob_ix_row;
+  // assign lb_rob_arr_ix0_out = rob_ix_row[0];
+  // assign lb_rob_arr_ix1_out = rob_ix_row[1];
+  // assign lb_rob_arr_ix2_out = rob_ix_row[2];
 
   always_ff @(posedge clk_in) begin
     if (rst_in) begin

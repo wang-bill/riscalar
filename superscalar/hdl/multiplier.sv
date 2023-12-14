@@ -1,7 +1,8 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module multiplier(
+module multiplier #(parameter ROB_IX=2)
+(
   input wire clk_in,
   input wire rst_in,
   input wire valid_in, // high for 1 clock cycle
@@ -9,9 +10,9 @@ module multiplier(
   
   input wire signed [31:0] rval1_in,
   input wire signed [31:0] rval2_in,
-  input wire [2:0] rob_ix_in,
+  input wire [ROB_IX:0] rob_ix_in,
 
-  output logic [2:0] rob_ix_out,
+  output logic [ROB_IX:0] rob_ix_out,
   output logic signed [31:0] data_out,
   output logic ready_out,
   output logic valid_out // high until output is read

@@ -18,12 +18,13 @@ module top_level(
 );
   localparam INST_DEPTH = 64;
   localparam DATA_DEPTH = 64;
+
   localparam ROB_SIZE = 8;
-  localparam ROB_IX = $clog2(ROB_SIZE);
   localparam RS_DEPTH = 3;
   localparam IQ_SIZE = 4;
-  localparam LOAD_BUFFER_DEPTH = 3;
+  localparam LOAD_BUFFER_DEPTH = 4;
 
+  localparam ROB_IX = $clog2(ROB_SIZE)-1;
   // assign led = sw; //for debugging
   //shut up those rgb LEDs (active high):
   assign rgb1 = 0;
@@ -70,16 +71,16 @@ module top_level(
           first_two_or_branch <= inst_fetch_is_branch && branch_taken;
         end
       end else begin
-        if (!iq_ready && !pc_backtrack) begin
-          pc <= pc - 4;
-          pc_bram <= pc_bram - 12;
-          pc_backtrack <= 1;  
-        end
+        // if (!iq_ready && !pc_backtrack) begin
+        //   pc <= pc - 4;
+        //   pc_bram <= pc_bram - 12;
+        //   pc_backtrack <= 1;  
+        // end
       end
     end
   end
 
-  assign iq_valid = !(first_two_or_branch || (instruction_fetched == 32'h0000_0000 && pc_bram < 8)) && iq_ready;
+  assign iq_valid = !(first_two_or_branch || (instruction_fetched == 32'h0000_0000 && pc_bram < 8));
 
   logic [$clog2(INST_DEPTH)-1:0] effective_pc;
   assign effective_pc = pc_bram[($clog2(INST_DEPTH)-1)+2:2]; // different than pc for indexing into the BRAM
@@ -176,7 +177,7 @@ module top_level(
   logic [4:0] flush_addrs [7:0]; // indices in the register file that we are flushing, if we are clearing fewer than 8 rob entries, we can just fill in with 0s
 
   // registers (part of decode)
-  register_file registers(
+  register_file #(.ROB_IX(ROB_IX)) registers(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
     .rs1_in(rs1),
@@ -229,25 +230,23 @@ module top_level(
   logic decode_rob_ready1;
   logic decode_rob_ready2; 
   logic [ROB_IX:0] rob_can_load;
-  logic [ROB_IX:0] lb_rob_arr_ix [ROB_IX:0];
+  logic [ROB_IX:0] lb_rob_arr_ix [LOAD_BUFFER_DEPTH-1:0];
   // logic [2:0] lb_rob_arr_ix0, lb_rob_arr_ix1, lb_rob_arr_ix2; 
   logic signed [31:0] lb_rob_dest [ROB_IX:0];
   // logic signed [31:0] lb_rob_dest0, lb_rob_dest1, lb_rob_dest2;
   logic store_read;
 
-  rob #(.SIZE(ROB_SIZE)) reorder_buffer( 
+  rob #(.ROB_SIZE(ROB_SIZE), .LOAD_BUFFER_DEPTH(LOAD_BUFFER_DEPTH)) reorder_buffer( 
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
+    //Decode Inputs
+    .decode_rob1_ix_in(rob_ix1_out),
+    .decode_rob2_ix_in(rob_ix2_out),
 
     .valid_in(iq_output_read && iType != NOP),
     .iType_in(iType),
     .value_in((iType == BRANCH) ? iq_instruction_branch_taken : 32'hFFFF_FFFF), //might be an uneccesary input since we never know the actual value yet initially
     .dest_in((iType == STORE) ? imm : rd), //temporarily store immediate in the destination if iType is STORE, else store register dest index
-    //Issue Output
-    .inst_rob_ix_out(issue_rob_ix),
-    //Decode Inputs
-    .decode_rob1_ix_in(rob_ix1_out),
-    .decode_rob2_ix_in(rob_ix2_out),
     //CDB Inputs
     .cdb_rob_ix_in(cdb_rob_ix),
     .cdb_value_in(cdb_value),
@@ -272,12 +271,14 @@ module top_level(
     .decode_ready1_out(decode_rob_ready1),
     .decode_value2_out(decode_rob_value2),
     .decode_ready2_out(decode_rob_ready2),
+    //Issue Output
+    .inst_rob_ix_out(issue_rob_ix),
     //Commit Outputs
+    .ix_out(rob_commit_ix),
     .iType_out(rob_commit_iType),
     .value_out(rob_commit_value),
     .dest_out(rob_commit_dest),
-    .ix_out(rob_commit_ix),
-
+    
     .ready_out(rob_ready),
     .commit_out(commit_out),
     .store_valid_out(store_valid_out)
@@ -385,7 +386,7 @@ module top_level(
   logic signed [31:0] fu_alu_result;
   logic fu_alu_read_in;
   
-  alu fu_alu(
+  alu #(.ROB_IX(ROB_IX)) fu_alu(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
     .valid_in(output_valid_alu),
@@ -403,12 +404,12 @@ module top_level(
 
   logic [31:0] fu_brAlu_rval1, fu_brAlu_rval2;
   logic [3:0] fu_brAlu_opcode;
-  logic [2:0] fu_brAlu_rob_ix_in, fu_brAlu_rob_ix_out;
+  logic [ROB_IX:0] fu_brAlu_rob_ix_in, fu_brAlu_rob_ix_out;
   logic output_valid_brAlu;
   
   logic cdb_brAlu;
   
-  reservation_station rs_brAlu(
+  reservation_station #(.RS_DEPTH(RS_DEPTH), .ROB_IX(ROB_IX)) rs_brAlu(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
     .valid_input_in(rs_brAlu_ready), // get from decode
@@ -439,7 +440,7 @@ module top_level(
   logic fu_brAlu_result;
 
   // Branch ALU Functional Unit
-  branchAlu fu_brAlu(
+  branchAlu #(.ROB_IX(ROB_IX)) fu_brAlu(
     .rval1_in(fu_brAlu_rval1),
     .rval2_in(fu_brAlu_rval2),
     .brFunc_in(fu_brAlu_opcode),
@@ -483,7 +484,7 @@ module top_level(
   logic signed [31:0] fu_mul_result;
   logic fu_mul_read_in;
   
-  multiplier fu_mul(
+  multiplier #(.ROB_IX(ROB_IX)) fu_mul(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
     .valid_in(output_valid_mul),
@@ -539,10 +540,7 @@ module top_level(
   logic lb_output_read;
   logic [ROB_IX:0] lb_rob_ix_out;
 
-  load_buffer 
-    #(.LOAD_BUFFER_DEPTH(LOAD_BUFFER_DEPTH), .ROB_SIZE(ROB_SIZE)) 
-    
-    load_buffer(
+  load_buffer #(.LOAD_BUFFER_DEPTH(LOAD_BUFFER_DEPTH), .ROB_IX(ROB_IX)) load_buffer(
     .clk_in(clk_100mhz),
     .rst_in(sys_rst),
     .valid_input_in(output_valid_load),
@@ -553,10 +551,10 @@ module top_level(
     // .read_in(lb_output_read && ~old_lb_output_read),
     .read_in(lb_output_read),
 
-    // .lb_dest_out(lb_rob_dest),
-    .lb_dest0_out(lb_rob_dest0),
-    .lb_dest1_out(lb_rob_dest1),
-    .lb_dest2_out(lb_rob_dest2),
+    .lb_dest_out(lb_rob_dest),
+    // .lb_dest0_out(lb_rob_dest0),
+    // .lb_dest1_out(lb_rob_dest1),
+    // .lb_dest2_out(lb_rob_dest2),
     .lb_rob_arr_ix_out(lb_rob_arr_ix),
     // .lb_rob_arr_ix0_out(lb_rob_arr_ix0),
     // .lb_rob_arr_ix1_out(lb_rob_arr_ix1),
@@ -685,7 +683,7 @@ module top_level(
     end
   end
 
-  memory_unit data_mem(
+  memory_unit #(.ROB_IX(ROB_IX)) data_mem(
   .clk_in(clk_100mhz),
   .rst_in(sys_rst),
   .valid_in(memory_unit_ready && (lb_valid_out || store_valid_out)), // high for 1 clock cycle
