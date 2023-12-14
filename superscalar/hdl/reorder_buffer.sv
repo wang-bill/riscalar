@@ -63,6 +63,8 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
   logic [ROB_SIZE-1:0] inst_ready_buffer;
   logic correct_branch;
 
+  logic [ROB_IX:0] lb_rob_arr_ix_2d_in [LOAD_BUFFER_DEPTH-1:0];
+  logic signed [31:0] lb_rob_arr_dest_2d_in [LOAD_BUFFER_DEPTH-1:0];
 
   logic [31:0] tail;
   logic [31:0] head;
@@ -120,23 +122,28 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
     end
   end
 
-  // logic [31:0] value_buffer0;
-  // logic [31:0] value_buffer1;
-  // logic [31:0] value_buffer2;
-  // logic [31:0] value_buffer3;
+  logic [31:0] value_buffer0;
+  logic [31:0] value_buffer1;
+  logic [31:0] value_buffer2;
+  logic [31:0] value_buffer3;
   // logic [31:0] value_buffer4;
   // logic [31:0] value_buffer5;
   // logic [31:0] value_buffer6;
   // logic [31:0] value_buffer7;
   
-  // logic [3:0] iType_buffer0;
-  // logic [3:0] iType_buffer1;
-  // logic [3:0] iType_buffer2;
-  // logic [3:0] iType_buffer3;
+  logic [3:0] iType_buffer0;
+  logic [3:0] iType_buffer1;
+  logic [3:0] iType_buffer2;
+  logic [3:0] iType_buffer3;
   // logic [3:0] iType_buffer4;
   // logic [3:0] iType_buffer5;
   // logic [3:0] iType_buffer6;
   // logic [3:0] iType_buffer7;
+
+  logic [31:0] dest_buffer0;
+  logic [31:0] dest_buffer1;
+  logic [31:0] dest_buffer2;
+  logic [31:0] dest_buffer3;
 
   always_comb begin
     ready_out = (tail - head) < ROB_SIZE;
@@ -160,42 +167,60 @@ module rob#(parameter ROB_SIZE=8, parameter LOAD_BUFFER_DEPTH=3)(
       correct_branch = 1;
     end
     nextPc_out = (!correct_branch) ? destination_buffer[cdb_rob_ix_in]: 0;
-    // value_buffer0 = value_buffer[0];
-    // value_buffer1 = value_buffer[1];
-    // value_buffer2 = value_buffer[2];
-    // value_buffer3 = value_buffer[3];
+    value_buffer0 = value_buffer[0];
+    value_buffer1 = value_buffer[1];
+    value_buffer2 = value_buffer[2];
+    value_buffer3 = value_buffer[3];
     // value_buffer4 = value_buffer[4];
     // value_buffer5 = value_buffer[5];
     // value_buffer6 = value_buffer[6];
     // value_buffer7 = value_buffer[7];
-    // iType_buffer0 = iType_buffer[0];
-    // iType_buffer1 = iType_buffer[1];
-    // iType_buffer2 = iType_buffer[2];
-    // iType_buffer3 = iType_buffer[3];
+    iType_buffer0 = iType_buffer[0];
+    iType_buffer1 = iType_buffer[1];
+    iType_buffer2 = iType_buffer[2];
+    iType_buffer3 = iType_buffer[3];
     // iType_buffer4 = iType_buffer[4];
     // iType_buffer5 = iType_buffer[5];
     // iType_buffer6 = iType_buffer[6];
     // iType_buffer7 = iType_buffer[7];
     // destination_buffer0 = destination_buffer[0];
     // destination_buffer1 = destination_buffer[1];
+    dest_buffer0 = destination_buffer[0];
+    dest_buffer0 = destination_buffer[1];
+    dest_buffer0 = destination_buffer[2];
+    dest_buffer0 = destination_buffer[3];
+  end
+
+
+  // Convert 1D flattened arrays into 2D internal arrays
+  always_comb begin
+    for (int i = 0; i < LOAD_BUFFER_DEPTH; i = i+1) begin
+      for (int j = 0; j <= ROB_IX; j = j+1) begin
+        lb_rob_arr_ix_2d_in[i][j] = lb_rob_arr_ix_in[i*(ROB_IX+1)+j];
+      end
+      for (int k = 0; k < 32; k = k+1) begin
+        lb_rob_arr_dest_2d_in[i][k] = lb_rob_arr_dest_in[i*32+k];
+      end
+    end
   end
 
   logic can_load_i;
   always_comb begin // Check from head to see if there are conflicts
-    for (int i = 0; i <= LOAD_BUFFER_DEPTH; i=i+1) begin
+    for (int i = 0; i < LOAD_BUFFER_DEPTH; i=i+1) begin
       can_load_i = 1;
       for (int j = 0; j < ROB_SIZE; j = j+1) begin
-        if (j >= head[ROB_IX:0] && j <= lb_rob_arr_ix_in[i*ROB_SIZE+j]) begin
-          for (int k = 0; k < 32; k=k+1) begin
-            can_load_i &= !(iType_buffer[j] == STORE &&
-                          destination_buffer[j][k] ==
-                          lb_rob_arr_dest_in[i*ROB_SIZE+j+k]);
+        if (lb_rob_arr_ix_2d_in[i] > head[ROB_IX:0]) begin
+          if (j >= head[ROB_IX:0] && j < lb_rob_arr_ix_2d_in[i]) begin
+            can_load_i &= !(iType_buffer[j] == STORE 
+                          && destination_buffer[j] == lb_rob_arr_dest_2d_in[j]);
+            can_load_i &= !(iType_buffer[j] == STORE && !inst_ready_buffer[j]);
           end
-          
-          // can_load_i &= !(iType_buffer[j] == STORE && 
-                        // (destination_buffer[j] ==
-                        // lb_rob_arr_dest_in[i*ROB_SIZE+31:i*ROB_SIZE]));
-          can_load_i &= !(iType_buffer[j] == STORE && !inst_ready_buffer[j]);
+        end else if (lb_rob_arr_ix_2d_in[i] < head[ROB_IX:0]) begin
+          if (j >= head[ROB_IX:0] || j < lb_rob_arr_ix_2d_in[i]) begin
+            can_load_i &= !(iType_buffer[j] == STORE 
+                          && destination_buffer[j] == lb_rob_arr_dest_2d_in[j]);
+            can_load_i &= !(iType_buffer[j] == STORE && !inst_ready_buffer[j]);
+          end
         end
       end
       can_load_out[i] = can_load_i;
